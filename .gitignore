@@ -1,0 +1,13 @@
+/tools/
+/run/
+/dist/
+/swarmcopy
+/swarmcopy.next
+/swarmcopy-race
+*.part
+*.sqsh
+*.token
+*.log
+__pycache__/
+
+*.swarmcopy.verified.json

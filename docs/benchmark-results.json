@@ -1,0 +1,41 @@
+{
+  "date": "2026-11-15",
+  "protocol": "SCDP/1",
+  "application": "swarmcopy 0.1.0 development",
+  "file_bytes": 40188444672,
+  "method": "single sequential observation; fresh receiver files; prepared unchanged verified seed; unlimited bandwidth",
+  "runs": [
+    {
+      "nodes": 5,
+      "receivers": 4,
+      "rsync_copy_seconds": 98.55065850634128,
+      "rsync_copy_plus_sha256_seconds": 141.92823888547719,
+      "scdp_verified_seconds": 80.95929093938321,
+      "seed_valid_bytes": 56653905920,
+      "received_bytes": 160753778688,
+      "ssh_deployment": "serial"
+    },
+    {
+      "nodes": 45,
+      "receivers": 44,
+      "rsync_copy_seconds": 122.19081726577133,
+      "rsync_copy_plus_sha256_seconds": 165.74384323414415,
+      "scdp_verified_seconds": 85.16268455423415,
+      "seed_valid_bytes": 54298083328,
+      "received_bytes": 1768291565568,
+      "ssh_deployment": "bounded parallel, fanout=8"
+    }
+  ],
+  "earlier_development_runs": {
+    "five_nodes_256_mib_per_second": 310.119,
+    "five_nodes_unlimited_without_verified_seed_cache": 157.01365271676332
+  },
+  "notes": [
+    "No cold-cache reset or repeated statistical sampling.",
+    "Initial seed staging/manifest/cache preparation excluded for both methods.",
+    "SCDP timed duration includes deployment, transfer, final SHA256, fsync, and owned-peer stop.",
+    "rsync copy-only uses its normal completion semantics; extra SHA256 is reported separately.",
+    "Source-byte reduction uses valid received From counters, excluding protocol overhead/retries.",
+    "One failed and one membership-cancelled expanded run excluded."
+  ]
+}

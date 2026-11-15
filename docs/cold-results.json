@@ -1,0 +1,146 @@
+{
+  "nodes": 157,
+  "receivers": 156,
+  "rounds": 3,
+  "file_bytes": 40188444672,
+  "binary_sha256": "d2c27a604aab59d8ed51bb86422c35d03afdbef669088e053bb767d8240cf6b6",
+  "rsync": {
+    "verified_seconds": [
+      410.87094539031386,
+      408.734391765669,
+      406.44774995651096
+    ],
+    "median": 408.734391765669,
+    "min": 406.44774995651096,
+    "max": 410.87094539031386,
+    "copy_seconds": [
+      364.5490140495822,
+      362.7623132644221,
+      360.13311894983053
+    ],
+    "copy_median": 362.7623132644221
+  },
+  "scdp": {
+    "verified_seconds": [
+      153.29323400184512,
+      153.46738669648767,
+      153.14661766495556
+    ],
+    "median": 153.29323400184512,
+    "min": 153.14661766495556,
+    "max": 153.46738669648767
+  },
+  "speedup_verified_median": 2.666356375264085,
+  "speedup_vs_copy_median": 2.3664600438924506,
+  "file_sha256": "b4b4781e7392957eb24d45e9f480ea6d8ec2d20f9200a1c48aeeefd64d2e77c1",
+  "driver_sha256": "deda6c03c40e7effde9bc43b877023d8a38ae5c9e0ac99a9a821b8d7821a5dfc",
+  "dist_sha256": {
+    "swarmcopy-linux-aarch64": "73ba1818bc39416f8cfd2986bfb495fba11e269740bcfbd11cdde345db83b8dd",
+    "swarmcopy-linux-x86_64": "d2c27a604aab59d8ed51bb86422c35d03afdbef669088e053bb767d8240cf6b6"
+  },
+  "cases": [
+    {
+      "round": 1,
+      "method": "rsync",
+      "fresh_start": true,
+      "verified": true,
+      "copy_seconds": 364.5490140495822,
+      "verified_seconds": 410.87094539031386,
+      "attempts": 156
+    },
+    {
+      "round": 1,
+      "method": "scdp",
+      "fresh_start": true,
+      "verified": true,
+      "verified_seconds": 153.29323400184512,
+      "downloaded_bytes": 6269397368832,
+      "seed_valid_bytes": 50573541376,
+      "receiver_origin_count": 0
+    },
+    {
+      "round": 2,
+      "method": "scdp",
+      "fresh_start": true,
+      "verified": true,
+      "verified_seconds": 153.46738669648767,
+      "downloaded_bytes": 6269397368832,
+      "seed_valid_bytes": 50288328704,
+      "receiver_origin_count": 0
+    },
+    {
+      "round": 2,
+      "method": "rsync",
+      "fresh_start": true,
+      "verified": true,
+      "copy_seconds": 362.7623132644221,
+      "verified_seconds": 408.734391765669,
+      "attempts": 156
+    },
+    {
+      "round": 3,
+      "method": "rsync",
+      "fresh_start": true,
+      "verified": true,
+      "copy_seconds": 360.13311894983053,
+      "verified_seconds": 406.44774995651096,
+      "attempts": 156
+    },
+    {
+      "round": 3,
+      "method": "scdp",
+      "fresh_start": true,
+      "verified": true,
+      "verified_seconds": 153.14661766495556,
+      "downloaded_bytes": 6269397368832,
+      "seed_valid_bytes": 51194298368,
+      "receiver_origin_count": 0
+    }
+  ],
+  "orders": [
+    [
+      "rsync",
+      "scdp"
+    ],
+    [
+      "scdp",
+      "rsync"
+    ],
+    [
+      "rsync",
+      "scdp"
+    ]
+  ],
+  "cache_policy": "sync + drop_caches=3 on every participating compute host before each method",
+  "fresh_start_policy": "unique case directory absent everywhere before timing; no cross-case data or partial reuse",
+  "retry_policy": "normal TCP/chunk recovery and in-case retry allowed; all attempt time counted without resetting the case timer",
+  "primary_metric": "time until all receivers verified; SCDP also includes deployment and owned-peer shutdown",
+  "source_policy": "same prepared verified immutable seed; verification sidecar retained; source verified once before study and cold-cache barriers",
+  "transports": {
+    "rsync": "SSH encrypted, compression off",
+    "scdp": "HTTP plaintext"
+  },
+  "limitations": [
+    "OS page cache is cleared; device/controller caches are not controlled.",
+    "Background cluster load is not isolated.",
+    "Three observations do not establish a universal performance guarantee."
+  ],
+  "environment": {
+    "architectures": {
+      "x86_64": 157
+    },
+    "filesystems": {
+      "xfs": 116,
+      "ext4": 41
+    },
+    "source_nic": "4 x 100 Gb/s LACP bond; ordinary routed TCP, not native RDMA",
+    "seed_node": "node001"
+  },
+  "post_study_audit": {
+    "nodes": 157,
+    "unique_boot_ids": 157,
+    "jobs": 3,
+    "owned_peers_checked": 471,
+    "all_owned_peers_stopped": true
+  }
+}
