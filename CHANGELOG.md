@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.1 — quiet mesh defaults and real per-node NIC measurements
+
+- Make the default hosts-only mesh command the primary example, hide SSH details unless verbose, split common/full help and refresh a live terminal dashboard instead of appending repeated tables.
+- Read real routed-interface and bond-member kernel counters with monotonic intervals; display current versus final average per-node rates and detected link utilization. Do not add bond/member counters or RX/TX, substitute application bytes, or imply ACTIVE means saturation.
+- Balance mesh sources cyclically, including groups larger than worker count; classify HTTP429 separately from other failures and bound retry backoff.
+- Use benchmark defaults of 64 workers, Go parallelism 32 and 1 MiB buffers, retaining explicit overrides. File-distribution integrity and worker defaults remain unchanged.
+- Record the exact 60-node mesh: all nodes exchange payload, no request errors, median NIC RX/TX about 229/230 Gbit/s, none averaging >=90% nominal 400G. Preserve independent physical-port samples and three-node near-line checks without claiming the large mesh was saturated.
+
 ## 0.9.0 — bounded-memory compute-node network benchmark
 
 - Add benchmark: synthetic TCP/QUIC payload streams between selected compute nodes, count/discard receiving, no media I/O or content hashes; production integrity remains unchanged.

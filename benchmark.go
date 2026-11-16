@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	randv2 "math/rand/v2"
 	"net"
 	"net/http"
 	"os"
@@ -23,28 +24,20 @@ import (
 	"github.com/quic-go/quic-go/http3"
 )
 
-const benchmarkUsage = `Measure compute-node application payload throughput, not file distribution.
-Every node serves a small pre-generated random buffer repeatedly; receivers
-count and discard bytes. No payload files, manifests or content hashes.
-SSH deploys/controls only. TCP checksums and QUIC authentication still apply.
+const benchmarkUsage = `Measure per-node network-interface throughput.
+Default MESH: every node sends and receives; no content hashes or payload files.
+Live view: current NIC rates. Final table: average NIC rates and link utilization.
+RX/TX are separate directions; bond counters include all member ports once.
+NIC counters also include other traffic on that interface.
 
 Examples:
-  swarmcopy benchmark --hosts 'HGX[061,066,082,138,169]'
-  swarmcopy benchmark --hosts @hosts.txt --duration 60s --workers 128 --uploads 256 --per-source 128
-  swarmcopy benchmark --hosts 'node[001-005]' --topology seed --transport quic
-  swarmcopy benchmark --hosts @hosts.txt --cpus 32 --buffer-kib 1024 --numa system
+  swarmcopy benchmark --hosts 'HGX[603-608,610-618]'
+  swarmcopy benchmark --hosts @hosts.txt --duration 60s
+  swarmcopy benchmark --hosts @hosts.txt --workers 128
   swarmcopy benchmark --hosts @hosts.txt --output network.json
 
-Mesh: all nodes send/receive directly. Ring: each node downloads from its predecessor.
-Seed: first compute node sends to all others; receivers do not relay.
-These are synthetic network flows, not SCDP chunk scheduling/forwarding.
-Per-node rates and aggregate RX are separate; do not add TX to RX as goodput.
-NUMA defaults to system; explicit binding/interleave requires target numactl.
---cpus controls Go parallelism, not affinity; larger values are not always faster.
-Warmup is excluded. RAM is bounded by buffers/concurrency, not duration/bytes;
-protocol/OS socket memory is additional. Ctrl-C cancels this benchmark only.
-No resume: restart a fresh test. Temporary executables are removed on normal exit;
-failed cleanup prints the exact owned path. Results are saved only with --output.
+Ctrl-C stops this benchmark and cleans its temporary deployment.
+Use --verbose for deployment details; --help-all for advanced options.
 `
 
 type benchmarkConfig struct {
@@ -93,17 +86,20 @@ func (c benchmarkConfig) sources() []string {
 		}
 		return c.Addresses[:1]
 	}
-	out := []string{}
-	for i, a := range c.Addresses {
-		if i != c.Index {
-			out = append(out, a)
-		}
+	// Start after this node, wrapping around, so even a partial mesh is balanced.
+	out := make([]string, 0, len(c.Addresses)-1)
+	for offset := 1; offset < len(c.Addresses); offset++ {
+		out = append(out, c.Addresses[(c.Index+offset)%len(c.Addresses)])
 	}
 	return out
 }
 func (c benchmarkConfig) activeWorkers() int { return min(c.Workers, len(c.sources())*c.PerSource) }
 
 type benchmarkStatus struct {
+	NIC *benchmarkNICStatus
+	benchmarkErrors
+	Interface                                string
+	LinkGbit                                 float64
 	NUMA                                     string
 	CPUs                                     int
 	ID, Transport, Topology, Error           string
@@ -111,10 +107,17 @@ type benchmarkStatus struct {
 	Running, Measuring, Frozen               bool
 	Seconds                                  float64
 	Received, Sent, Requests, Failures, Busy int64
-	RXGbit, TXGbit                           float64
+	RXGbit                                   float64 `json:"ApplicationRXGbit"`
+	TXGbit                                   float64 `json:"ApplicationTXGbit"`
 	From                                     map[string]int64
 }
 type benchmarkPeer struct {
+	nic                                                  *benchmarkNICMonitor
+	errorCounts                                          [benchmarkErrorKinds]atomic.Int64
+	baseErrorCounts                                      [benchmarkErrorKinds]int64
+	lastError                                            string
+	iface                                                string
+	linkGbit                                             float64
 	c                                                    benchmarkConfig
 	payload                                              []byte
 	rx, tx, requests, failures, busy                     atomic.Int64
@@ -136,7 +139,7 @@ func (p *benchmarkPeer) snapshotLocked() benchmarkStatus {
 	if p.frozen {
 		return p.final
 	}
-	s := benchmarkStatus{NUMA: cNUMA(p.c.NUMA), CPUs: runtime.GOMAXPROCS(0), ID: p.c.ID, Transport: p.c.Transport, Topology: p.c.Topology, PID: os.Getpid(), Workers: p.c.activeWorkers(), UploadLimit: p.c.Uploads, Running: p.running, Measuring: p.measuring, Received: p.rx.Load() - p.baseRX, Sent: p.tx.Load() - p.baseTX, Requests: p.requests.Load() - p.baseRequests, Failures: p.failures.Load() - p.baseFailures, Busy: p.busy.Load() - p.baseBusy, From: map[string]int64{}}
+	s := benchmarkStatus{NIC: p.nic.snapshot(), benchmarkErrors: p.errorSnapshotLocked(), Interface: p.iface, LinkGbit: p.linkGbit, NUMA: cNUMA(p.c.NUMA), CPUs: runtime.GOMAXPROCS(0), ID: p.c.ID, Transport: p.c.Transport, Topology: p.c.Topology, PID: os.Getpid(), Workers: p.c.activeWorkers(), UploadLimit: p.c.Uploads, Running: p.running, Measuring: p.measuring, Received: p.rx.Load() - p.baseRX, Sent: p.tx.Load() - p.baseTX, Requests: p.requests.Load() - p.baseRequests, Failures: p.failures.Load() - p.baseFailures, Busy: p.busy.Load() - p.baseBusy, From: map[string]int64{}}
 	if p.measuring {
 		s.Seconds = time.Since(p.epoch).Seconds()
 		s.RXGbit = float64(s.Received) * 8 / s.Seconds / 1e9
@@ -201,11 +204,18 @@ func (p *benchmarkPeer) handler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "not running", 409)
 			return
 		}
+		if p.nic != nil {
+			p.nic.reset()
+		}
 		p.baseRX = p.rx.Load()
 		p.baseTX = p.tx.Load()
 		p.baseRequests = p.requests.Load()
 		p.baseFailures = p.failures.Load()
 		p.baseBusy = p.busy.Load()
+		for i := range p.baseErrorCounts {
+			p.baseErrorCounts[i] = p.errorCounts[i].Load()
+		}
+		p.lastError = ""
 		for i := range p.baseFrom {
 			p.baseFrom[i] = p.perSource[i].Load()
 		}
@@ -228,41 +238,58 @@ func (p *benchmarkPeer) handler(w http.ResponseWriter, r *http.Request) {
 func (p *benchmarkPeer) receive(source int) {
 	buf := make([]byte, p.c.BufferKiB<<10)
 	addr := p.c.sources()[source]
+	backoff := 20 * time.Millisecond
 	for p.workCtx.Err() == nil {
+		kind := benchmarkConnect
 		resp, e := request(p.workCtx, p.client, p.c.Token, addr, "/benchmark/data")
-		if e == nil && resp.StatusCode == 200 && (p.c.Transport != "quic" || resp.ProtoMajor == 3) {
-			var count int64
-			for {
-				n, err := resp.Body.Read(buf)
-				p.rx.Add(int64(n))
-				p.perSource[source].Add(int64(n))
-				count += int64(n)
-				if err != nil {
-					if err != io.EOF {
-						e = err
+		if e == nil {
+			switch {
+			case resp.StatusCode == 429:
+				kind = benchmarkBusy
+				e = fmt.Errorf("HTTP 429: source upload slots busy")
+			case resp.StatusCode != 200:
+				kind = benchmarkHTTP
+				e = fmt.Errorf("HTTP %d", resp.StatusCode)
+			case p.c.Transport == "quic" && resp.ProtoMajor != 3:
+				kind = benchmarkProtocol
+				e = fmt.Errorf("QUIC response used HTTP/%d", resp.ProtoMajor)
+			default:
+				kind = benchmarkRead
+				var count int64
+				for {
+					n, err := resp.Body.Read(buf)
+					p.rx.Add(int64(n))
+					p.perSource[source].Add(int64(n))
+					count += int64(n)
+					if err != nil {
+						if err != io.EOF {
+							e = err
+						}
+						break
 					}
-					break
+				}
+				if e == nil && count != int64(p.c.BlockMiB)<<20 {
+					e = io.ErrUnexpectedEOF
+				}
+				if e == nil {
+					p.requests.Add(1)
 				}
 			}
-			if e == nil && count != int64(p.c.BlockMiB)<<20 {
-				e = io.ErrUnexpectedEOF
-			}
-			if e == nil {
-				p.requests.Add(1)
-			}
-		} else if e == nil {
-			e = fmt.Errorf("data HTTP %d", resp.StatusCode)
 		}
 		if resp != nil {
 			resp.Body.Close()
 		}
 		if e != nil && p.workCtx.Err() == nil {
-			p.failures.Add(1)
+			p.recordFailure(kind, addr, e)
+			backoff = min(backoff*2, time.Second)
+			delay := backoff/2 + time.Duration(randv2.Int64N(int64(backoff/2)+1))
 			select {
 			case <-p.workCtx.Done():
 				return
-			case <-time.After(20 * time.Millisecond):
+			case <-time.After(delay):
 			}
+		} else {
+			backoff = 20 * time.Millisecond
 		}
 	}
 }
@@ -304,6 +331,8 @@ func serveBenchmarkPeer(ctx context.Context, c benchmarkConfig) error {
 	workCtx, stopWork := context.WithCancel(ctx)
 	defer stopWork()
 	p := &benchmarkPeer{c: c, payload: data, slots: make(chan struct{}, c.Uploads), client: dc, workCtx: workCtx, stopWork: stopWork, perSource: make([]atomic.Int64, len(c.sources())), baseFrom: make([]int64, len(c.sources()))}
+	p.iface, p.linkGbit = benchmarkLink(ctx, c.Addresses, c.Index)
+	p.nic = newBenchmarkNIC(p.iface, p.linkGbit)
 	ln, e := net.Listen("tcp", c.Listen)
 	if e != nil {
 		return e

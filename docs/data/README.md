@@ -8,6 +8,7 @@ These are referenced measurement evidence, not runtime configuration, live jobs 
 
 | 数据 / Data | 报告或用途 / Report or purpose |
 | --- | --- |
+| [network-nic-mesh-20261116.json](network-nic-mesh-20261116.json) | [中文](../NETWORK.zh-CN.md) / [English](../NETWORK.en.md)；60-node real NIC mesh evidence |
 | [network-benchmark-20261116.json](network-benchmark-20261116.json) | [中文](../NETWORK.zh-CN.md) / [English](../NETWORK.en.md) |
 | [adaptive-cache-barriers.json](adaptive-cache-barriers.json) | [中文](../ADAPTIVE-RESULTS.zh-CN.md) / [English](../ADAPTIVE-RESULTS.en.md) |
 | [adaptive-initial-cache-barriers.json](adaptive-initial-cache-barriers.json) | [中文](../ADAPTIVE-INITIAL-RESULTS.zh-CN.md) / [English](../ADAPTIVE-INITIAL-RESULTS.en.md) |

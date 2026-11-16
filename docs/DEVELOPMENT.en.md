@@ -22,7 +22,7 @@ Build output contains both static Linux architectures and SHA256SUMS; SWARMCOPY_
 
 | Module | Responsibility |
 | --- | --- |
-| benchmark.go / benchmark_cluster.go | Bounded network streams, SSH stdin leases, measurement windows and optional NUMA |
+| benchmark*.go | Bounded network streams, SSH stdin leases, measurement windows and optional NUMA |
 | main.go / help.go | CLI, peer lifecycle, HTTP and help |
 | cluster.go / parallel.go | Host expansion, saved jobs, SSH deployment and controller |
 | cli_sources.go / tree_source.go | Multiple sources, globs, immutable source plans and streams |
@@ -97,3 +97,9 @@ Future work should follow profiling: small-file metadata/FD costs, combining dis
 benchmark is an isolated synthetic network test, not distribute with verification disabled. Bound payload memory independently of total traffic; discard receive buffers. Mesh is simultaneous send/receive; two-node seed is unidirectional. Compare like directions. Payload stays within hosts; SSH handles deployment/control/leases, with dedicated default port 19701. NUMA uses constrained arguments to optional target numactl; system adds no dependency. --cpus changes Go parallelism only.
 
 Use per-node monotonic reset/freeze snapshots excluding warmup. Keep flows alive until all final snapshots are collected, so an early stop does not truncate another measurement. Reports omit tokens and mark failures. Ctrl+C closes stdin leases, waits for exit and cleans exclusive temporary directories without killing unrelated jobs. Validate real TCP/QUIC, no TCP fallback, frozen windows, bounded memory and cancellation. See the [network guide](NETWORK.en.md) for hardware checks, 64-stream/LACP/NUMA findings and evidence.
+
+Network metrics must come from routed-interface /sys/class/net/<iface>/statistics counters with per-node monotonic deltas. CURRENT uses adjacent samples; AVERAGE uses the full post-warmup window. Keep bond/member counters separate without adding them. Unknown interfaces, loopback, counter resets and invalid intervals must not fall back to application bytes. Default output emphasizes per-node NIC throughput rather than cluster totals.
+
+Mesh defaults are 64 workers, Go parallelism 32 and 1 MiB buffers. Cyclic source order starts after each node's own index, balancing uploads even when host count exceeds workers. Regression cases cover 60/160 nodes. Classify HTTP429, connect, read, other HTTP/protocol errors and apply bounded backoff. Quiet SSH is enabled only on the benchmark runner instance; ordinary file-job logging retains its contract.
+
+Common help is concise; --help-all retains advanced options. Interactive terminals refresh in place; noninteractive output has sparse progress and a final table. Deployment commands require --verbose. UI tests must supply different application/NIC rates to prove NIC selection, and must not equate ACTIVE/no request errors with link saturation. See the network guide for the complete 60-node NIC checks.

@@ -11,19 +11,22 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
 )
 
 type benchmarkReport struct {
-	NUMA                                                          string
-	CPUs                                                          int
-	ID, Version, Transport, Topology, State, Error                string
-	ContentVerification                                           bool
-	DurationSeconds, WarmupSeconds, TotalSeconds, AggregateRXGbit float64
-	Workers, Uploads, PerSource, BufferKiB, BlockMiB              int
-	Nodes                                                         map[string]benchmarkStatus
+	Metric                                                                   string
+	Summary                                                                  benchmarkSummary
+	NUMA                                                                     string
+	CPUs                                                                     int
+	ID, Version, Transport, Topology, State, Error                           string
+	ContentVerification                                                      bool
+	DurationSeconds, WarmupSeconds, TotalSeconds, ApplicationAggregateRXGbit float64
+	Workers, Uploads, PerSource, BufferKiB, BlockMiB                         int
+	Nodes                                                                    map[string]benchmarkStatus
 }
 
 func benchmarkCall(ctx context.Context, hc *http.Client, c benchmarkConfig, address, action string) (benchmarkStatus, error) {
@@ -70,25 +73,14 @@ func benchmarkAll(ctx context.Context, hc *http.Client, c benchmarkConfig, actio
 	}
 	return out, errors.Join(failures...)
 }
-func printBenchmark(nodes map[string]benchmarkStatus, addresses []string, remaining time.Duration) {
-	fmt.Printf("\nBENCHMARK remaining %.0fs | application payload; no content hashes, no payload disk I/O\n", max(0, remaining.Seconds()))
-	fmt.Printf("%-24s %12s %12s %12s %9s\n", "NODE", "AVG RX Gbit/s", "AVG TX Gbit/s", "RX GiB", "FAILURES")
-	var rx float64
-	for _, a := range addresses {
-		s := nodes[a]
-		if s.Error != "" {
-			fmt.Printf("%-24s ERROR %s\n", a, s.Error)
-			continue
-		}
-		rx += s.RXGbit
-		fmt.Printf("%-24s %12.2f %12.2f %12.2f %9d\n", a, s.RXGbit, s.TXGbit, float64(s.Received)/(1<<30), s.Failures)
-	}
-	fmt.Printf("Aggregate RX: %.2f Gbit/s (sum of node rates; TX is not added)\n", rx)
-}
 func benchmarkCommand(args []string) (result error) {
 	fs := flag.NewFlagSet("benchmark", flag.ContinueOnError)
 	configureUsage(fs, "benchmark")
 	var c benchmarkConfig
+	verbose := fs.Bool("verbose", false, "show SSH deployment and detailed configuration")
+	plain := fs.Bool("plain", false, "disable the live terminal dashboard")
+	allHelp := fs.Bool("help-all", false, "show all advanced options")
+	fs.Usage = func() { benchmarkHelp(fs, false) }
 	hosts := fs.String("hosts", "", "compute hosts, bracket expression or @file; at least two distinct hosts")
 	port := fs.Int("port", 19701, "dedicated benchmark TCP port; QUIC also uses same-number UDP")
 	fs.StringVar(&c.Transport, "transport", "tcp", "tcp or quic; no fallback")
@@ -96,11 +88,11 @@ func benchmarkCommand(args []string) (result error) {
 	duration := fs.Duration("duration", 30*time.Second, "measured traffic duration, excluding deployment and warmup (1s..2h)")
 	warmup := fs.Duration("warmup", 3*time.Second, "untimed warmup (0..1m)")
 	fs.StringVar(&c.NUMA, "numa", "system", "system, interleave, or NUMA node number; non-system requires numactl on targets")
-	fs.IntVar(&c.CPUs, "cpus", 0, "Go CPU parallelism per benchmark peer; 0=runtime default, capped to host CPU count")
+	fs.IntVar(&c.CPUs, "cpus", 32, "Go CPU parallelism per benchmark peer; 0=runtime default, capped to host CPU count")
 	fs.IntVar(&c.Workers, "workers", 64, "download streams per node (1..1024)")
 	fs.IntVar(&c.Uploads, "uploads", 256, "maximum active upload streams per node (1..1024)")
 	fs.IntVar(&c.PerSource, "per-source", 64, "maximum download streams to each source (1..1024)")
-	fs.IntVar(&c.BufferKiB, "buffer-kib", 256, "receive buffer per stream and one shared send buffer (16..1024 KiB)")
+	fs.IntVar(&c.BufferKiB, "buffer-kib", 1024, "receive buffer per stream and one shared send buffer (16..1024 KiB)")
 	fs.IntVar(&c.BlockMiB, "block-mib", 64, "bytes per streaming response; does not allocate a response-sized buffer (1..1024 MiB)")
 	fs.IntVar(&c.QUICSockets, "quic-sockets", 4, "QUIC client socket shards (1..32)")
 	fs.IntVar(&c.QUICMaxPayload, "quic-max-payload", 8952, "QUIC payload ceiling; requires PMTU confirmation (1452..8952)")
@@ -119,6 +111,10 @@ func benchmarkCommand(args []string) (result error) {
 	}
 	if e := fs.Parse(args); e != nil {
 		return e
+	}
+	if *allHelp {
+		benchmarkHelp(fs, true)
+		return nil
 	}
 	if fs.NArg() != 0 || *duration < time.Second || *duration > 2*time.Hour || *warmup < 0 || *warmup > time.Minute || *port < 1 || *port > 65535 || *nodeTimeout < time.Second || *nodeTimeout > 5*time.Minute || !validSSHCipher(*cipher) {
 		return errors.New("invalid benchmark arguments; see benchmark --help")
@@ -158,7 +154,7 @@ func benchmarkCommand(args []string) (result error) {
 		}
 		defer reportFile.Close()
 	}
-	report := benchmarkReport{NUMA: c.NUMA, CPUs: c.CPUs, ID: c.ID, Version: version, Transport: c.Transport, Topology: c.Topology, State: "preparing", DurationSeconds: duration.Seconds(), WarmupSeconds: warmup.Seconds(), Workers: c.Workers, Uploads: c.Uploads, PerSource: c.PerSource, BufferKiB: c.BufferKiB, BlockMiB: c.BlockMiB, Nodes: map[string]benchmarkStatus{}}
+	report := benchmarkReport{Metric: "network-interface counters", NUMA: c.NUMA, CPUs: c.CPUs, ID: c.ID, Version: version, Transport: c.Transport, Topology: c.Topology, State: "preparing", DurationSeconds: duration.Seconds(), WarmupSeconds: warmup.Seconds(), Workers: c.Workers, Uploads: c.Uploads, PerSource: c.PerSource, BufferKiB: c.BufferKiB, BlockMiB: c.BlockMiB, Nodes: map[string]benchmarkStatus{}}
 	overall := time.Now()
 	defer func() {
 		report.TotalSeconds = time.Since(overall).Seconds()
@@ -186,7 +182,7 @@ func benchmarkCommand(args []string) (result error) {
 		return e
 	}
 	defer closePassword()
-	runner := sshRunner{env: env, user: *user, password: *ask, cipher: *cipher, options: opts}
+	runner := sshRunner{quiet: !*verbose, env: env, user: *user, password: *ask, cipher: *cipher, options: opts}
 	dir, e := os.MkdirTemp("", "swarmcopy-benchmark-")
 	if e != nil {
 		return e
@@ -196,10 +192,15 @@ func benchmarkCommand(args []string) (result error) {
 	if e = os.WriteFile(filepath.Join(dir, "job.token"), []byte(c.Token), 0600); e != nil {
 		return e
 	}
-	fmt.Printf("BENCHMARK ID: %s\nMODE: %s/%s | content verification OFF | payload disk I/O OFF\n", c.ID, c.Transport, c.Topology)
-	fmt.Printf("Per-node receive buffers <= %.2f MiB + shared send %.2f MiB; protocol/socket memory additional.\n", float64(c.Workers*c.BufferKiB)/1024, float64(c.BufferKiB)/1024)
-	fmt.Printf("Requested workers=%d uploads=%d per-source=%d | warmup=%s measurement=%s | port=%d\n", c.Workers, c.Uploads, c.PerSource, *warmup, *duration, *port)
-	fmt.Printf("DEPLOYING: SSH transfers executables/configuration only; temporary path %s\n", j.remoteDir())
+	fmt.Printf("%s / %s | %d nodes | %s measurement + %s warmup\n", strings.ToUpper(c.Topology), strings.ToUpper(c.Transport), len(hs), *duration, *warmup)
+	fmt.Println("Measuring each node's routed NIC; RX and TX are separate directions.")
+	if *verbose {
+		fmt.Printf("BENCHMARK ID: %s\nMODE: %s/%s | content verification OFF | payload disk I/O OFF\n", c.ID, c.Transport, c.Topology)
+		fmt.Printf("Per-node receive buffers <= %.2f MiB + shared send %.2f MiB; protocol/socket memory additional.\n", float64(c.Workers*c.BufferKiB)/1024, float64(c.BufferKiB)/1024)
+		fmt.Printf("Requested workers=%d uploads=%d per-source=%d | warmup=%s measurement=%s | port=%d\n", c.Workers, c.Uploads, c.PerSource, *warmup, *duration, *port)
+		fmt.Printf("DEPLOYING: SSH transfers executables/configuration only; temporary path %s\n", j.remoteDir())
+	}
+	fmt.Printf("Preparing %d nodes...\n", len(hs))
 	peerCtx, cancelPeers := context.WithTimeout(context.Background(), c.Lifetime+20*time.Second)
 	defer cancelPeers()
 	var leases []*os.File
@@ -291,10 +292,15 @@ func benchmarkCommand(args []string) (result error) {
 		case <-time.After(250 * time.Millisecond):
 		}
 	}
+	for address, row := range report.Nodes {
+		if row.NIC == nil || row.NIC.Error != "" {
+			return fmt.Errorf("%s: routed NIC counters unavailable; benchmark cannot report physical throughput", address)
+		}
+	}
 	if _, e = benchmarkAll(ctx, hc, c, "start"); e != nil {
 		return e
 	}
-	fmt.Printf("WARMUP: %s (excluded from rates)\n", *warmup)
+	fmt.Printf("Ready %d/%d. Warming up %s...\n", len(hs), len(hs), *warmup)
 	select {
 	case e := <-exits:
 		return e
@@ -302,9 +308,13 @@ func benchmarkCommand(args []string) (result error) {
 		return ctx.Err()
 	case <-time.After(*warmup):
 	}
-	if _, e = benchmarkAll(ctx, hc, c, "reset"); e != nil {
+	initial, e := benchmarkAll(ctx, hc, c, "reset")
+	if e != nil {
 		return e
 	}
+	previous := initial
+	live := benchmarkTerminal() && !*plain && !*verbose
+	lastProgress := time.Time{}
 	report.State = "measuring"
 	measured := time.Now()
 	end := time.NewTimer(*duration)
@@ -320,7 +330,15 @@ func benchmarkCommand(args []string) (result error) {
 		case <-tick.C:
 			nodes, err := benchmarkAll(ctx, hc, c, "")
 			report.Nodes = nodes
-			printBenchmark(nodes, c.Addresses, *duration-time.Since(measured))
+			if live {
+				fmt.Print("\033[H\033[2J")
+				renderBenchmark(os.Stdout, c, nodes, previous, *duration-time.Since(measured), false, benchmarkDisplayRows())
+			} else if lastProgress.IsZero() || time.Since(lastProgress) >= 5*time.Second {
+				summary := summarizeBenchmark(nodes, c.Addresses)
+				fmt.Printf("Measuring %s: %.0f/%.0fs | NIC counters %d/%d | busy %d | errors %d\n", strings.ToUpper(c.Topology), time.Since(measured).Seconds(), duration.Seconds(), summary.NICAvailable, summary.Nodes, summary.BusyResponses, summary.OtherErrors)
+				lastProgress = time.Now()
+			}
+			previous = nodes
 			if err != nil {
 				return err
 			}
@@ -330,15 +348,26 @@ func benchmarkCommand(args []string) (result error) {
 			if err != nil {
 				return err
 			}
-			for _, s := range nodes {
+			report.Summary = summarizeBenchmark(nodes, c.Addresses)
+			if live {
+				fmt.Print("\033[H\033[2J")
+			}
+			renderBenchmark(os.Stdout, c, nodes, nil, 0, true)
+			for address, s := range nodes {
+				if s.NIC == nil || s.NIC.Error != "" || s.NIC.Seconds <= 0 {
+					return fmt.Errorf("%s: NIC counters unavailable/invalid; no valid network result", address)
+				}
+				if c.Topology == "mesh" && s.Sent == 0 {
+					return fmt.Errorf("%s did not send mesh payload", address)
+				}
 				if !s.Frozen || !s.Measuring || s.Seconds <= 0 || s.Workers > 0 && s.Received == 0 {
 					return errors.New("benchmark did not measure traffic on every receiver")
 				}
-				report.AggregateRXGbit += s.RXGbit
+				report.ApplicationAggregateRXGbit += s.RXGbit
 			}
 			report.State = "complete"
-			printBenchmark(nodes, c.Addresses, 0)
-			fmt.Printf("FINISHED measured=%.2fs (warmup/deployment excluded); aggregate RX %.2f Gbit/s\n", time.Since(measured).Seconds(), report.AggregateRXGbit)
+
+			fmt.Printf("Finished %.1fs.\n", time.Since(measured).Seconds())
 			if *output != "" {
 				fmt.Println("JSON report:", *output)
 			}

@@ -215,6 +215,7 @@ func hostList(input string) ([]string, error) {
 func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", "'\"'\"'") + "'" }
 
 type sshRunner struct {
+	quiet    bool
 	env      []string
 	user     string
 	password bool
@@ -231,13 +232,18 @@ func (r sshRunner) run(ctx context.Context, host, reason, command string, in io.
 		target = r.user + "@" + host
 	}
 	args := r.arguments(target, command)
-	log.Printf("SSH target=%s reason=%s command=%s", target, reason, command)
+	if !r.quiet {
+		log.Printf("SSH target=%s reason=%s command=%s", target, reason, command)
+	}
 	cmd := exec.CommandContext(ctx, "ssh", args...)
 	cmd.Env = r.env
 	cmd.Stdin = in
 	var out, stderr bytes.Buffer
 	cmd.Stdout = &out
-	cmd.Stderr = io.MultiWriter(&stderr, os.Stderr)
+	cmd.Stderr = &stderr
+	if !r.quiet {
+		cmd.Stderr = io.MultiWriter(&stderr, os.Stderr)
+	}
 	if e := cmd.Run(); e != nil {
 		if ctx.Err() != nil {
 			return nil, fmt.Errorf("SSH %s cancelled after controller cancellation or another operation failed: %w", target, ctx.Err())

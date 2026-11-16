@@ -1,58 +1,72 @@
-# Memory network benchmark and throughput diagnosis
+# Per-node NIC benchmark
 
 [中文（主文档）](NETWORK.zh-CN.md) · [Documentation](README.en.md) · [Examples](EXAMPLES.en.md)
 
-`benchmark` measures application payload throughput between compute nodes. Each node repeatedly serves a small pre-generated random buffer; receivers count and discard bytes. There are no media reads, payload files or content hashes. The separate streaming endpoints do not exercise SCDP chunk scheduling, forwarding, storage or publication, so their rates are not file-distribution performance claims.
-
-## Run
+Default mesh means every node sends and receives. Normally only hosts are needed:
 
 ```bash
-# Simultaneous sending/receiving: 64 download streams, 256 upload limit per node
-./swarmcopy benchmark --hosts 'HGX[061,066,082,138,169]'
-
-# Unidirectional, comparable in direction to default iperf: first host sends
-./swarmcopy benchmark --hosts 'HGX[061,066]' --topology seed \
-  --workers 64 --per-source 64 --uploads 128 \
-  --cpus 32 --buffer-kib 1024 --warmup 3s --duration 30s \
-  --output network-forward.json
-
-# Reverse direction by reversing the ordered host list
-./swarmcopy benchmark --hosts 'HGX[066,061]' --topology seed \
-  --workers 64 --per-source 64 --cpus 32 --buffer-kib 1024
-
-./swarmcopy benchmark --help
+./swarmcopy benchmark --hosts 'HGX[603-608,610-618,620-653,655-665]'
 ```
 
-SSH deploys binaries and maintains process leases; HTTP controls and queries peers. Payload flows only between listed nodes. A controller included in hosts also participates. Benchmark port defaults to 19701, configurable with `--port`; normal distribution defaults to 19700. The same SSH user, shared-password prompt, cipher and repeatable `--ssh-opt` options apply. Architecture binaries in `--bin-dir` must match the controller. Default testing needs no external benchmark utility; explicit NUMA policies require target `numactl`.
+Fixed buffers generate traffic; receivers count and discard it, without media I/O or content hashes. SSH deploys and controls only. Payload stays among listed hosts; a controller outside the list does not participate.
 
-## Topology, concurrency and memory
+## See whether each NIC is saturated
 
-| Option | Meaning |
+The main table reads Linux byte counters for each node's routed network interface, rather than estimating NIC throughput from application bytes. It detects interface/capacity and shows RX/TX utilization. One actual row from the 60-node run:
+
+```text
+NODE               INTERFACE/LINK       RX Gbit/s    TX Gbit/s RX/LINK TX/LINK STATE
+HGX603             bond0/400G              227.75       226.00   56.9%   56.5% ACTIVE
+```
+
+- bond0/400G is the four 100G ports combined, per direction. A node exceeding 100G does not imply one physical port exceeded 100G.
+- Live NIC CURRENT uses successive counter samples, refreshed in place about every two seconds. Final NIC AVERAGE covers the complete post-warmup measurement interval.
+- Assess RX and TX separately. They are never added together. Cluster Aggregate is no longer emphasized.
+- RX/LINK and TX/LINK use detected nominal capacity. The summary counts nodes averaging at least 90%; ACTIVE means traffic, not saturation.
+- NIC counters include other interface traffic. Bond counters are counted once, without adding physical members again. Physical member counters/rates are retained separately in JSON.
+- Unknown interfaces, loopback, counter resets and invalid intervals fail explicitly; application statistics are not substituted and rates are not clamped or invented.
+
+This synthetic traffic does not exercise file chunk scheduling, common-file forwarding, storage or publication. It is not a real file-distribution benchmark.
+
+## Quiet defaults
+
+Interactive terminals refresh one dashboard and retain one final table. If terminal height is limited, the live view prioritizes lower-utilization/problem nodes without scrolling; the final table includes all nodes. Redirected output or --plain emits occasional one-line progress and the final table. SSH commands, process IDs and deployment details are hidden unless requested; errors remain visible.
+
+```bash
+./swarmcopy benchmark --hosts @hosts.txt --duration 60s
+./swarmcopy benchmark --hosts @hosts.txt --workers 128
+./swarmcopy benchmark --hosts @hosts.txt --output network.json
+./swarmcopy benchmark --help
+./swarmcopy benchmark --help-all
+```
+
+Normal help lists common options; full help retains advanced tuning. --verbose shows SSH/configuration details; --plain disables terminal refresh. --output accepts a new path only. JSON retains application diagnostics, real NIC/member counters, error categories and measurement intervals.
+
+## Defaults and optional tuning
+
+| Setting | Default / meaning |
 | --- | --- |
-| `--topology mesh` (default) | Every node downloads from others and serves its own buffer; limited stream counts may not cover every host pair |
-| `--topology ring` | Download from predecessor; synthetic local buffers are served, not a common file relayed around the ring |
-| `--topology seed` | First node serves the rest; no receiver forwarding, useful for unidirectional/source limits |
-| `--workers 64` | Total download streams per node, 1..1024 |
-| `--per-source 64` | Streams per source, 1..1024; actual total is min(workers, sources × per-source) |
-| `--uploads 256` | Concurrent upload response limit, 1..1024; insufficient capacity produces busy/failure counts |
-| `--buffer-kib 256` | Receive buffer per stream, plus one shared send buffer, 16..1024 KiB |
-| `--block-mib 64` | Streamed bytes per response, not allocation size, 1..1024 MiB |
-| `--cpus 0` | Go CPU parallelism; 0 keeps runtime defaults, not affinity or physical core count |
-| `--transport quic` | Optional QUIC, TCP control plus same-number UDP; no TCP payload fallback |
+| topology | mesh; cyclic source ordering balances load even when workers are fewer than nodes |
+| duration / warmup | 30-second measurement, 3-second warmup; deployment/warmup excluded |
+| workers / uploads / per-source | 64 download streams, 256 uploads, at most 64 streams/source per node; each configurable 1..1024 |
+| cpus | Go parallelism 32 capped to available CPUs; --cpus 0 follows runtime defaults, not CPU affinity |
+| buffer-kib / block-mib | 1 MiB receive buffer per stream, 64 MiB streamed response; response size is not allocation size |
+| port / transport | 19701 / TCP; distribution still defaults to 19700; QUIC also needs same-number UDP |
+| numa | system; explicit NUMA policies alone require target numactl |
 
-Default explicit payload buffers use approximately `64 × 256 KiB + 256 KiB = 16.25 MiB`. Go, connections, protocol/statistics and kernel sockets add memory. Duration, cumulative bytes and block-mib do not accumulate received content. Configured receive buffers are capped at 1 GiB per node. Physical pages are not locked; OS swap policy still applies.
+Explicit payload buffers default to about `64 × 1 MiB + 1 MiB = 65 MiB`, plus Go/protocol/kernel socket memory. Duration and cumulative traffic do not accumulate receive data. No rate cap or physical-memory locking; configured receive buffers are capped at 1 GiB per node. More concurrency need not improve performance.
 
-There is no rate cap. More streams can improve LACP distribution or increase contention; 128/1024 is not automatically faster than 64.
+Advanced seed sends only from the first host, with no forwarding. Ring downloads from the predecessor. Neither is default mesh. SSH user, shared password, cipher, repeated --ssh-opt and architecture --bin-dir options remain available.
 
-## Interpret results
+## Interpret problems
 
-Every two seconds, the table shows remaining time, average per-node RX/TX Gbit/s since warmup, received GiB and failed requests. Gbit/s is decimal; GiB is binary. Aggregate RX sums node RX rates without adding TX again.
+BUSY identifies HTTP 429 source upload-slot rejection, separately from connection, read, other HTTP and protocol errors. These are not NIC packet-loss counts. Bounded backoff avoids fixed-interval retry storms. Final output summarizes problems and recent concrete errors; JSON holds details.
 
-Deployment and warmup are excluded. Each node uses its own monotonic measurement interval, recorded as Seconds; synchronized wall clocks are unnecessary, though control RPC boundaries have small skew. Counts include actual payload read/written, including partial failed transfers. They are not unique-file bytes, NIC wire rates or TCP retransmission counts. QUIC still incurs TLS/AEAD costs without content hashing.
+No request errors means traffic measurement finished, not that links were saturated. An interface at 60% should be reported as 60%.
 
-A 4×100G bond has a nominal 400 Gbit/s per node in each direction, about 50 GB/s. Bidirectional tests send and receive simultaneously. Two-node Aggregate RX can therefore approach 800 Gbit/s; it is not one node's 400G rate. Mesh results cannot be compared directly with unidirectional iperf.
+## LACP, MTU and NUMA
 
-## LACP and NUMA
+Read-only checks:
 
 ```bash
 ip link show bond0
@@ -62,31 +76,25 @@ cat /proc/net/bonding/bond0
 numactl --hardware
 ```
 
-The measured cluster already had MTU 9000 on bond/members, 802.3ad LACP, layer3+4 hashing and four active 100G ports. The program does not change system configuration. Jumbo MTU requires path support; hashing distributes flows rather than combining four links for one TCP flow, and inbound distribution also depends on switches.
+The tested cluster already has MTU 9000, 802.3ad LACP, layer3+4 and four active 100G ports. The program does not reconfigure these. Jumbo MTU needs path support; LACP hashes flows rather than combining four ports for one TCP flow.
 
-HGX061/HGX066 each have two NUMA nodes: both ens1 ports attach to NUMA 0, both ens3 ports to NUMA 1. Binding the entire process to one node still accesses two remote NIC ports and need not improve throughput. Hold every other option constant:
+Earlier HGX061/HGX066 checks found two NUMA nodes with two NIC ports on each. Binding the whole process to one node still accesses remote ports and need not help. Hold hosts, direction, concurrency, buffers and timing constant while comparing --numa system, 0, 1 or interleave. Numeric policies bind CPU and memory; interleave sets memory interleaving. Explicit policies use installed numactl; default system adds no binding.
 
-```bash
-./swarmcopy benchmark --hosts 'HGX[061,066]' --workers 64 --per-source 64 --cpus 32 --buffer-kib 1024 --numa system
-./swarmcopy benchmark --hosts 'HGX[061,066]' --workers 64 --per-source 64 --cpus 32 --buffer-kib 1024 --numa 0
-./swarmcopy benchmark --hosts 'HGX[061,066]' --workers 64 --per-source 64 --cpus 32 --buffer-kib 1024 --numa 1
-./swarmcopy benchmark --hosts 'HGX[061,066]' --workers 64 --per-source 64 --cpus 32 --buffer-kib 1024 --numa interleave
-```
+## Actual measurements and evidence
 
-Numeric policies use numactl to bind CPU and memory; interleave sets memory interleaving over available nodes. Default system adds no binding. Match direction, hosts, streams, buffers, Go parallelism, warmup and timing; repeat in reversed order and inspect physical port counters, CPU/softirq, retransmissions and topology. NUMA numbering is host-specific.
+[Real NIC records](data/network-nic-mesh-20261116.json) contain parameters, per-node bond/member counters and independent samples. The exact 60 hosts in the opening command ran defaults for 30 seconds:
 
-## Evidence and limits
+| Per-node metric | Minimum | Median | Maximum |
+| --- | --- | --- | --- |
+| NIC RX Gbit/s | 222.52 | 229.00 | 256.90 |
+| NIC TX Gbit/s | 212.02 | 229.95 | 264.44 |
 
-[Recorded measurements](data/network-benchmark-20261116.json) include parameters and slower trials. These are short diagnostics, not repeated statistical guarantees or before/after software-version comparisons.
+All 60 exchanged payload in both directions; HTTP 429 and other request errors were zero. Zero of 60 averaged at least 90% nominal capacity in either direction: this run did not saturate the links. Independent SSH samples from HGX603/608/618/653/665 agreed with the program's counters. A separate three-node HGX603–605 short test reached roughly 396..397 Gbit/s in each direction. Small-group near-line-rate results do not prove 60-node mesh saturation; topology and software costs need further isolation.
 
-- Five-node mesh: 64 workers over 20 seconds yielded about 1.18 Tbit/s; another 128-worker, 10-second run about 1.26 Tbit/s. Independent bond counters agreed in scale. Process RSS was about 93..96 MiB despite hundreds of GiB received per node.
-- Two-node bidirectional, 64 workers, Go parallelism 32, 1 MiB buffers: system about 697.4 Gbit/s aggregate; NUMA 0/1/interleave about 672.4/678.0/683.3 Gbit/s. This set did not justify forced NUMA as default.
-- Unidirectional on the same pair with 64 workers, Go parallelism 32 and 1 MiB buffers reached about 388.5 Gbit/s forward and 387.7 Gbit/s reverse, close to nominal 400G. Independent physical-port counters showed roughly 97.6..98.4 Gbit/s TX and 96.1..99.7 Gbit/s RX per member.
+[Earlier application-byte observations](data/network-benchmark-20261116.json) retain directional/concurrency/NUMA trials, including slower rounds. Their application rates differ from this guide's NIC metric. Different hardware, scale, direction or metrics must not be combined into software speedup claims.
 
-Lower simultaneous bidirectional/mesh rates do not prove a 200..350G link ceiling. Real distribution also includes storage, chunk validation, source limits, scheduling and finalization; this test cannot attribute their entire gap to hashing. Production verification/scheduling are unchanged.
+## Stop and cleanup
 
-## Stop, reports and cleanup
+Ctrl+C closes SSH stdin leases, waits for owned peers and cleans exclusive temporary /tmp/.swarmcopy/benchmark-... deployment. Unconfirmed shutdown/cleanup failures name the retained path. Unrelated jobs are not stopped.
 
-Ctrl+C closes SSH stdin leases so owned peers exit, with a bounded lifetime as a fallback. Normal exit removes this test's `/tmp/.swarmcopy/benchmark-...` deployment. Unconfirmed shutdown or cleanup errors report the owned path rather than claiming clean completion. Other jobs/processes are not killed.
-
-Benchmarks are not resumable file jobs and do not appear in jobs. Start a fresh test. Only `--output` saves a new controller-side JSON; existing files are never overwritten. Interrupted/failed tests have State=failed and are not successful performance results.
+Benchmarks do not appear in jobs and are not resumable; each invocation is fresh. Interruptions, failed nodes or unavailable real NIC counters mark the run failed instead of implying a complete measurement.

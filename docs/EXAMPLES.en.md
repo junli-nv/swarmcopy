@@ -168,7 +168,7 @@ Prepare, peer and hashbench are advanced/development entry points; normal distri
 ## Network benchmark
 
 ```bash
-./swarmcopy benchmark --hosts 'HGX[061,066,082,138,169]'
+./swarmcopy benchmark --hosts 'HGX[603-608,610-618,620-653,655-665]'
 ```
 
-Fixed small buffers generate traffic and discard received bytes, without media I/O or content hashing; default 64 download streams per node. SSH deploys/controls only. Global progress, directional topologies, configurable concurrency and optional NUMA tests are included. Compare unidirectional and simultaneous sending/receiving separately; see the [network guide](NETWORK.en.md) for 400G bond, 64-stream, MTU/LACP and NUMA measurements.
+Default mesh sends/receives on every node. The quiet live dashboard shows real per-node NIC rates, capacity and utilization, followed by one average-rate table. Defaults use 64 streams; tune only when needed with `benchmark --help-all`, and request deployment logs with `--verbose`. Fixed buffers discard payload without media I/O or content hashes. See the [network guide](NETWORK.en.md) for 400G bond, 64-stream, MTU/LACP and NUMA measurements.

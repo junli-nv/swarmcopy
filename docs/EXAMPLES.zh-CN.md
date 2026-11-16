@@ -168,7 +168,7 @@ cleanup 保留 jobs/watch/status 历史；remove/delete 删除记录。`.swarmco
 ## 网络测速
 
 ```bash
-./swarmcopy benchmark --hosts 'HGX[061,066,082,138,169]'
+./swarmcopy benchmark --hosts 'HGX[603-608,610-618,620-653,655-665]'
 ```
 
-固定小内存缓冲循环收发，接收即丢弃，无介质读写、无内容哈希；默认每节点 64 路下载。SSH 只负责部署与控制。支持全局进度、单向/双向拓扑、可调并发和可选 NUMA 测试。单向与同时收发的成绩应分开比较；400G bond、64 路连接、MTU/LACP 与 NUMA 的可复现实测见[网络基准指南](NETWORK.zh-CN.md)。
+默认 mesh，每节点同时收发；主表显示真实网卡的 RX/TX、标称带宽和占用率，终端原地刷新，结束保留一张平均速率表。默认 64 路并发，只有需要时才调参数；详细帮助用 `benchmark --help-all`，部署日志用 `--verbose`。固定缓冲、接收即丢弃，无介质读写或内容哈希。实测、NIC 统计口径和 NUMA 说明见[网络基准指南](NETWORK.zh-CN.md)。

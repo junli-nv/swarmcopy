@@ -37,7 +37,7 @@ COMMANDS
   stop        Stop only the selected job's recorded peer processes
   prepare     Copy an immutable source into a seed file and build its manifest
   peer        Run one peer directly with a manifest and token
-  benchmark   Measure compute-node P2P network throughput using memory only
+  benchmark   Show per-node NIC throughput using default mesh memory traffic
   hashbench   Measure memory/file SHA256 and optionally record a CPU profile
   version     Print the executable version
 

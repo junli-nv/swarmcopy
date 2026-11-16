@@ -22,7 +22,7 @@ build.sh 输出两种静态 Linux 二进制和 SHA256SUMS；可通过 SWARMCOPY_
 
 | 模块 | 职责 |
 | --- | --- |
-| benchmark.go / benchmark_cluster.go | 固定缓冲网络流、SSH stdin 租约、测量窗口和可选 NUMA |
+| benchmark*.go | 固定缓冲网络流、SSH stdin 租约、测量窗口和可选 NUMA |
 | main.go / help.go | CLI、peer 生命周期、HTTP 服务与帮助 |
 | cluster.go / parallel.go | 主机展开、作业持久化、SSH 部署与控制器 |
 | cli_sources.go / tree_source.go | 多来源参数、glob、只读来源快照与流 |
@@ -97,3 +97,9 @@ cleanup 持控制器/agent/目标锁并验证归属，清理失败保存 Cleanup
 benchmark 是独立的合成网络测试，不是禁用校验的 distribute。保持 payload 固定缓冲、接收即丢弃，禁止按测试总量分配内存。默认 mesh 同时收发；seed 在双节点时为单向，不能混比两种成绩。流量只在 hosts 内，SSH 仅部署、控制和租约；默认端口 19701。默认无 numactl 依赖，显式 NUMA 策略通过受限参数调用现有 numactl。--cpus 仅调 Go 并行度。
 
 测量 reset/freeze 使用每节点单调时钟和计数快照，预热不计入；冻结后保留流量到全部节点取得快照，避免停止早的节点截断其他窗口。JSON 不保存 token，失败标记 failed。Ctrl+C 先关闭 stdin 租约，再等待 peer 退出、清理独占临时目录；不杀其他作业。新增场景要验证真实 TCP/QUIC、无 TCP 回退、计时冻结、有限内存和中断收尾。硬件检查、64 路/LACP/NUMA 经验和证据见[网络指南](NETWORK.zh-CN.md)。
+
+网络指标必须来自路由接口 /sys/class/net/<iface>/statistics 的原始计数，以每节点单调时间计算差值；CURRENT 使用相邻样本，AVERAGE 使用预热后的完整窗口。bond 与物理成员分别保存，不相加。未知接口、loopback、计数回退和无效时间不能回退到应用字节。默认界面只突出每节点网口，不展示集群累计吞吐。
+
+默认 mesh 64 workers、Go 并行度 32、1 MiB 缓冲。来源从各自索引之后循环排列；即便主机数大于 worker 数，每个节点仍分担上传，不能都固定选择列表前部。回归覆盖 60/160 节点的输入负载均衡。HTTP429、连接、读取、其他 HTTP/协议错误分别统计，忙时有界退避。quiet 只在 benchmark 的 sshRunner 实例启用，普通文件作业的日志契约不变。
+
+普通帮助只列常用选项；--help-all 保留高级调优。交互终端原地刷新，非交互只显示稀疏阶段进度及最终表。--verbose 才显示部署命令。UI 测试必须用不同的应用与 NIC 数值确认取的是 NIC，且不把无请求错误或 ACTIVE 解释为压满。完整 60 节点 NIC 对照见网络指南。
