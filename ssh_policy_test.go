@@ -51,6 +51,9 @@ func TestSSHFailurePrecedesSourceHash(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	if job.Verify != "chunks" || job.ChunkHash != "blake3" || job.FileHash != "blake3" || job.PipelineVerify || job.VerifyWindowChunks != 0 {
+		t.Fatalf("wrong new-job CLI defaults: %+v", job)
+	}
 	progress, ok := preparationState(job)
 	if !ok || progress.Stage != "checking-ssh" {
 		t.Fatalf("hashing started before SSH login: %+v", progress)

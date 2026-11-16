@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.1 — chunks by default for new distribution jobs
+
+- Default new distribute jobs to chunks with BLAKE3 chunks/files; retain explicit full/SHA256, advanced overrides and fixed concurrency.
+- Keep saved/resumed mode and manifest algorithms; missing legacy mode and low-level peer remain full.
+- Preserve fsync/publication gates. Inject Sync EIO in regression tests and verify partial recheck, good-block reuse and damaged-block recovery.
+- Update English help and Chinese-primary bilingual defaults, durability and recovery examples.
+
 ## 0.7.0 — bounded scheduling, native copies and completion summaries
 
 - Bound expensive missing-chunk scoring with full-range sampling and sparse-availability fallback; retain fixed 4/4 concurrency and adaptive off. Cache immutable manifest IDs.

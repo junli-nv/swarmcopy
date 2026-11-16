@@ -2,7 +2,7 @@
 
 [中文（主文档）](DEVELOPMENT.zh-CN.md) · [Usage](../README.en.md) · [Examples](EXAMPLES.en.md)
 
-This describes unified main v0.7.0. Maintain one long-lived branch, main. TCP, optional UDP, adaptive scheduling, pipelined integrity and trees belong to one executable. Retain historical tags; do not maintain parallel feature releases.
+This describes unified main v0.7.1. Maintain one long-lived branch, main. TCP, optional UDP, adaptive scheduling, pipelined integrity and trees belong to one executable. Retain historical tags; do not maintain parallel feature releases.
 
 ## Source map
 
@@ -109,3 +109,9 @@ v0.6.0: `resolveNewJobIntegrity` resolves defaults only for new jobs: full→SHA
 Send `Options.LocalInputs/LocalRoots` only to the source-host peer. Internal local-source-config is not a public user flag. Keep source fingerprint/layout validation, common commit locking and hashing, and unchanged full/chunks completion gates. Local source/write errors are not remote retries. Download pacing also covers native copies. Keep local-source bytes separate from wire throughput.
 
 Agent started-version checks follow actual releases; upgrades may restart peers without discarding verified data. Development builds sharing a version must explicitly stop their owned test peers, rather than expecting version strings to distinguish every source change. Maintain main only; TCP, optional UDP and optional adaptive mode ship together. [Controlled comparison and reproduction](OPTIMIZATION-0.7.0.en.md).
+
+## v0.7.1 defaults and persistence errors
+
+New distribute CLI/resolveNewJobIntegrity use chunks/BLAKE3. Do not change empty verifyMode from full: it preserves legacy saved records and low-level peer compatibility. Resume without an explicit override keeps saved settings; prepared manifests keep algorithms. XXH3 still requires explicit full. Chunks does not create full verification caches.
+
+durability_test.go injects EIO into each of the two prepublication Sync calls, checks no Complete/publication, retains staging, reopens/rechecks good and damaged chunks, then repairs and syncs/publishes. This is fault injection, not a power-loss or RAID hardware test. Successful fsync relies on correct underlying flush semantics and does not replace content validation.

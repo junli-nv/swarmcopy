@@ -33,13 +33,13 @@ watch 重看保存的文本摘要，status 输出含 Summary 的 JSON。集群�
   --source /raid/local-ai/dist/local-ai.tar --dest /raid/images --verify chunks
 ```
 
-新作业只需 `--verify chunks`（BLAKE3/BLAKE3），或 `--verify full`（默认 SHA256/SHA256）。异常节点不取消健康节点；仍保留未完成状态，恢复后用同一 ID 续传。恢复时跳过能确认的稀疏空洞，避免对未收到的几百 GB 零重复计算。
+新作业默认 chunks（BLAKE3/BLAKE3），需要最终整文件复核时使用 `--verify full`（SHA256/SHA256）。异常节点不取消健康节点；仍保留未完成状态，恢复后用同一 ID 续传。恢复时跳过能确认的稀疏空洞，避免对未收到的几百 GB 零重复计算。
 
 删除作业并清理独占暂存：`./swarmcopy remove --job <ID> --purge-partials`，`delete` 为别名。它先停止本作业控制器和 peer，再清理记录、远端作业目录及独占暂存；原始源文件、已发布成品和共享数据保留。清理失败时保留记录供重试。只想暂停请用 `stop`。
 
-## 两种校验预设（v0.6.0）
+## 两种校验模式（v0.7.1）
 
-日常只需选择 `--verify full` 或 `--verify chunks`：新建 `--source` 作业时，full 默认 SHA256 分块和文件摘要，并检查最终文件；chunks 默认 BLAKE3 分块和文件摘要，全部验块、fsync 后发布，省略最终整文件回读。省略 `--verify` 仍为 full。无需再记两项 hash 参数。
+日常只需选择 `--verify full` 或 `--verify chunks`：新建 `--source` 作业时，full 默认 SHA256 分块和文件摘要，并检查最终文件；chunks 默认 BLAKE3 分块和文件摘要，全部验块、fsync 后发布，省略最终整文件回读。v0.7.1 起省略 `--verify` 默认 chunks；需要最终整文件复核时显式使用 `--verify full`。无需再记两项 hash 参数。
 
 ```bash
 ./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify chunks
@@ -199,9 +199,9 @@ SSH 登录会在耗时来源哈希前先检查，旧任务 resume 也采用这�
 
 system 完全沿用 OpenSSH 的 cipher 协商。密码、用户名、密钥／agent 的用法不变；SSH 加密只影响部署／初始导入，不等于 SCDP 数据校验。
 
-## v0.5.0 校验模式与 SSH 扩展
+## 校验算法与 SSH 扩展
 
-默认保留 full + SHA256；可选 `--verify chunks` 省略最终整文件回读，或 `--verify full --chunk-hash xxh3-128 --file-hash blake3` 混用快速分块与密码学文件摘要。XXH3 不允许用于 chunks 模式。首次来源清单仍要读完整源文件。详见[模式、完整性边界、硬件实测](INTEGRITY.zh-CN.md)。
+默认 chunks + BLAKE3，省略最终整文件回读；可显式选择 `--verify full`，或 `--verify full --chunk-hash xxh3-128 --file-hash blake3` 混用快速分块与密码学文件摘要。XXH3 不允许用于 chunks 模式。首次来源清单仍要读完整源文件。详见[模式、完整性边界、硬件实测](INTEGRITY.zh-CN.md)。
 
 SSH 默认包含 `StrictHostKeyChecking=no`、`UserKnownHostsFile=/dev/null`、`LogLevel=quiet`、`CheckHostIP=no`，可重复 `--ssh-opt KEY=VALUE` 扩展或覆盖，设置随作业保存。比如 `--ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15`。AES-GCM 可用 `--ssh-cipher aes128-gcm@openssh.com` 选择。
 
@@ -211,3 +211,17 @@ SSH 默认包含 `StrictHostKeyChecking=no`、`UserKnownHostsFile=/dev/null`、`
   --ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15
 ./swarmcopy resume --job <ID> --ssh-opt ConnectTimeout=30 --verify full
 ```
+
+## fsync 报错后如何恢复
+
+数据 fsync 失败不会完成或发布该数据；保留作业和暂存。先排除磁盘空间、RAID/文件系统或 I/O 故障，原控制器仍在等待时先停止，再恢复同一作业：
+
+```bash
+./swarmcopy jobs
+./swarmcopy stop --job <ID>
+./swarmcopy resume --job <ID>
+```
+
+恢复会重新检查保留的数据，复用校验通过的块，补齐缺块/坏块，重新尝试完成；通常无需从头传整个文件。若写入后断电或设备丢数据，丢失块仍需补传；存储持续报错时不能保证完成。不要删除作业或使用 remove --purge-partials，否则会失去该恢复入口。
+
+如果已经完成改名/链接，后续目录或完成标记 fsync 才报错，某些目标文件可能已存在，但作业仍不算成功；恢复会检查并复用有效文件。多文件发布逐文件进行，不是全目录事务。fsync 成功依赖操作系统和底层设备正确兑现刷盘请求，不能代替内容复核；需要额外最终内容检查时用 --verify full。

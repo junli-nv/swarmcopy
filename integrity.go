@@ -112,9 +112,13 @@ func (e TreeEntry) fileAlgorithm() string {
 	return "sha256"
 }
 
+const defaultNewJobVerify = "chunks"
+
 // Resolve presets only for new jobs; saved jobs and prepared manifests keep their algorithms.
 func resolveNewJobIntegrity(j *Job) {
-	j.Verify = verifyMode(j.Verify)
+	if j.Verify == "" {
+		j.Verify = defaultNewJobVerify
+	}
 	algorithm := "sha256"
 	if j.Verify == "chunks" && j.SeedFile == "" {
 		algorithm = "blake3"

@@ -6,6 +6,10 @@ Linux 集群的可续传 P2P 文件与目录分发工具，协议名 **SCDP/1**�
 
 **只维护 main 一个长期分支。** 同一个二进制包含 TCP、可选 UDP/QUIC、流水校验、自适应并发、多文件和目录功能，不需要另外安装 UDP 版或 race 版。历史标签和测速报告仅供追溯。
 
+## v0.7.1 默认 chunks
+
+新建分发作业省略 --verify 即为 chunks/BLAKE3：所有块逐一校验，fsync 成功后发布，省略最终整文件复核。需要该复核时加 `--verify full`。旧作业续传保持保存的模式和算法，自适应仍默认关闭。fsync 不是内容校验，也无法替代存储设备正确的刷盘实现。
+
 ## v0.7.0：本地复制与完成摘要
 
 调度避免逐次对全部缺块做昂贵评分；源所在节点的目标副本直接读取本地源、校验后写入，不再经网络绕回。成功结束打印总耗时、准备/分发耗时、网络/本地/复用字节和平均速度；完成后 watch 可重看，status 保持 JSON。自适应默认关闭，固定并发仍是 `--workers 4 --uploads 4`，不限速仍是默认。
@@ -22,13 +26,13 @@ Linux 集群的可续传 P2P 文件与目录分发工具，协议名 **SCDP/1**�
   --source /raid/local-ai/dist/local-ai.tar --dest /raid/images --verify chunks
 ```
 
-新作业只需 `--verify chunks`（BLAKE3/BLAKE3），或 `--verify full`（默认 SHA256/SHA256）。异常节点不取消健康节点；仍保留未完成状态，恢复后用同一 ID 续传。恢复时跳过能确认的稀疏空洞，避免对未收到的几百 GB 零重复计算。
+新作业默认 chunks（BLAKE3/BLAKE3），需要最终整文件复核时使用 `--verify full`（SHA256/SHA256）。异常节点不取消健康节点；仍保留未完成状态，恢复后用同一 ID 续传。恢复时跳过能确认的稀疏空洞，避免对未收到的几百 GB 零重复计算。
 
 删除作业并清理独占暂存：`./swarmcopy remove --job <ID> --purge-partials`，`delete` 为别名。它先停止本作业控制器和 peer，再清理记录、远端作业目录及独占暂存；原始源文件、已发布成品和共享数据保留。清理失败时保留记录供重试。只想暂停请用 `stop`。
 
-## 两种校验预设（v0.6.0）
+## 两种校验模式（v0.7.1）
 
-日常只需选择 `--verify full` 或 `--verify chunks`：新建 `--source` 作业时，full 默认 SHA256 分块和文件摘要，并检查最终文件；chunks 默认 BLAKE3 分块和文件摘要，全部验块、fsync 后发布，省略最终整文件回读。省略 `--verify` 仍为 full。无需再记两项 hash 参数。
+日常只需选择 `--verify full` 或 `--verify chunks`：新建 `--source` 作业时，full 默认 SHA256 分块和文件摘要，并检查最终文件；chunks 默认 BLAKE3 分块和文件摘要，全部验块、fsync 后发布，省略最终整文件回读。v0.7.1 起省略 `--verify` 默认 chunks；需要最终整文件复核时显式使用 `--verify full`。无需再记两项 hash 参数。
 
 ```bash
 ./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify chunks
@@ -37,9 +41,9 @@ Linux 集群的可续传 P2P 文件与目录分发工具，协议名 **SCDP/1**�
 
 `--chunk-hash` / `--file-hash` 保留为高级覆盖参数。续传和已有种子清单沿用原摘要算法，选择模式不会改写清单；旧 SHA256 作业切换 chunks 仍用 SHA256 验块。
 
-## v0.5.0 校验模式与 SSH 扩展
+## 校验算法与 SSH 扩展
 
-默认保留 full + SHA256；可选 `--verify chunks` 省略最终整文件回读，或 `--verify full --chunk-hash xxh3-128 --file-hash blake3` 混用快速分块与密码学文件摘要。XXH3 不允许用于 chunks 模式。首次来源清单仍要读完整源文件。详见[模式、完整性边界、硬件实测](docs/INTEGRITY.zh-CN.md)。
+默认 chunks + BLAKE3，省略最终整文件回读；可显式选择 `--verify full`，或 `--verify full --chunk-hash xxh3-128 --file-hash blake3` 混用快速分块与密码学文件摘要。XXH3 不允许用于 chunks 模式。首次来源清单仍要读完整源文件。详见[模式、完整性边界、硬件实测](docs/INTEGRITY.zh-CN.md)。
 
 SSH 默认包含 `StrictHostKeyChecking=no`、`UserKnownHostsFile=/dev/null`、`LogLevel=quiet`、`CheckHostIP=no`，可重复 `--ssh-opt KEY=VALUE` 扩展或覆盖，设置随作业保存。比如 `--ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15`。AES-GCM 可用 `--ssh-cipher aes128-gcm@openssh.com` 选择。
 
@@ -66,7 +70,7 @@ v0.4.1 起，建立来源清单和初始种子导入每约 2 秒显示字节、�
 ./swarmcopy watch
 ~~~
 
-源在**运行命令的控制端**。目标在每个节点自己的本地磁盘上。首次建立可信 SHA256 清单需要读取源文件；源 inode/大小/mtime/ctime 和目录成员不变时，后续新任务可复用本地校验缓存，`--recheck` 可强制重读。
+源在**运行命令的控制端**。目标在每个节点自己的本地磁盘上。首次建立可信来源摘要清单需要读取源文件；源 inode/大小/mtime/ctime 和目录成员不变时，后续新任务可复用本地校验缓存，`--recheck` 可强制重读。
 
 分发前会检查各节点。已有完整副本时，直接从这些节点补齐缺失节点，跳过控制端到种子的介质传输。本机在目标列表时直接供种；否则先通过 SSH 向一个种子复制一次，再由节点互传。默认任务全体完成后停止 peer。
 
@@ -166,7 +170,7 @@ Job 默认在 `~/.local/state/swarmcopy/jobs`，遵循 `XDG_STATE_HOME`。保留
 
 QUIC 模式还需放行同端口 UDP，控制／状态仍走 TCP，不会静默回退到 TCP 数据。包含接收 socket 分片、协商大包和有界 GSO；已有集群测试中 TCP 仍更快，故不改默认值。
 
-默认启用流水 SHA256 和 256 块窗口。`--pipeline-verify=false` 关闭两者；`--verify-window-chunks 0` 仅关闭窗口。全部已知校验路径保持 SHA256，Go 在支持的平台自动使用 CPU 加速，不是换成弱校验。
+显式 full 时默认启用流水文件校验和 256 块窗口；chunks 不启用整文件回读或该窗口。`--pipeline-verify=false` 关闭两者；`--verify-window-chunks 0` 仅关闭窗口。SHA256 和 BLAKE3 均为密码学摘要，并在支持的平台使用相应 CPU 加速。
 
 缓存绑定每个文件的 inode、设备、大小、mtime、ctime 与完整 manifest ID；`--recheck` 强制重读。传输期间请保持源和目标不被其他程序修改。HTTP 控制及 TCP 数据为明文，QUIC 数据有任务身份绑定 TLS；仍应部署在可信集群网络。
 

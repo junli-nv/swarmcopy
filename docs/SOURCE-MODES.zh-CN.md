@@ -68,7 +68,7 @@ v0.6.0 删除等待所有监听端口就绪才进入监控的门槛。peer 启�
 ./swarmcopy resume --job <ID>
 ~~~
 
-无需把已完成目标从原作业删除。旧 v0.5 作业保留原来的摘要算法；新建作业只需 --verify chunks，默认 BLAKE3/BLAKE3。--verify full 默认 SHA256/SHA256。
+无需把已完成目标从原作业删除。旧 v0.5 作业保留原来的摘要算法；v0.7.1 新建作业默认 chunks/BLAKE3，无需显式 --verify chunks。--verify full 默认 SHA256/SHA256。
 
 ## 本轮验证
 

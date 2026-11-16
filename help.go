@@ -116,10 +116,11 @@ Concurrency is saved at startup; no live-edit command is provided.
 Bandwidth defaults to unlimited; upload-mib/download-mib set per-node MiB/s.
 TCP stays default; optional QUIC needs UDP as well as TCP on the chosen port.
 Choose one preset for a NEW source job:
-  --verify full    SHA256 chunks + SHA256 files, with final disk verification (default)
-  --verify chunks  BLAKE3 chunks + BLAKE3 files, without final disk reread
+  --verify chunks  BLAKE3 chunks + BLAKE3 files, without final disk reread (default)
+  --verify full    SHA256 chunks + SHA256 files, with final disk verification
 No hash flags are needed; --chunk-hash/--file-hash are advanced overrides.
-Saved jobs and prepared seed manifests keep their original algorithms.
+Resume keeps the saved mode (legacy empty mode means full); it never adopts
+the new-job default. Prepared seed manifests keep their original algorithms.
 --verify chunks validates every cryptographic chunk, then syncs/publishes without
 a final disk reread. It cannot detect damage after a successful chunk write.
 --chunk-hash sha256|blake3|xxh3-128; --file-hash sha256|blake3.

@@ -33,13 +33,13 @@ If media already resides on a compute node, run there and include it in `--hosts
   --source /raid/local-ai/dist/local-ai.tar --dest /raid/images --verify chunks
 ```
 
-New jobs need only `--verify chunks` (BLAKE3/BLAKE3) or `--verify full` (default SHA256/SHA256). Failed targets do not cancel healthy siblings and remain incomplete; resume the same ID after recovery. Resumed sparse holes are skipped without treating unwritten bytes as verified.
+New jobs default to chunks (BLAKE3/BLAKE3); explicitly choose `--verify full` (SHA256/SHA256) for final whole-file verification. Failed targets do not cancel healthy siblings and remain incomplete; resume the same ID after recovery. Resumed sparse holes are skipped without treating unwritten bytes as verified.
 
 Remove a job and exclusive partials with `./swarmcopy remove --job <ID> --purge-partials` (`delete` is an alias). It stops owned controller/peers, then removes records/remote job metadata and exclusive partials. Source files, published media and shared data remain. Failed cleanup keeps the local record for retry. Use `stop` when you only want to pause.
 
-## Two integrity presets (v0.6.0)
+## Two integrity modes (v0.7.1)
 
-For new `--source` jobs, choose `--verify full` or `--verify chunks`. Full defaults to SHA256 chunks/files with final file verification; chunks defaults to BLAKE3 chunks/files and publishes after all chunk checks and fsync, omitting the final full-file reread. Omitting `--verify` still selects full. No hash flags are needed.
+For new `--source` jobs, choose `--verify full` or `--verify chunks`. Full defaults to SHA256 chunks/files with final file verification; chunks defaults to BLAKE3 chunks/files and publishes after all chunk checks and fsync, omitting the final full-file reread. From v0.7.1, omitting `--verify` selects chunks; explicitly use `--verify full` for final whole-file verification. No hash flags are needed.
 
 ```bash
 ./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify chunks
@@ -189,7 +189,7 @@ system leaves cipher negotiation entirely to OpenSSH. Username/password/key/agen
 
 ## v0.5.0 integrity modes and SSH options
 
-Defaults remain full + SHA256. Choose `--verify chunks` to omit the final disk reread, or `--verify full --chunk-hash xxh3-128 --file-hash blake3` for fast chunks plus a cryptographic file digest. XXH3 is rejected in chunks mode. Initial source hashing still reads every byte. See [guarantees, combinations and measured hardware results](INTEGRITY.en.md).
+Defaults are chunks + BLAKE3, omitting the final disk reread. Choose `--verify full` for final file verification, or `--verify full --chunk-hash xxh3-128 --file-hash blake3` for fast chunks plus a cryptographic file digest. XXH3 is rejected in chunks mode. Initial source hashing still reads every byte. See [guarantees, combinations and measured hardware results](INTEGRITY.en.md).
 
 SSH defaults include `StrictHostKeyChecking=no`, `UserKnownHostsFile=/dev/null`, `LogLevel=quiet`, `CheckHostIP=no`. Repeat `--ssh-opt KEY=VALUE` to extend/override saved defaults, e.g. `--ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15`. Select AES-GCM with `--ssh-cipher aes128-gcm@openssh.com`.
 
@@ -199,3 +199,17 @@ SSH defaults include `StrictHostKeyChecking=no`, `UserKnownHostsFile=/dev/null`,
   --ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15
 ./swarmcopy resume --job <ID> --ssh-opt ConnectTimeout=30 --verify full
 ```
+
+## Recover after fsync errors
+
+A data fsync error prevents completion/publication of that data and retains job/staging records. Resolve space, RAID/filesystem or I/O errors first. If the controller still waits, stop it before resuming the same job:
+
+```bash
+./swarmcopy jobs
+./swarmcopy stop --job <ID>
+./swarmcopy resume --job <ID>
+```
+
+Recovery rechecks retained data, reuses valid blocks and fills missing/damaged blocks before attempting completion again. A full restart is normally unnecessary, but power loss or storage data loss can require retransmission, and persistent storage errors prevent completion. Keep the job and partials; remove --purge-partials discards that recovery entry point.
+
+A later directory/marker fsync may fail after a file has already been renamed/linked into place. Some targets may therefore exist while the job remains unsuccessful; recovery checks and reuses valid files. Publication is per file, not a dataset transaction. Successful fsync depends on correct OS/device flush behavior and does not replace content checking; choose --verify full for an additional final content check.

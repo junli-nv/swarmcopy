@@ -2,7 +2,7 @@
 
 [English](DEVELOPMENT.en.md) · [中文使用说明](../README.md) · [示例](EXAMPLES.zh-CN.md)
 
-本文描述统一主线 v0.7.0。只维护 main 一个长期分支；常规 TCP、可选 UDP、自适应、流水校验及目录分发都在同一二进制内。旧标签保留历史，后续直接在 main 改进，不另行发布长期并行功能版。
+本文描述统一主线 v0.7.1。只维护 main 一个长期分支；常规 TCP、可选 UDP、自适应、流水校验及目录分发都在同一二进制内。旧标签保留历史，后续直接在 main 改进，不另行发布长期并行功能版。
 
 ## 源码地图
 
@@ -109,3 +109,9 @@ v0.6.0：`resolveNewJobIntegrity` 只在新建作业时解析模式预设：full
 `Options.LocalInputs/LocalRoots` 仅发送给当前源主机对应的 peer；内部 local-source-config 不作为公开用户参数。读取来源沿用指纹/布局检查，数据通过相同 commit 锁和摘要路径，full/chunks 最终门槛不变。localSourceError 与本地写错误均不能记成远端重试。下载限速同样覆盖本地复制。来源流量和 wire 网络字节分离，不能为了好看的速度把本地复制加进网络吞吐。
 
 agent 的启动版本检查需随真实发布更新；二进制升级时允许重启 peer，但不因此强制清掉已验证数据。开发中的相同版本构建需主动停止自己的测试 peer，不能依靠版本字符串分辨所有源码变化。只维护 main；TCP、可选 UDP 和可选自适应在同一发布物中。[完整对照和复现步骤](OPTIMIZATION-0.7.0.zh-CN.md)。
+
+## v0.7.1 默认模式与持久化错误
+
+新建 distribute 的 CLI 和 resolveNewJobIntegrity 默认 chunks/BLAKE3；不得把 verifyMode 空值从 full 改为 chunks。空值用于旧记录和低级 peer 兼容；resume 无显式模式参数时保持保存设置，prepared manifest 保持算法。XXH3 仍必须显式 full。chunks 完成不生成 full 成品缓存。
+
+默认 chunks 并不跳过 fsync。durability_test.go 向最终阶段前两次 Sync 注入 EIO，验证拒绝 Complete/发布、保留暂存、重启重验，完整块保留，坏块缺失，修复后重新刷盘发布。不能把该测试说成真实断电或 RAID 故障测试。fsync 成功依赖底层正确兑现刷新语义，并不代替内容摘要。

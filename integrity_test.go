@@ -330,7 +330,7 @@ func TestNewJobIntegrityPresets(t *testing.T) {
 		job         Job
 		chunk, file string
 	}{
-		{"default", Job{}, "sha256", "sha256"},
+		{"default", Job{}, "blake3", "blake3"},
 		{"full", Job{Verify: "full"}, "sha256", "sha256"},
 		{"chunks", Job{Verify: "chunks"}, "blake3", "blake3"},
 		{"explicit-chunk", Job{Verify: "chunks", ChunkHash: "sha256"}, "sha256", "blake3"},
@@ -342,6 +342,13 @@ func TestNewJobIntegrityPresets(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			j := tc.job
 			resolveNewJobIntegrity(&j)
+			wantMode := tc.job.Verify
+			if wantMode == "" {
+				wantMode = "chunks"
+			}
+			if j.Verify != wantMode {
+				t.Fatalf("mode=%s want=%s", j.Verify, wantMode)
+			}
 			if j.ChunkHash != tc.chunk || j.FileHash != tc.file {
 				t.Fatalf("unexpected preset: %+v", j)
 			}
@@ -358,5 +365,38 @@ func TestNewJobIntegrityPresets(t *testing.T) {
 	resolveNewJobIntegrity(&j)
 	if validateVerification(j.Verify, newSourceManifest(j)) == nil {
 		t.Fatal("weak chunks accepted")
+	}
+}
+
+func TestSavedJobIntegrityDoesNotAdoptNewDefault(t *testing.T) {
+	for _, mode := range []string{"", "full", "chunks"} {
+		t.Run("mode-"+mode, func(t *testing.T) {
+			dir := t.TempDir()
+			record := map[string]any{"ID": "old-job", "Hosts": []string{"node"}, "Port": 19700}
+			if mode != "" {
+				record["Verify"] = mode
+			}
+			b, e := json.Marshal(record)
+			if e != nil {
+				t.Fatal(e)
+			}
+			if e = os.WriteFile(filepath.Join(dir, "job.json"), b, 0600); e != nil {
+				t.Fatal(e)
+			}
+			j, e := loadJob(dir)
+			if e != nil {
+				t.Fatal(e)
+			}
+			expected := mode
+			if expected == "" {
+				expected = "full"
+			}
+			if verifyMode(j.Verify) != expected || j.ChunkHash != "" || j.FileHash != "" {
+				t.Fatal("changed saved integrity", j)
+			}
+			if hashName(j.ChunkHash) != "sha256" || hashName(j.FileHash) != "sha256" {
+				t.Fatal("changed legacy algorithms")
+			}
+		})
 	}
 }

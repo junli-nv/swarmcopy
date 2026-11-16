@@ -388,7 +388,7 @@ func clusterCommand(mode string, args []string) error {
 		fs.BoolVar(&recheck, "recheck", false, "force full existing-file verification")
 	}
 	if mode == "distribute" {
-		fs.StringVar(&j.Verify, "verify", "full", "full: disk content verification; chunks: cryptographic chunk checks without final reread")
+		fs.StringVar(&j.Verify, "verify", defaultNewJobVerify, "chunks (default): cryptographic chunk checks and fsync; full: also verify final disk content")
 		fs.StringVar(&j.ChunkHash, "chunk-hash", "", "advanced override: sha256, blake3 or xxh3-128 (full only); default follows --verify")
 		fs.StringVar(&j.FileHash, "file-hash", "", "advanced override: sha256 or blake3; default follows --verify")
 		fs.IntVar(&j.QUICGSOKiB, "quic-gso-kib", 64, "maximum QUIC GSO batch KiB (16..64), congestion/pacing limited")

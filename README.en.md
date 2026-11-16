@@ -6,6 +6,10 @@ Resumable P2P file and directory distribution for Linux clusters, using **SCDP/1
 
 **main is the only long-lived branch.** One binary includes TCP, optional UDP/QUIC, pipelined verification, optional adaptive concurrency, multiple files and directories. No separate UDP or race executable is needed. Historical tags and measurements remain available.
 
+## v0.7.1 defaults to chunks
+
+New distribution jobs omit --verify to use chunks/BLAKE3: every chunk is validated, then fsync and publication, without final whole-file verification. Add `--verify full` for that final check. Saved jobs retain their mode/algorithms on resume; adaptive stays off. Fsync is not content validation and depends on correct underlying storage flush behavior.
+
 ## v0.7.0: native copies and completion summaries
 
 Scheduling avoids repeated expensive scoring of every missing chunk. The source-host destination reads and verifies local source data instead of receiving it back over the network. Successful runs print elapsed/preparation/distribution time, network/local/reused bytes and average rates; completed watch shows the saved summary, while status retains JSON. Adaptive stays off; fixed concurrency remains `--workers 4 --uploads 4`, with no rate cap by default.
@@ -22,13 +26,13 @@ If media already resides on a compute node, run there and include it in `--hosts
   --source /raid/local-ai/dist/local-ai.tar --dest /raid/images --verify chunks
 ```
 
-New jobs need only `--verify chunks` (BLAKE3/BLAKE3) or `--verify full` (default SHA256/SHA256). Failed targets do not cancel healthy siblings and remain incomplete; resume the same ID after recovery. Resumed sparse holes are skipped without treating unwritten bytes as verified.
+New jobs default to chunks (BLAKE3/BLAKE3); explicitly choose `--verify full` (SHA256/SHA256) for final whole-file verification. Failed targets do not cancel healthy siblings and remain incomplete; resume the same ID after recovery. Resumed sparse holes are skipped without treating unwritten bytes as verified.
 
 Remove a job and exclusive partials with `./swarmcopy remove --job <ID> --purge-partials` (`delete` is an alias). It stops owned controller/peers, then removes records/remote job metadata and exclusive partials. Source files, published media and shared data remain. Failed cleanup keeps the local record for retry. Use `stop` when you only want to pause.
 
-## Two integrity presets (v0.6.0)
+## Two integrity modes (v0.7.1)
 
-For new `--source` jobs, choose `--verify full` or `--verify chunks`. Full defaults to SHA256 chunks/files with final file verification; chunks defaults to BLAKE3 chunks/files and publishes after all chunk checks and fsync, omitting the final full-file reread. Omitting `--verify` still selects full. No hash flags are needed.
+For new `--source` jobs, choose `--verify full` or `--verify chunks`. Full defaults to SHA256 chunks/files with final file verification; chunks defaults to BLAKE3 chunks/files and publishes after all chunk checks and fsync, omitting the final full-file reread. From v0.7.1, omitting `--verify` selects chunks; explicitly use `--verify full` for final whole-file verification. No hash flags are needed.
 
 ```bash
 ./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify chunks
@@ -37,9 +41,9 @@ For new `--source` jobs, choose `--verify full` or `--verify chunks`. Full defau
 
 `--chunk-hash` / `--file-hash` remain advanced overrides. Resume/prepared seed manifests retain their algorithms; changing mode never rewrites a manifest. An existing SHA256 job still uses SHA256 chunks after switching to chunks mode.
 
-## v0.5.0 integrity modes and SSH options
+## Integrity algorithms and SSH options
 
-Defaults remain full + SHA256. Choose `--verify chunks` to omit the final disk reread, or `--verify full --chunk-hash xxh3-128 --file-hash blake3` for fast chunks plus a cryptographic file digest. XXH3 is rejected in chunks mode. Initial source hashing still reads every byte. See [guarantees, combinations and measured hardware results](docs/INTEGRITY.en.md).
+Defaults are chunks + BLAKE3, omitting the final disk reread. Choose `--verify full` for final file verification, or `--verify full --chunk-hash xxh3-128 --file-hash blake3` for fast chunks plus a cryptographic file digest. XXH3 is rejected in chunks mode. Initial source hashing still reads every byte. See [guarantees, combinations and measured hardware results](docs/INTEGRITY.en.md).
 
 SSH defaults include `StrictHostKeyChecking=no`, `UserKnownHostsFile=/dev/null`, `LogLevel=quiet`, `CheckHostIP=no`. Repeat `--ssh-opt KEY=VALUE` to extend/override saved defaults, e.g. `--ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15`. Select AES-GCM with `--ssh-cipher aes128-gcm@openssh.com`.
 
@@ -162,7 +166,7 @@ TCP remains default; peers listen on all local addresses at port 19700. Hostname
 
 QUIC also needs UDP at that port; control/status stay on TCP, with no silent TCP data fallback. Receive-socket sharding, negotiated jumbo ceilings and bounded GSO are included. Existing cluster measurements still favor TCP, so the default stays unchanged.
 
-Pipelined SHA256 and a 256-chunk window default on. `--pipeline-verify=false` disables both; `--verify-window-chunks 0` disables only the window. SHA256 remains throughout, with CPU acceleration automatically used by Go where supported.
+Explicit full mode defaults to pipelined file verification and a 256-chunk window; chunks disables the whole-file reread and that window. `--pipeline-verify=false` disables both; `--verify-window-chunks 0` disables only the window. SHA256 and BLAKE3 are cryptographic digests with CPU acceleration where supported.
 
 Target caches bind every verified file's inode/device/size/mtime/ctime to its complete manifest ID; `--recheck` bypasses them. Keep sources and destinations immutable to other writers during a job. HTTP control and TCP data are plaintext; QUIC data uses task-bound TLS. Use a trusted cluster network.
 

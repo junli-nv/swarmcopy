@@ -56,7 +56,7 @@ Status requests are bounded. Peers avoid unavailable sources through discovery/r
 
 Each SSH/deployment/inventory attempt defaults to one minute; --node-timeout 5m increases it. Timed-out inventory is unknown, not complete; a started peer can perform its own checks and show STARTING. Global unreadable source/no deployable target/unique-seed loss can still prevent progress.
 
-New source jobs need only --verify chunks (BLAKE3/BLAKE3) or --verify full (default SHA256/SHA256). Saved manifests retain their algorithms.
+From v0.7.1, new source jobs default to chunks/BLAKE3; explicit --verify full selects SHA256/SHA256. Saved manifests retain their algorithms.
 
 ## Validation
 
