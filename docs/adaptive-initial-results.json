@@ -1,0 +1,205 @@
+{
+  "nodes": 45,
+  "receivers": 44,
+  "file_bytes": 40188444672,
+  "rounds": 2,
+  "cases": [
+    {
+      "round": 1,
+      "method": "baseline",
+      "seconds": 85.0265151867643,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": null,
+        "TransferSeconds_max": null,
+        "FinalSyncSeconds_max": null,
+        "FinalHashSeconds_max": null,
+        "PublishSeconds_max": null,
+        "Requests_sum": null,
+        "Retries_sum": null,
+        "BusyResponses_sum": null,
+        "HedgeRequests_sum": null,
+        "CanceledRequests_sum": null,
+        "WorkerChanges_sum": null,
+        "ReceivedBytes_sum": null,
+        "DuplicateBytes_sum": null
+      }
+    },
+    {
+      "round": 1,
+      "method": "fixed",
+      "seconds": 85.17362974397838,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001278463,
+        "TransferSeconds_max": 36.001356974,
+        "FinalSyncSeconds_max": 6.161890623,
+        "FinalHashSeconds_max": 41.400991518,
+        "PublishSeconds_max": 0.006110995,
+        "Requests_sum": 108435,
+        "Retries_sum": 3011,
+        "BusyResponses_sum": 3011,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0
+      }
+    },
+    {
+      "round": 1,
+      "method": "adaptive",
+      "seconds": 101.13565378729254,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001331504,
+        "TransferSeconds_max": 55.001875831,
+        "FinalSyncSeconds_max": 2.341866666,
+        "FinalHashSeconds_max": 41.938268582,
+        "PublishSeconds_max": 0.002930514,
+        "Requests_sum": 109107,
+        "Retries_sum": 3683,
+        "BusyResponses_sum": 3683,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 261,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0
+      }
+    },
+    {
+      "round": 2,
+      "method": "adaptive",
+      "seconds": 104.74556818976998,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001635682,
+        "TransferSeconds_max": 61.001438817,
+        "FinalSyncSeconds_max": 4.677800465000001,
+        "FinalHashSeconds_max": 42.204153607,
+        "PublishSeconds_max": 0.005749116,
+        "Requests_sum": 109591,
+        "Retries_sum": 4167,
+        "BusyResponses_sum": 4167,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 277,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0
+      }
+    },
+    {
+      "round": 2,
+      "method": "fixed",
+      "seconds": 82.9719190299511,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001923357,
+        "TransferSeconds_max": 35.001787257,
+        "FinalSyncSeconds_max": 5.770916334,
+        "FinalHashSeconds_max": 40.677794022,
+        "PublishSeconds_max": 0.005211762,
+        "Requests_sum": 108872,
+        "Retries_sum": 3448,
+        "BusyResponses_sum": 3448,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0
+      }
+    },
+    {
+      "round": 2,
+      "method": "baseline",
+      "seconds": 82.97272669058293,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": null,
+        "TransferSeconds_max": null,
+        "FinalSyncSeconds_max": null,
+        "FinalHashSeconds_max": null,
+        "PublishSeconds_max": null,
+        "Requests_sum": null,
+        "Retries_sum": null,
+        "BusyResponses_sum": null,
+        "HedgeRequests_sum": null,
+        "CanceledRequests_sum": null,
+        "WorkerChanges_sum": null,
+        "ReceivedBytes_sum": null,
+        "DuplicateBytes_sum": null
+      }
+    }
+  ],
+  "methods": {
+    "baseline": {
+      "seconds": [
+        85.0265151867643,
+        82.97272669058293
+      ],
+      "median": 83.99962093867362,
+      "min": 82.97272669058293,
+      "max": 85.0265151867643
+    },
+    "fixed": {
+      "seconds": [
+        85.17362974397838,
+        82.9719190299511
+      ],
+      "median": 84.07277438696474,
+      "min": 82.9719190299511,
+      "max": 85.17362974397838
+    },
+    "adaptive": {
+      "seconds": [
+        101.13565378729254,
+        104.74556818976998
+      ],
+      "median": 102.94061098853126,
+      "min": 101.13565378729254,
+      "max": 104.74556818976998
+    }
+  },
+  "unique_boot_ids": 45,
+  "owned_peers_stopped": 270,
+  "adaptive_speedup_vs_baseline": 0.8160008001898504,
+  "adaptive_speedup_vs_fixed": 0.8167114375912475,
+  "file_sha256": "b4b4781e7392957eb24d45e9f480ea6d8ec2d20f9200a1c48aeeefd64d2e77c1",
+  "frozen_artifacts": {
+    "baseline": {
+      "binary": "d2c27a604aab59d8ed51bb86422c35d03afdbef669088e053bb767d8240cf6b6",
+      "dist": {
+        "swarmcopy-linux-x86_64": "d2c27a604aab59d8ed51bb86422c35d03afdbef669088e053bb767d8240cf6b6",
+        "swarmcopy-linux-aarch64": "73ba1818bc39416f8cfd2986bfb495fba11e269740bcfbd11cdde345db83b8dd"
+      }
+    },
+    "fixed": {
+      "binary": "96c159b201b2bdca6199128f5316dde9277dd667ee7ceec2e0397954f4bfb27a",
+      "dist": {
+        "swarmcopy-linux-x86_64": "96c159b201b2bdca6199128f5316dde9277dd667ee7ceec2e0397954f4bfb27a",
+        "swarmcopy-linux-aarch64": "9ab6de174642964ebb3d01ae8af715ab6c45d7ae514c422bb1faf3c573aa30f7"
+      }
+    },
+    "adaptive": {
+      "binary": "96c159b201b2bdca6199128f5316dde9277dd667ee7ceec2e0397954f4bfb27a",
+      "dist": {
+        "swarmcopy-linux-x86_64": "96c159b201b2bdca6199128f5316dde9277dd667ee7ceec2e0397954f4bfb27a",
+        "swarmcopy-linux-aarch64": "9ab6de174642964ebb3d01ae8af715ab6c45d7ae514c422bb1faf3c573aa30f7"
+      }
+    }
+  },
+  "driver_sha256": "969938b1f1a2124687714a0588e6bf74d25112fca78930d81aea7e7104d3dd05",
+  "policy": "Unique absent case directory; sync/drop_caches=3 on every participant before every method; prepared common seed; unlimited bandwidth; full SHA256/fsync; timing through peer shutdown; retries remain in timed case."
+}

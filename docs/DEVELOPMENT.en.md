@@ -8,6 +8,7 @@ This describes the actual v0.1.0 implementation. Keep both language versions, CL
 
 | File | Responsibility |
 | --- | --- |
+| adaptive.go / transfer.go | Adaptive scheduler, hedge deduplication, and phase diagnostics; see [experiment](ADAPTIVE.en.md) |
 | main.go | Manifest, prepare, peer, HTTP chunks, validation, scheduling, dispatch |
 | cluster.go | Host expansion, SSH deployment, persistent jobs, distribute/resume/stop |
 | statefiles.go | Atomic state-file replacement and file/parent fsync |

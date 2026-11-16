@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Local three-process chain: interruption, corruption repair, and partial forwarding."""
-import hashlib, json, os, pathlib, socket, subprocess, tempfile, time
+import hashlib, json, os, pathlib, shlex, socket, subprocess, tempfile, time
+EXTRA = shlex.split(os.environ.get("SWARMCOPY_TEST_FLAGS",""))
 BINARY = os.environ.get("SWARMCOPY_BINARY", str(pathlib.Path(__file__).resolve().parents[1] / "swarmcopy"))
 def freeport():
     with socket.socket() as s:
@@ -26,7 +27,7 @@ with tempfile.TemporaryDirectory(prefix="swarmcopy-test-") as tmp:
         f=open(root/f"{i}-{len(logs)}.log","w");logs.append(f)
         p=subprocess.Popen([BINARY,"peer","--file",str(files[i]),"--manifest",str(manifest),
           "--token-file",str(token),"--listen",f"127.0.0.1:{ports[i]}","--peers",",".join(peers),
-          "--download-mib","8","--upload-mib","8","--lifetime","60s","--stall-timeout","20s"],
+          "--download-mib","8","--upload-mib","8","--lifetime","60s","--stall-timeout","20s"]+EXTRA,
           stdout=f,stderr=f)
         procs.append(p);return p
     try:
@@ -49,6 +50,12 @@ with tempfile.TemporaryDirectory(prefix="swarmcopy-test-") as tmp:
         def status(i):
             req=urllib.request.Request(f"http://127.0.0.1:{ports[i]}/status",headers={"Authorization":"Bearer "+token.read_text()})
             with urllib.request.urlopen(req) as response: return json.load(response)
+        for i in [1,2]:
+            st=status(i)
+            if "Performance" in st:
+                check(st["Performance"]["Stage"]=="complete","missing completed phase")
+                check(st["Performance"]["FinalHashSeconds"]>0,"missing full hash timing")
+                if "--adaptive" in EXTRA: check(st["Performance"]["Adaptive"],"adaptive flag not propagated")
         check(status(1)["Uploaded"]>0,"middle node did not forward")
         check(status(2)["From"].get(f"127.0.0.1:{ports[1]}",0)==source.stat().st_size,"chain bypassed")
         print("PASS: interrupted receiver resumed, corrupted block repaired, partial peer forwarded, all SHA256 match")

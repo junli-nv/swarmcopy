@@ -25,6 +25,9 @@ import (
 )
 
 type Job struct {
+	Adaptive, Endgame                                                            bool
+	MaxWorkers                                                                   int
+	HedgeDelay                                                                   time.Duration
 	Fanout                                                                       int
 	Recheck                                                                      bool
 	ID, Created, State, Source, Seed, SeedFile, Dest, BinDir, SSHUser, LastError string
@@ -361,7 +364,11 @@ func clusterCommand(mode string, args []string) error {
 		fs.StringVar(&j.BinDir, "bin-dir", filepath.Dir(exe), "directory of both architecture binaries")
 		fs.IntVar(&j.Port, "port", 19700, "peer TCP port")
 		fs.IntVar(&j.Fanout, "fanout", 8, "maximum concurrent SSH deployment operations")
-		fs.IntVar(&j.Workers, "workers", 4, "concurrent downloads")
+		fs.IntVar(&j.Workers, "workers", 4, "fixed or initial concurrent downloads")
+		fs.BoolVar(&j.Adaptive, "adaptive", false, "experimental adaptive concurrency and source selection")
+		fs.BoolVar(&j.Endgame, "endgame", false, "hedge delayed final chunks from an alternate source")
+		fs.IntVar(&j.MaxWorkers, "max-workers", 16, "adaptive maximum downloads (workers..32)")
+		fs.DurationVar(&j.HedgeDelay, "hedge-delay", 2*time.Second, "minimum age before an endgame duplicate request")
 		fs.IntVar(&j.Uploads, "uploads", 4, "concurrent uploads")
 		fs.Int64Var(&j.UploadMiB, "upload-mib", 0, "per-node upload MiB/s; 0=unlimited")
 		fs.Int64Var(&j.DownloadMiB, "download-mib", 0, "per-node download MiB/s; 0=unlimited")
@@ -408,6 +415,12 @@ func clusterCommand(mode string, args []string) error {
 		if j.Port < 1 || j.Port > 65535 || j.Workers < 1 || j.Workers > 32 || j.Uploads < 1 || j.Uploads > 32 ||
 			j.UploadMiB < 0 || j.DownloadMiB < 0 || j.UploadMiB > 100000 || j.DownloadMiB > 100000 || j.Lifetime <= 0 {
 			return errors.New("invalid resource limits")
+		}
+		if j.MaxWorkers < j.Workers && !j.Adaptive {
+			j.MaxWorkers = j.Workers
+		}
+		if j.MaxWorkers < j.Workers || j.MaxWorkers > 32 || j.HedgeDelay <= 0 {
+			return errors.New("invalid max-workers or hedge-delay")
 		}
 		if j.Seed == "" {
 			j.Seed = j.Hosts[0]

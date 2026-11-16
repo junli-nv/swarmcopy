@@ -1,5 +1,7 @@
 # swarmcopy
 
+[Adaptive transfer experiment](docs/ADAPTIVE.en.md): 0.2.0-dev branch with diagnostics and opt-in scheduling. Previously published v0.1.0 results remain below.
+
 Resumable P2P distribution of large files, including NeMo/SquashFS container media, to node-local storage in Linux compute clusters.
 
 [中文（主文档）](README.md) · [Developer guide](docs/DEVELOPMENT.en.md) · [中文开发指南](docs/DEVELOPMENT.zh-CN.md) · [Validation](docs/VALIDATION.en.md)

@@ -137,6 +137,18 @@ func agentCommand(args []string) error {
 			"--uploads", strconv.Itoa(o.Uploads), "--upload-mib", strconv.FormatInt(o.UploadMiB, 10),
 			"--download-mib", strconv.FormatInt(o.DownloadMiB, 10), "--lifetime", o.Lifetime.String(),
 			"--stall-timeout", o.Stall.String()}
+		if o.MaxWorkers > 0 {
+			argv = append(argv, "--max-workers", strconv.Itoa(o.MaxWorkers))
+		}
+		if o.HedgeDelay > 0 {
+			argv = append(argv, "--hedge-delay", o.HedgeDelay.String())
+		}
+		if o.Adaptive {
+			argv = append(argv, "--adaptive")
+		}
+		if o.Endgame {
+			argv = append(argv, "--endgame")
+		}
 		if o.Recheck {
 			argv = append(argv, "--recheck")
 		}

@@ -154,9 +154,41 @@ func render(observations []observation, previous map[string]observation, clear b
 		if !s.Complete {
 			all = false
 		}
+		if p := s.Performance; p != nil {
+			if !s.Complete && s.Error == "" && (p.Stage == "sync" || p.Stage == "final-hash" || p.Stage == "publish") {
+				state = strings.ToUpper(p.Stage)
+			}
+			if p.Adaptive {
+				state += fmt.Sprintf(" workers=%d/%d", p.ActiveDownloads, p.TargetDownloads)
+			}
+		}
 		fmt.Printf("%-25s %6.1f%% %8.2f / %8.2f %11.2f %11.2f  %s\n", o.addr,
 			100*float64(s.VerifiedBytes)/float64(s.Size), float64(s.VerifiedBytes)/(1<<30),
 			float64(s.Size)/(1<<30), d/(1<<20), u/(1<<20), state)
+	}
+	var metrics, adaptive int
+	var retry, hedge, canceled, received int64
+	var syncTime, hashTime, transferTime float64
+	for _, o := range observations {
+		if o.err != nil || o.st.Performance == nil {
+			continue
+		}
+		p := o.st.Performance
+		metrics++
+		if p.Adaptive {
+			adaptive++
+		}
+		retry += p.Retries
+		hedge += p.HedgeRequests
+		canceled += p.CanceledRequests
+		received += p.ReceivedBytes
+		syncTime = math.Max(syncTime, p.FinalSyncSeconds)
+		hashTime = math.Max(hashTime, p.FinalHashSeconds)
+		transferTime = math.Max(transferTime, p.TransferSeconds)
+	}
+	if metrics > 0 {
+		fmt.Printf("Diagnostics: adaptive %d/%d | retries %d | hedges %d | canceled %d | received %.2f GiB\n", adaptive, metrics, retry, hedge, canceled, float64(received)/(1<<30))
+		fmt.Printf("Max per-node phases (overlap, do not sum): transfer %.2fs | fsync %.2fs | final hash %.2fs\n", transferTime, syncTime, hashTime)
 	}
 	ratio := 0.0
 	if total > 0 {

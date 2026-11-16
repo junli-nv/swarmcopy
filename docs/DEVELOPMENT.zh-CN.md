@@ -8,6 +8,7 @@
 
 | 文件 | 职责 |
 | --- | --- |
+| adaptive.go / transfer.go | 并发反馈、来源调度、尾块去重、分阶段统计；细节见 [实验说明](ADAPTIVE.zh-CN.md) |
 | main.go | Manifest、prepare、peer、分块 HTTP 服务、校验、调度及入口 |
 | cluster.go | 主机展开、SSH 部署、Job 持久化、批量分发/恢复/停止 |
 | statefiles.go | 记录原子写入、文件及父目录 fsync |

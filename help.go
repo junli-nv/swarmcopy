@@ -20,6 +20,7 @@ QUICK START
   swarmcopy distribute --hosts 'node[001-005]' --source /shared/nemo.sqsh --dest /raid/images
   swarmcopy jobs
   swarmcopy watch
+  swarmcopy distribute --hosts 'node[001-005]' --source /shared/media.sqsh --dest /raid/images --adaptive --max-workers 16 --endgame
   swarmcopy resume --job <ID>
 
 COMMANDS

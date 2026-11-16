@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math/rand/v2"
 	"net"
 	"net/http"
 	"os"
@@ -25,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.1.0"
+const version = "0.2.0-dev"
 const protocol = "SCDP/1"
 
 type Manifest struct {
@@ -222,6 +221,9 @@ func prepare(args []string) error {
 }
 
 type Options struct {
+	Adaptive, Endgame                        bool
+	MaxWorkers                               int
+	HedgeDelay                               time.Duration
 	Recheck                                  bool
 	File, Manifest, Listen, Peers, TokenFile string
 	Workers, Uploads                         int
@@ -229,6 +231,7 @@ type Options struct {
 	Lifetime, Stall                          time.Duration
 }
 type Status struct {
+	Performance          *Performance `json:",omitempty"`
 	Protocol             string
 	Size, VerifiedBytes  int64
 	Recorded             bool
@@ -275,22 +278,31 @@ type Remote struct {
 	seen time.Time
 }
 type Node struct {
-	m                    Manifest
-	o                    Options
-	token                string
-	f                    *os.File
-	mu                   sync.Mutex
-	have, busy           []bool
-	remotes              []Remote
-	peerBusy             map[string]int
-	from                 map[string]int64
-	complete, origin     bool
-	failure              string
-	lastProgress         time.Time
-	downloaded, uploaded atomic.Int64
-	up, down             pacer
-	slots                chan struct{}
-	client               *http.Client
+	m                              Manifest
+	o                              Options
+	token                          string
+	f                              *os.File
+	mu                             sync.Mutex
+	have, busy                     []bool
+	remotes                        []Remote
+	peerBusy                       map[string]int
+	from                           map[string]int64
+	complete, origin               bool
+	failure                        string
+	lastProgress                   time.Time
+	downloaded, uploaded           atomic.Int64
+	up, down                       pacer
+	slots                          chan struct{}
+	client                         *http.Client
+	flights                        map[int]map[string]*flight
+	chunkLocks                     []sync.Mutex
+	sourceStats                    map[string]*sourceState
+	active, target, cooldownTicks  int
+	probing                        bool
+	previousRate                   float64
+	perf                           Performance
+	wireReceived                   atomic.Int64
+	transferStarted, transferEnded time.Time
 }
 
 func token(path string) (string, error) {
@@ -452,7 +464,7 @@ func (n *Node) snapshot() Status {
 	for k, v := range n.from {
 		from[k] = v
 	}
-	return Status{Protocol: protocol, Size: n.m.Size, VerifiedBytes: verifiedBytes(n.m, n.have), ID: n.m.id(), Version: version, Have: append([]bool(nil), n.have...), Complete: n.complete,
+	return Status{Performance: n.performanceLocked(), Protocol: protocol, Size: n.m.Size, VerifiedBytes: verifiedBytes(n.m, n.have), ID: n.m.id(), Version: version, Have: append([]bool(nil), n.have...), Complete: n.complete,
 		Origin: n.origin, Downloaded: n.downloaded.Load(), Uploaded: n.uploaded.Load(), From: from, Error: n.failure}
 }
 func (n *Node) serve(w http.ResponseWriter, r *http.Request) {
@@ -549,160 +561,6 @@ func (n *Node) discover(ctx context.Context, addresses []string) {
 		}
 	}
 }
-func (n *Node) choose() (int, string) {
-	n.mu.Lock()
-	defer n.mu.Unlock()
-	chosen := -1
-	best := int(^uint(0) >> 1)
-	addr := ""
-	if len(n.have) == 0 {
-		return -1, ""
-	}
-	start := rand.IntN(len(n.have))
-	for j := 0; j < len(n.have); j++ {
-		i := (start + j) % len(n.have)
-		if n.have[i] || n.busy[i] {
-			continue
-		}
-		count := 0
-		cost := int(^uint(0) >> 1)
-		candidate := ""
-		for _, p := range n.remotes {
-			if time.Since(p.seen) > 8*time.Second || !p.st.Have[i] {
-				continue
-			}
-			count++
-			if n.peerBusy[p.addr] >= 2 {
-				continue
-			}
-			score := n.peerBusy[p.addr] * 2
-			if p.st.Origin {
-				score += 10
-			}
-			if score < cost || score == cost && rand.IntN(2) == 0 {
-				cost = score
-				candidate = p.addr
-			}
-		}
-		if count > 0 && candidate != "" && count < best {
-			chosen = i
-			best = count
-			addr = candidate
-		}
-	}
-	if chosen >= 0 {
-		n.busy[chosen] = true
-		n.peerBusy[addr]++
-	}
-	return chosen, addr
-}
-func (n *Node) download(ctx context.Context, i int, addr string, buffers ...[]byte) error {
-	resp, e := request(ctx, n.client, n.token, addr, "/chunk?i="+strconv.Itoa(i))
-	if e != nil {
-		return e
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		return fmt.Errorf("HTTP %d", resp.StatusCode)
-	}
-	size := n.m.length(i)
-	if resp.ContentLength != size {
-		return errors.New("chunk length mismatch")
-	}
-	var buf []byte
-	if len(buffers) > 0 && int64(len(buffers[0])) >= size {
-		buf = buffers[0][:size]
-	} else {
-		buf = make([]byte, int(size))
-	}
-	for pos := 0; pos < len(buf); {
-		end := pos + (256 << 10)
-		if end > len(buf) {
-			end = len(buf)
-		}
-		if e = n.down.wait(ctx, int64(end-pos)); e != nil {
-			return e
-		}
-		if _, e = io.ReadFull(resp.Body, buf[pos:end]); e != nil {
-			return e
-		}
-		pos = end
-	}
-	if digest(buf) != n.m.Chunks[i] {
-		return errors.New("chunk checksum mismatch")
-	}
-	if _, e = n.f.WriteAt(buf, int64(i)*n.m.ChunkSize); e != nil {
-		return fmt.Errorf("local write: %w", e)
-	}
-	n.mu.Lock()
-	n.have[i] = true
-	n.from[addr] += size
-	n.lastProgress = time.Now()
-	n.mu.Unlock()
-	n.downloaded.Add(size)
-	return nil
-}
-func (n *Node) worker(ctx context.Context) {
-	var buffer []byte
-	for ctx.Err() == nil {
-		i, addr := n.choose()
-		if i < 0 {
-			select {
-			case <-ctx.Done():
-				return
-			case <-time.After(100 * time.Millisecond):
-			}
-			continue
-		}
-		if buffer == nil {
-			buffer = make([]byte, int(n.m.ChunkSize))
-		}
-		e := n.download(ctx, i, addr, buffer)
-		n.mu.Lock()
-		n.busy[i] = false
-		n.peerBusy[addr]--
-		if e != nil && ctx.Err() == nil {
-			for j := range n.remotes {
-				if n.remotes[j].addr == addr {
-					n.remotes[j].seen = time.Time{}
-				}
-			}
-		}
-		n.mu.Unlock()
-		if e != nil && ctx.Err() == nil {
-			log.Printf("RETRY chunk=%d peer=%s error=%v", i, addr, e)
-		}
-	}
-}
-func (n *Node) finalize() error {
-	if e := n.f.Sync(); e != nil {
-		return e
-	}
-	whole := sha256.New()
-	if _, e := io.Copy(whole, io.NewSectionReader(n.f, 0, n.m.Size)); e != nil {
-		return e
-	}
-	if hex.EncodeToString(whole.Sum(nil)) != n.m.SHA256 {
-		return errors.New("final SHA256 mismatch")
-	}
-	if e := n.f.Chmod(0644); e != nil {
-		return e
-	}
-	if e := n.f.Sync(); e != nil {
-		return e
-	}
-	if e := publish(n.f.Name(), n.o.File); e != nil {
-		return e
-	}
-	n.mu.Lock()
-	n.complete = true
-	n.mu.Unlock()
-	if info, err := n.f.Stat(); err == nil {
-		rememberVerified(n.o.File, n.m, info)
-	}
-	log.Printf("COMPLETE sha256=%s bytes=%d; continuing to seed", n.m.SHA256, n.m.Size)
-	return nil
-}
 
 func peer(args []string) error {
 	var o Options
@@ -714,7 +572,11 @@ func peer(args []string) error {
 	fs.StringVar(&o.Listen, "listen", ":19700", "listening address")
 	fs.StringVar(&o.Peers, "peers", "", "comma-separated host:port list; exclude self")
 	fs.StringVar(&o.TokenFile, "token-file", "", "shared job token file")
-	fs.IntVar(&o.Workers, "workers", 4, "concurrent downloads (1..32)")
+	fs.IntVar(&o.Workers, "workers", 4, "fixed or initial concurrent downloads (1..32)")
+	fs.BoolVar(&o.Adaptive, "adaptive", false, "experimental adaptive concurrency and source selection")
+	fs.BoolVar(&o.Endgame, "endgame", false, "hedge delayed final chunks using one alternate source")
+	fs.IntVar(&o.MaxWorkers, "max-workers", 16, "adaptive maximum downloads (workers..32)")
+	fs.DurationVar(&o.HedgeDelay, "hedge-delay", 2*time.Second, "minimum age before an endgame duplicate request")
 	fs.IntVar(&o.Uploads, "uploads", 4, "concurrent uploads (1..32)")
 	fs.Int64Var(&o.DownloadMiB, "download-mib", 0, "aggregate download MiB/s; 0=unlimited")
 	fs.Int64Var(&o.UploadMiB, "upload-mib", 0, "aggregate upload MiB/s; 0=unlimited")
@@ -735,6 +597,12 @@ func peer(args []string) error {
 		o.Uploads < 1 || o.Uploads > 32 || o.DownloadMiB < 0 || o.UploadMiB < 0 ||
 		o.DownloadMiB > 100000 || o.UploadMiB > 100000 || o.Lifetime <= 0 || o.Stall <= 0 {
 		return errors.New("invalid peer arguments")
+	}
+	if o.MaxWorkers < o.Workers && !o.Adaptive {
+		o.MaxWorkers = o.Workers
+	}
+	if o.MaxWorkers < o.Workers || o.MaxWorkers > 32 || o.HedgeDelay <= 0 {
+		return errors.New("invalid max-workers or hedge-delay")
 	}
 	m, e := loadManifest(o.Manifest)
 	if e != nil {
@@ -808,6 +676,7 @@ func peer(args []string) error {
 			return e
 		}
 	}
+	scanStart := time.Now()
 	if fresh {
 		log.Printf("NEW partial file: no existing chunks to scan")
 	} else if n.origin && !o.Recheck && cacheMatches(o.File, m, st) {
@@ -826,6 +695,14 @@ func peer(args []string) error {
 			}
 		}
 	}
+	n.perf.ScanSeconds = time.Since(scanStart).Seconds()
+	n.initTransfersLocked()
+	n.perf.Stage = "transfer"
+	if n.complete {
+		n.perf.Stage = "complete"
+	} else {
+		n.transferStarted = time.Now()
+	}
 	signalCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	ctx, cancel := context.WithTimeout(signalCtx, o.Lifetime)
@@ -841,7 +718,11 @@ func peer(args []string) error {
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() { defer wg.Done(); n.discover(ctx, addresses) }()
-	for j := 0; j < o.Workers; j++ {
+	if o.Adaptive {
+		wg.Add(1)
+		go func() { defer wg.Done(); n.control(ctx) }()
+	}
+	for j := 0; j < n.maxWorkers(); j++ {
 		wg.Add(1)
 		go func() { defer wg.Done(); n.worker(ctx) }()
 	}
@@ -861,6 +742,9 @@ func peer(args []string) error {
 			return e
 		case <-ticker.C:
 			st := n.snapshot()
+			if st.Error != "" {
+				return errors.New(st.Error)
+			}
 			count := 0
 			for _, h := range st.Have {
 				if h {
