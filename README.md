@@ -1,5 +1,7 @@
 # swarmcopy
 
+[流水线整文件校验与 CPU 加速](docs/PIPELINE.zh-CN.md)：0.2.0-dev.2 分支，保留完整 SHA-256，并提供 hashbench 诊断。
+
 [自适应传输实验说明](docs/ADAPTIVE.zh-CN.md)：0.2.0-dev 分支，新增性能诊断及可选调度；v0.1.0 的既有测速结果见下文。
 
 [下载实验版](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0-dev) · [45-node results](docs/ADAPTIVE-RESULTS.zh-CN.md)

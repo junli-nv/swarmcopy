@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"io"
 	"log"
@@ -114,6 +112,9 @@ func (n *Node) download(ctx context.Context, i int, addr string, buffers ...[]by
 	n.from[addr] += size
 	n.lastProgress = time.Now()
 	n.downloaded.Add(size)
+	if n.verifier != nil {
+		n.verifier.signal()
+	}
 	for _, other := range n.flights[i] {
 		other.cancel()
 	}
@@ -124,9 +125,11 @@ func (n *Node) setPhase(stage string) {
 	defer n.mu.Unlock()
 	n.perf.Stage = stage
 }
-func (n *Node) finalize() (err error) {
+func (n *Node) finalize() error { return n.finalizeContext(context.Background()) }
+func (n *Node) finalizeContext(ctx context.Context) (err error) {
 	n.mu.Lock()
 	n.transferEnded = time.Now()
+	n.perf.FileHashBytesAtTransferEnd = n.perf.FileHashBytes
 	if !n.transferStarted.IsZero() {
 		n.perf.TransferSeconds = n.transferEnded.Sub(n.transferStarted).Seconds()
 	}
@@ -150,16 +153,27 @@ func (n *Node) finalize() (err error) {
 	}
 	n.setPhase("final-hash")
 	start = time.Now()
-	whole := sha256.New()
-	_, err = io.Copy(whole, io.NewSectionReader(n.f, 0, n.m.Size))
+	var sum string
+	if n.verifier != nil {
+		sum, err = n.verifier.wait(ctx)
+	} else {
+		sum, err = n.serialDigest(ctx)
+		n.mu.Lock()
+		n.perf.FileHashWallSeconds = time.Since(start).Seconds()
+		n.mu.Unlock()
+	}
+
 	n.mu.Lock()
 	n.perf.FinalHashSeconds = time.Since(start).Seconds()
 	n.mu.Unlock()
 	if err != nil {
 		return err
 	}
-	if hex.EncodeToString(whole.Sum(nil)) != n.m.SHA256 {
+	if sum != n.m.SHA256 {
 		return errors.New("final SHA256 mismatch")
+	}
+	if err = ctx.Err(); err != nil {
+		return err
 	}
 	n.setPhase("publish")
 	start = time.Now()
@@ -173,6 +187,9 @@ func (n *Node) finalize() (err error) {
 	n.perf.FinalSyncSeconds += syncElapsed
 	n.mu.Unlock()
 	if err != nil {
+		return err
+	}
+	if err = ctx.Err(); err != nil {
 		return err
 	}
 	if err = publish(n.f.Name(), n.o.File); err != nil {

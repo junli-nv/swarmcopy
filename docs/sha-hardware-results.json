@@ -1,0 +1,227 @@
+[
+  {
+    "node": "node-1",
+    "mode": "auto",
+    "result": {
+      "AdvertisedCPUFeatures": {
+        "avx2": true,
+        "bmi2": true,
+        "sha_ni": true
+      },
+      "Architecture": "amd64",
+      "CPUModel": "Intel(R) Xeon(R) 6776P",
+      "FileBufferMiB": 4,
+      "GODEBUG": "",
+      "GoVersion": "go1.27.4",
+      "MemoryBytes": 2147483648,
+      "MemoryMiBPerSecond": 1061.267390878747,
+      "MemorySHA256": "d5699ebf25c1abf61ae1fc14080d8afa8d782b4b2995831590cb15dbcc5fb951",
+      "MemorySeconds": 1.929768141,
+      "Version": "0.2.0-dev.2"
+    },
+    "sha_samples": [
+      "1.93s 92.79% 92.79%      1.93s 92.79%  crypto/internal/fips140/sha256.blockSHANI",
+      "0     0% 97.60%      1.93s 92.79%  crypto/internal/fips140/sha256.block"
+    ]
+  },
+  {
+    "node": "node-1",
+    "mode": "no-sha",
+    "result": {
+      "AdvertisedCPUFeatures": {
+        "avx2": true,
+        "bmi2": true,
+        "sha_ni": true
+      },
+      "Architecture": "amd64",
+      "CPUModel": "Intel(R) Xeon(R) 6776P",
+      "FileBufferMiB": 4,
+      "GODEBUG": "cpu.sha=off",
+      "GoVersion": "go1.27.4",
+      "MemoryBytes": 2147483648,
+      "MemoryMiBPerSecond": 279.9528283858433,
+      "MemorySHA256": "d5699ebf25c1abf61ae1fc14080d8afa8d782b4b2995831590cb15dbcc5fb951",
+      "MemorySeconds": 7.31551816,
+      "Version": "0.2.0-dev.2"
+    },
+    "sha_samples": [
+      "7.31s 97.86% 97.86%      7.31s 97.86%  crypto/internal/fips140/sha256.blockAVX2",
+      "0     0% 99.20%      7.31s 97.86%  crypto/internal/fips140/sha256.block"
+    ]
+  },
+  {
+    "node": "node-1",
+    "mode": "generic",
+    "result": {
+      "AdvertisedCPUFeatures": {
+        "avx2": true,
+        "bmi2": true,
+        "sha_ni": true
+      },
+      "Architecture": "amd64",
+      "CPUModel": "Intel(R) Xeon(R) 6776P",
+      "FileBufferMiB": 4,
+      "GODEBUG": "cpu.all=off",
+      "GoVersion": "go1.27.4",
+      "MemoryBytes": 2147483648,
+      "MemoryMiBPerSecond": 177.00066786898,
+      "MemorySHA256": "d5699ebf25c1abf61ae1fc14080d8afa8d782b4b2995831590cb15dbcc5fb951",
+      "MemorySeconds": 11.57057781,
+      "Version": "0.2.0-dev.2"
+    },
+    "sha_samples": [
+      "11.57s 98.89% 98.89%     11.57s 98.89%  crypto/internal/fips140/sha256.blockGeneric",
+      "0     0% 99.74%     11.57s 98.89%  crypto/internal/fips140/sha256.block"
+    ]
+  },
+  {
+    "node": "node-2",
+    "mode": "auto",
+    "result": {
+      "AdvertisedCPUFeatures": {
+        "avx2": true,
+        "bmi2": true,
+        "sha_ni": true
+      },
+      "Architecture": "amd64",
+      "CPUModel": "Intel(R) Xeon(R) 6776P",
+      "FileBufferMiB": 4,
+      "GODEBUG": "",
+      "GoVersion": "go1.27.4",
+      "MemoryBytes": 2147483648,
+      "MemoryMiBPerSecond": 1066.1235139395828,
+      "MemorySHA256": "d5699ebf25c1abf61ae1fc14080d8afa8d782b4b2995831590cb15dbcc5fb951",
+      "MemorySeconds": 1.920978173,
+      "Version": "0.2.0-dev.2"
+    },
+    "sha_samples": [
+      "1920ms 94.12% 94.12%     1920ms 94.12%  crypto/internal/fips140/sha256.blockSHANI",
+      "0     0% 99.02%     1920ms 94.12%  crypto/internal/fips140/sha256.block"
+    ]
+  },
+  {
+    "node": "node-2",
+    "mode": "no-sha",
+    "result": {
+      "AdvertisedCPUFeatures": {
+        "avx2": true,
+        "bmi2": true,
+        "sha_ni": true
+      },
+      "Architecture": "amd64",
+      "CPUModel": "Intel(R) Xeon(R) 6776P",
+      "FileBufferMiB": 4,
+      "GODEBUG": "cpu.sha=off",
+      "GoVersion": "go1.27.4",
+      "MemoryBytes": 2147483648,
+      "MemoryMiBPerSecond": 280.2453641706151,
+      "MemorySHA256": "d5699ebf25c1abf61ae1fc14080d8afa8d782b4b2995831590cb15dbcc5fb951",
+      "MemorySeconds": 7.307881813,
+      "Version": "0.2.0-dev.2"
+    },
+    "sha_samples": [
+      "7310ms 98.52% 98.52%     7310ms 98.52%  crypto/internal/fips140/sha256.blockAVX2",
+      "0     0% 99.87%     7310ms 98.52%  crypto/internal/fips140/sha256.block"
+    ]
+  },
+  {
+    "node": "node-2",
+    "mode": "generic",
+    "result": {
+      "AdvertisedCPUFeatures": {
+        "avx2": true,
+        "bmi2": true,
+        "sha_ni": true
+      },
+      "Architecture": "amd64",
+      "CPUModel": "Intel(R) Xeon(R) 6776P",
+      "FileBufferMiB": 4,
+      "GODEBUG": "cpu.all=off",
+      "GoVersion": "go1.27.4",
+      "MemoryBytes": 2147483648,
+      "MemoryMiBPerSecond": 177.6487914007197,
+      "MemorySHA256": "d5699ebf25c1abf61ae1fc14080d8afa8d782b4b2995831590cb15dbcc5fb951",
+      "MemorySeconds": 11.528364386,
+      "Version": "0.2.0-dev.2"
+    },
+    "sha_samples": [
+      "11.52s 98.97% 98.97%     11.52s 98.97%  crypto/internal/fips140/sha256.blockGeneric",
+      "0     0% 99.74%     11.52s 98.97%  crypto/internal/fips140/sha256.block"
+    ]
+  },
+  {
+    "node": "node-3",
+    "mode": "auto",
+    "result": {
+      "AdvertisedCPUFeatures": {
+        "avx2": true,
+        "bmi2": true,
+        "sha_ni": true
+      },
+      "Architecture": "amd64",
+      "CPUModel": "Intel(R) Xeon(R) 6767P",
+      "FileBufferMiB": 4,
+      "GODEBUG": "",
+      "GoVersion": "go1.27.4",
+      "MemoryBytes": 2147483648,
+      "MemoryMiBPerSecond": 1657.2421096224984,
+      "MemorySHA256": "d5699ebf25c1abf61ae1fc14080d8afa8d782b4b2995831590cb15dbcc5fb951",
+      "MemorySeconds": 1.235788053,
+      "Version": "0.2.0-dev.2"
+    },
+    "sha_samples": [
+      "1.24s 93.23% 93.23%      1.24s 93.23%  crypto/internal/fips140/sha256.blockSHANI",
+      "0     0%   100%      1.24s 93.23%  crypto/internal/fips140/sha256.block"
+    ]
+  },
+  {
+    "node": "node-3",
+    "mode": "no-sha",
+    "result": {
+      "AdvertisedCPUFeatures": {
+        "avx2": true,
+        "bmi2": true,
+        "sha_ni": true
+      },
+      "Architecture": "amd64",
+      "CPUModel": "Intel(R) Xeon(R) 6767P",
+      "FileBufferMiB": 4,
+      "GODEBUG": "cpu.sha=off",
+      "GoVersion": "go1.27.4",
+      "MemoryBytes": 2147483648,
+      "MemoryMiBPerSecond": 438.03562918669076,
+      "MemorySHA256": "d5699ebf25c1abf61ae1fc14080d8afa8d782b4b2995831590cb15dbcc5fb951",
+      "MemorySeconds": 4.675418764,
+      "Version": "0.2.0-dev.2"
+    },
+    "sha_samples": [
+      "4.67s 97.29% 97.29%      4.67s 97.29%  crypto/internal/fips140/sha256.blockAVX2",
+      "0     0% 99.38%      4.67s 97.29%  crypto/internal/fips140/sha256.block"
+    ]
+  },
+  {
+    "node": "node-3",
+    "mode": "generic",
+    "result": {
+      "AdvertisedCPUFeatures": {
+        "avx2": true,
+        "bmi2": true,
+        "sha_ni": true
+      },
+      "Architecture": "amd64",
+      "CPUModel": "Intel(R) Xeon(R) 6767P",
+      "FileBufferMiB": 4,
+      "GODEBUG": "cpu.all=off",
+      "GoVersion": "go1.27.4",
+      "MemoryBytes": 2147483648,
+      "MemoryMiBPerSecond": 277.63317230952316,
+      "MemorySHA256": "d5699ebf25c1abf61ae1fc14080d8afa8d782b4b2995831590cb15dbcc5fb951",
+      "MemorySeconds": 7.376640129,
+      "Version": "0.2.0-dev.2"
+    },
+    "sha_samples": [
+      "7.37s 98.66% 98.66%      7.37s 98.66%  crypto/internal/fips140/sha256.blockGeneric",
+      "0     0% 99.60%      7.37s 98.66%  crypto/internal/fips140/sha256.block"
+    ]
+  }
+]

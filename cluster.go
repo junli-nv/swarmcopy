@@ -25,6 +25,8 @@ import (
 )
 
 type Job struct {
+	PipelineVerify                                                               bool
+	VerifyBufferMiB                                                              int
 	Adaptive, Endgame                                                            bool
 	MinWorkers                                                                   int
 	MaxWorkers                                                                   int
@@ -356,6 +358,8 @@ func clusterCommand(mode string, args []string) error {
 		fs.BoolVar(&recheck, "recheck", false, "force full existing-file verification")
 	}
 	if mode == "distribute" {
+		fs.BoolVar(&j.PipelineVerify, "pipeline-verify", false, "overlap ordered whole-file SHA256 with transfer")
+		fs.IntVar(&j.VerifyBufferMiB, "verify-buffer-mib", 4, "whole-file verification read buffer (1..64 MiB)")
 		fs.StringVar(&hosts, "hosts", "", "host list, bracket ranges, or @host-file")
 		fs.StringVar(&j.Source, "source", "", "controller-local immutable source file")
 		fs.StringVar(&j.Seed, "seed", "", "initial seed host; default first host")
@@ -417,6 +421,9 @@ func clusterCommand(mode string, args []string) error {
 		if j.Port < 1 || j.Port > 65535 || j.Workers < 1 || j.Workers > 32 || j.Uploads < 1 || j.Uploads > 32 ||
 			j.UploadMiB < 0 || j.DownloadMiB < 0 || j.UploadMiB > 100000 || j.DownloadMiB > 100000 || j.Lifetime <= 0 {
 			return errors.New("invalid resource limits")
+		}
+		if j.VerifyBufferMiB < 1 || j.VerifyBufferMiB > 64 {
+			return errors.New("verify-buffer-mib must be 1..64")
 		}
 		if j.MinWorkers == 0 {
 			j.MinWorkers = j.Workers

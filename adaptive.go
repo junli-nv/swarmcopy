@@ -12,6 +12,9 @@ import (
 
 // Performance durations are sums of concurrent request work unless named as a phase.
 type Performance struct {
+	PipelineVerify                                                                           bool
+	FileHashBytes, FileHashBytesAtTransferEnd                                                int64
+	FileHashReadSeconds, FileHashComputeSeconds, FileHashWaitSeconds, FileHashWallSeconds    float64
 	Stage                                                                                    string
 	Adaptive                                                                                 bool
 	ActiveDownloads, TargetDownloads, MaxDownloads, MinDownloads, ActiveUploads, UploadLimit int
@@ -73,6 +76,7 @@ func (n *Node) maxWorkers() int {
 func (n *Node) performanceLocked() *Performance {
 	p := n.perf
 	p.Adaptive = n.o.Adaptive
+	p.PipelineVerify = n.o.PipelineVerify
 	p.ActiveDownloads = n.active
 	p.TargetDownloads = n.target
 	p.MaxDownloads = n.maxWorkers()

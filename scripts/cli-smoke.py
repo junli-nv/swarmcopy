@@ -3,7 +3,7 @@
 import os,pathlib,subprocess,tempfile
 root=pathlib.Path(__file__).resolve().parents[1]
 binary=os.environ.get('SWARMCOPY_BINARY',str(root/'swarmcopy'))
-commands=['distribute','jobs','inspect','watch','status','resume','stop','prepare','peer']
+commands=['distribute','jobs','inspect','watch','status','resume','stop','prepare','peer','hashbench']
 with tempfile.TemporaryDirectory(prefix='swarmcopy-cli-') as tmp:
     env=os.environ.copy();env['XDG_STATE_HOME']=tmp
     def call(args):

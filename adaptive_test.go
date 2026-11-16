@@ -249,6 +249,7 @@ func TestInvalidHedgeDoesNotCancelGoodOriginal(t *testing.T) {
 }
 func TestLocalWriteErrorNotBlamedOnSource(t *testing.T) {
 	n, data := fixture(t)
+	n.have[1] = true // Force the full first chunk, not the randomly selected short tail.
 	s := chunkServer(data[:65536])
 	defer s.Close()
 	n.remotes = []Remote{remoteFor(serverAddr(s), []bool{true, true})}

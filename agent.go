@@ -137,6 +137,12 @@ func agentCommand(args []string) error {
 			"--uploads", strconv.Itoa(o.Uploads), "--upload-mib", strconv.FormatInt(o.UploadMiB, 10),
 			"--download-mib", strconv.FormatInt(o.DownloadMiB, 10), "--lifetime", o.Lifetime.String(),
 			"--stall-timeout", o.Stall.String()}
+		if o.PipelineVerify {
+			argv = append(argv, "--pipeline-verify")
+		}
+		if o.VerifyBufferMiB > 0 {
+			argv = append(argv, "--verify-buffer-mib", strconv.Itoa(o.VerifyBufferMiB))
+		}
 		if o.MinWorkers > 0 {
 			argv = append(argv, "--min-workers", strconv.Itoa(o.MinWorkers))
 		}

@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.2.0-dev"
+const version = "0.2.0-dev.2"
 const protocol = "SCDP/1"
 
 type Manifest struct {
@@ -221,6 +221,8 @@ func prepare(args []string) error {
 }
 
 type Options struct {
+	PipelineVerify                           bool
+	VerifyBufferMiB                          int
 	Adaptive, Endgame                        bool
 	MinWorkers                               int
 	MaxWorkers                               int
@@ -279,6 +281,7 @@ type Remote struct {
 	seen time.Time
 }
 type Node struct {
+	verifier                       *orderedVerifier
 	m                              Manifest
 	o                              Options
 	token                          string
@@ -391,6 +394,8 @@ func main() {
 	}
 	if e == nil {
 		switch os.Args[1] {
+		case "hashbench":
+			e = hashbenchCommand(os.Args[2:])
 		case "prepare":
 			e = prepare(os.Args[2:])
 		case "peer":
@@ -568,6 +573,8 @@ func peer(args []string) error {
 	fs := flag.NewFlagSet("peer", flag.ContinueOnError)
 	configureUsage(fs, "peer")
 	fs.StringVar(&o.File, "file", "", "local destination or existing seed file")
+	fs.BoolVar(&o.PipelineVerify, "pipeline-verify", false, "overlap ordered whole-file SHA256 with chunk transfer")
+	fs.IntVar(&o.VerifyBufferMiB, "verify-buffer-mib", 4, "whole-file verification read buffer (1..64 MiB)")
 	fs.BoolVar(&o.Recheck, "recheck", false, "ignore final-file verification cache; rehash all existing data")
 	fs.StringVar(&o.Manifest, "manifest", "", "trusted manifest JSON")
 	fs.StringVar(&o.Listen, "listen", ":19700", "listening address")
@@ -611,6 +618,9 @@ func peer(args []string) error {
 	}
 	if o.MaxWorkers < o.Workers || o.MaxWorkers > 32 || o.HedgeDelay <= 0 {
 		return errors.New("invalid max-workers or hedge-delay")
+	}
+	if o.VerifyBufferMiB < 1 || o.VerifyBufferMiB > 64 {
+		return errors.New("verify-buffer-mib must be 1..64")
 	}
 	m, e := loadManifest(o.Manifest)
 	if e != nil {
@@ -724,6 +734,11 @@ func peer(args []string) error {
 	serverErr := make(chan error, 1)
 	go func() { serverErr <- srv.Serve(ln) }()
 	var wg sync.WaitGroup
+	if o.PipelineVerify && !n.complete {
+		n.verifier = newOrderedVerifier(n)
+		wg.Add(1)
+		go func() { defer wg.Done(); n.verifier.run(ctx) }()
+	}
 	wg.Add(1)
 	go func() { defer wg.Done(); n.discover(ctx, addresses) }()
 	if o.Adaptive {
@@ -760,7 +775,7 @@ func peer(args []string) error {
 				}
 			}
 			if !st.Complete && count == len(st.Have) {
-				if e = n.finalize(); e != nil {
+				if e = n.finalizeContext(ctx); e != nil {
 					return e
 				}
 				st = n.snapshot()

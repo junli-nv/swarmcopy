@@ -1,5 +1,7 @@
 # swarmcopy
 
+[Pipelined verification and CPU acceleration](docs/PIPELINE.en.md): 0.2.0-dev.2 with full SHA-256 and hashbench diagnostics.
+
 [Adaptive transfer experiment](docs/ADAPTIVE.en.md): 0.2.0-dev branch with diagnostics and opt-in scheduling. Previously published v0.1.0 results remain below.
 
 [Download experimental build](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0-dev) · [45-node results](docs/ADAPTIVE-RESULTS.en.md)

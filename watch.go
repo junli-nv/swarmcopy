@@ -158,6 +158,9 @@ func render(observations []observation, previous map[string]observation, clear b
 			if !s.Complete && s.Error == "" && (p.Stage == "sync" || p.Stage == "final-hash" || p.Stage == "publish") {
 				state = strings.ToUpper(p.Stage)
 			}
+			if p.PipelineVerify && !s.Origin {
+				state += fmt.Sprintf(" hash=%.1f%%", 100*float64(p.FileHashBytes)/float64(s.Size))
+			}
 			if p.Adaptive {
 				state += fmt.Sprintf(" workers=%d/%d", p.ActiveDownloads, p.TargetDownloads)
 			}

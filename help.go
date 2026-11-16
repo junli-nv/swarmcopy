@@ -33,6 +33,7 @@ COMMANDS
   stop        Stop only the selected job's recorded peer processes
   prepare     Copy an immutable source into a seed file and build its manifest
   peer        Run one peer directly with a manifest and token
+  hashbench   Measure memory/file SHA256 and optionally record a CPU profile
   version     Print the executable version
 
 HELP
@@ -54,6 +55,8 @@ DOCS
 }
 func usageText(name string) string {
 	switch name {
+	case "hashbench":
+		return "Measure SHA256 without changing input files. CPU profiles require a NEW path.\n\nExamples:\n  swarmcopy hashbench --bytes-mib 2048\n  swarmcopy hashbench --file /raid/images/media.sqsh --cpu-profile /tmp/new-sha.pprof\n"
 	case "distribute":
 		return `Create a saved job, bootstrap peers over SSH, and distribute one file.
 The controller prints a job ID and monitors until all files pass SHA256.
@@ -214,7 +217,7 @@ func completedJobRows(j Job) ([]observation, any, error) {
 	summary := map[string]any{}
 	for _, row := range rows {
 		s := row.st
-		summary[row.addr] = map[string]any{"Complete": s.Complete, "Size": s.Size, "VerifiedBytes": s.VerifiedBytes, "Downloaded": s.Downloaded, "Uploaded": s.Uploaded, "From": s.From}
+		summary[row.addr] = map[string]any{"Complete": s.Complete, "Size": s.Size, "VerifiedBytes": s.VerifiedBytes, "Downloaded": s.Downloaded, "Uploaded": s.Uploaded, "From": s.From, "Performance": s.Performance}
 	}
 	return rows, map[string]any{"Protocol": protocol, "Recorded": true, "JobID": j.ID, "Finished": result.Finished, "Nodes": summary}, nil
 }
@@ -236,6 +239,8 @@ func commandHelp(name string) error {
 		return e
 	case "prepare":
 		return prepare(args)
+	case "hashbench":
+		return hashbenchCommand(args)
 	case "peer":
 		return peer(args)
 	default:
