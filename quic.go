@@ -13,6 +13,8 @@ import (
 	"math/big"
 	"net"
 	"net/http"
+	"os"
+	"runtime/pprof"
 	"time"
 
 	"github.com/quic-go/quic-go"
@@ -70,16 +72,25 @@ func quicConfig() *quic.Config {
 		InitialConnectionReceiveWindow: 8 << 20, MaxConnectionReceiveWindow: 128 << 20, MaxIncomingStreams: 64}
 }
 
-type quicRoundTripper struct{ tr *http3.Transport }
+type quicRoundTripper struct{ shards []*http3.Transport }
+
+func (q *quicRoundTripper) index(host string) int {
+	var h uint64 = 14695981039346656037
+	for i := 0; i < len(host); i++ {
+		h ^= uint64(host[i])
+		h *= 1099511628211
+	}
+	return int(h % uint64(len(q.shards)))
+}
 
 func (q *quicRoundTripper) RoundTrip(r *http.Request) (*http.Response, error) {
 	cloned := r.Clone(r.Context())
 	url := *r.URL
 	url.Scheme = "https"
 	cloned.URL = &url
-	return q.tr.RoundTrip(cloned)
+	return q.shards[q.index(r.URL.Host)].RoundTrip(cloned)
 }
-func newDataClient(mode, token string) (*http.Client, func(), error) {
+func newDataClient(mode, token string, socketCounts ...int) (*http.Client, func(), error) {
 	if !validTransport(mode) {
 		return nil, nil, errors.New("transport must be tcp or quic")
 	}
@@ -91,9 +102,23 @@ func newDataClient(mode, token string) (*http.Client, func(), error) {
 	if err != nil {
 		return nil, nil, err
 	}
-	tr := &http3.Transport{TLSClientConfig: conf, QUICConfig: quicConfig(), DisableCompression: true, MaxResponseHeaderBytes: 8192}
-	c.Transport = &quicRoundTripper{tr: tr}
-	return c, func() { _ = tr.Close() }, nil
+	count := 1
+	if len(socketCounts) > 0 && socketCounts[0] != 0 {
+		count = socketCounts[0]
+	}
+	if count < 1 || count > 32 {
+		return nil, nil, errors.New("quic-sockets must be 1..32")
+	}
+	q := &quicRoundTripper{}
+	for range count {
+		q.shards = append(q.shards, &http3.Transport{TLSClientConfig: conf.Clone(), QUICConfig: quicConfig(), DisableCompression: true, MaxResponseHeaderBytes: 8192})
+	}
+	c.Transport = q
+	return c, func() {
+		for _, tr := range q.shards {
+			_ = tr.Close()
+		}
+	}, nil
 }
 func (n *Node) chunkClient() *http.Client {
 	if n.dataClient != nil {
@@ -120,4 +145,22 @@ func (n *Node) startQUIC(ctx context.Context, addr string, serverErr chan<- erro
 		Handler: http.HandlerFunc(n.serve), ConnContext: func(_ context.Context, _ *quic.Conn) context.Context { return ctx }}
 	go func() { serverErr <- srv.Serve(packet) }()
 	return func() { _ = srv.Close(); _ = packet.Close() }, nil
+}
+
+// Developer-only opt-in; capture real peer CPU work without an exposed pprof server.
+// The launcher controls this environment value, profiles are private new files.
+func peerCPUProfile() (func(), error) {
+	path := os.Getenv("SWARMCOPY_PEER_CPU_PROFILE")
+	if path == "" {
+		return func() {}, nil
+	}
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
+	if err != nil {
+		return nil, err
+	}
+	if err = pprof.StartCPUProfile(f); err != nil {
+		f.Close()
+		return nil, err
+	}
+	return func() { pprof.StopCPUProfile(); f.Close() }, nil
 }

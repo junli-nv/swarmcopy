@@ -215,3 +215,26 @@ func TestQUICCancellationNeverFallsBackToTCP(t *testing.T) {
 		t.Fatal("silently used TCP")
 	}
 }
+
+func TestQUICShardsKeepPeerAffinityAndDistributeHosts(t *testing.T) {
+	c, closeClient, e := newDataClient("quic", strings.Repeat("a", 64), 4)
+	if e != nil {
+		t.Fatal(e)
+	}
+	defer closeClient()
+	q := c.Transport.(*quicRoundTripper)
+	seen := map[int]bool{}
+	for _, host := range []string{"node001:1", "node002:1", "node003:1", "node004:1", "node005:1", "node006:1", "node007:1", "node008:1"} {
+		a, b := q.index(host), q.index(host)
+		if a != b {
+			t.Fatal("peer moved between receive sockets")
+		}
+		seen[a] = true
+	}
+	if len(seen) != 4 {
+		t.Fatalf("hosts did not spread: %v", seen)
+	}
+	if _, _, e := newDataClient("quic", strings.Repeat("a", 64), 33); e == nil {
+		t.Fatal("unbounded shard allocation")
+	}
+}

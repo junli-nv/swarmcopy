@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.3.0-dev.1"
+const version = "0.3.0-dev.2"
 const protocol = "SCDP/1"
 
 type Manifest struct {
@@ -221,6 +221,7 @@ func prepare(args []string) error {
 }
 
 type Options struct {
+	QUICSockets                              int
 	Transport                                string
 	VerifyWindowChunks                       int
 	PipelineVerify                           bool
@@ -581,6 +582,7 @@ func peer(args []string) error {
 	var o Options
 	fs := flag.NewFlagSet("peer", flag.ContinueOnError)
 	configureUsage(fs, "peer")
+	fs.IntVar(&o.QUICSockets, "quic-sockets", 1, "QUIC client UDP socket shards (1..32); distribute sources across receive loops")
 	fs.StringVar(&o.Transport, "transport", "tcp", "chunk data transport: tcp or quic (UDP); control stays TCP")
 	fs.StringVar(&o.File, "file", "", "local destination or existing seed file")
 	fs.IntVar(&o.VerifyWindowChunks, "verify-window-chunks", 256, "prefer this many upcoming hash chunks; 0=global rarity, requires pipeline-verify")
@@ -613,6 +615,9 @@ func peer(args []string) error {
 		fs.Usage()
 		return errors.New("unexpected positional arguments; this release accepts a single source file")
 	}
+	if o.QUICSockets < 1 || o.QUICSockets > 32 {
+		return errors.New("quic-sockets must be 1..32")
+	}
 	if !validTransport(o.Transport) {
 		return errors.New("transport must be tcp or quic")
 	}
@@ -640,6 +645,11 @@ func peer(args []string) error {
 	if o.VerifyBufferMiB < 1 || o.VerifyBufferMiB > 64 {
 		return errors.New("verify-buffer-mib must be 1..64")
 	}
+	finishProfile, profileErr := peerCPUProfile()
+	if profileErr != nil {
+		return profileErr
+	}
+	defer finishProfile()
 	m, e := loadManifest(o.Manifest)
 	if e != nil {
 		return e
@@ -667,7 +677,7 @@ func peer(args []string) error {
 		peerBusy: map[string]int{}, from: map[string]int64{}, slots: make(chan struct{}, o.Uploads),
 		client: client(), lastProgress: time.Now(), up: pacer{rate: o.UploadMiB << 20}, down: pacer{rate: o.DownloadMiB << 20}}
 	defer n.client.CloseIdleConnections()
-	dataClient, closeData, err := newDataClient(o.Transport, t)
+	dataClient, closeData, err := newDataClient(o.Transport, t, o.QUICSockets)
 	if err != nil {
 		return err
 	}
