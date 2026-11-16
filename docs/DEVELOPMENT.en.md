@@ -89,3 +89,13 @@ Changes must preserve these invariants: XXH3 requires full; chunks must never cr
 `Job.SSHOptions` stores explicit repeated `--ssh-opt` values. `mergeSSHOptions` merges defaults, saved options and new overrides case-insensitively without shell splitting. Explicit cipher selection takes priority. SSH login preflight stays before source hashing. Add options to this collection instead of introducing parallel SSH invocation paths.
 
 Pinned BLAKE3/XXH3 libraries are vendored with licenses. Run `scripts/vendor-quic.sh` after dependency changes so the existing QUIC bulk patch remains applied. Cross-build with CGO_ENABLED=0 for amd64 and arm64; distinguish cross-build validation from physical ARM tests. Preserve raw benchmark configuration and do not report CPU-only ratios as network speedups.
+
+v0.6.0: `resolveNewJobIntegrity` resolves defaults only for new jobs: full→SHA256/SHA256, chunks→BLAKE3/BLAKE3; explicit algorithms win. Never apply new presets to loaded jobs or existing manifests. Prepared seed files retain their manifest algorithms.
+
+## v0.6.0 source and lifecycle invariants
+
+`source_origin.go` maps trusted source-plan offsets to original read-only files; validate fingerprints/layout and bind the complete manifest before serving. Close HTTP/QUIC and file handles on controller exit. `controllerSourceHost` selects direct mode only when the actual controller hostname matches a target. `SourceAddress` stays outside the receiving target count. Agent reuse compares peer addresses/mode so changed origin ports restart peers without forcing an unrelated final-file cache bypass.
+
+`resilience.go` isolates node operations with bounded contexts; preserve the complete Hosts list in every saved record, including inventory passes. Monitoring has no all-ready barrier. Diagnostics are bounded and persisted; never mark failed targets complete.
+
+`remove.go` holds controller/agent locks, validates process identity and configuration ownership, retains records after partial failure, and only purges a manifest namespace after checking other job references. Preserve sources/final media and reject foreign/symlink job roots. `resilience_test.go` and `remove_test.go` cover these boundaries. Sparse detection must skip zero-length entries and conservatively fall back when SEEK_DATA is unsupported.

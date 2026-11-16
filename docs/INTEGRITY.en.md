@@ -11,6 +11,17 @@ v0.5.0 keeps `--verify full --chunk-hash sha256 --file-hash sha256` as defaults.
 
 Full verification is pipelined by default and may overlap download. Chunks cannot detect corruption after a successful chunk check/write; the guarantees differ. fsync requests OS persistence, not independent hardware readback. Both modes retain recovery and retransmission. Chunks completion never creates a full-file verification cache. Full caches require manifest identity and matching file fingerprints; `--recheck` bypasses them.
 
+## Two integrity presets (v0.6.0)
+
+For new `--source` jobs, choose `--verify full` or `--verify chunks`. Full defaults to SHA256 chunks/files with final file verification; chunks defaults to BLAKE3 chunks/files and publishes after all chunk checks and fsync, omitting the final full-file reread. Omitting `--verify` still selects full. No hash flags are needed.
+
+```bash
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify chunks
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify full
+```
+
+`--chunk-hash` / `--file-hash` remain advanced overrides. Resume/prepared seed manifests retain their algorithms; changing mode never rewrites a manifest. An existing SHA256 job still uses SHA256 chunks after switching to chunks mode.
+
 ## Combinations and examples
 
 `--chunk-hash sha256|blake3|xxh3-128` selects chunk validation.
@@ -24,7 +35,7 @@ XXH3-128 is noncryptographic and requires full mode with a cryptographic file di
 
 # Cryptographic chunk checks, omit final receiving disk reread
 ./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images --verify chunks --chunk-hash blake3 --file-hash blake3
+  --dest /raid/images --verify chunks
 
 ./swarmcopy jobs
 ./swarmcopy inspect --job <ID>

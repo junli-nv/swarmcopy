@@ -6,6 +6,31 @@ Resumable P2P file and directory distribution for Linux clusters, using **SCDP/1
 
 **main is the only long-lived branch.** One binary includes TCP, optional UDP/QUIC, pipelined verification, optional adaptive concurrency, multiple files and directories. No separate UDP or race executable is needed. Historical tags and measurements remain available.
 
+## Recommended: seed directly from a compute node
+
+If media already resides on a compute node, run there and include it in `--hosts`. v0.6.0 serves original files directly, skipping initial seed copying; local and remote destinations receive concurrently. A BCM controller outside the target list instead stages a compute seed through SSH. Startup and watch explicitly show the selected mode and endpoints. [Scenarios, network requirements and failures](docs/SOURCE-MODES.en.md).
+
+```bash
+# Run on HGX167; include this host as a destination
+./swarmcopy distribute --hosts 'HGX[061,066,082,138,169,167]' \
+  --source /raid/local-ai/dist/local-ai.tar --dest /raid/images --verify chunks
+```
+
+New jobs need only `--verify chunks` (BLAKE3/BLAKE3) or `--verify full` (default SHA256/SHA256). Failed targets do not cancel healthy siblings and remain incomplete; resume the same ID after recovery. Resumed sparse holes are skipped without treating unwritten bytes as verified.
+
+Remove a job and exclusive partials with `./swarmcopy remove --job <ID> --purge-partials` (`delete` is an alias). It stops owned controller/peers, then removes records/remote job metadata and exclusive partials. Source files, published media and shared data remain. Failed cleanup keeps the local record for retry. Use `stop` when you only want to pause.
+
+## Two integrity presets (v0.6.0)
+
+For new `--source` jobs, choose `--verify full` or `--verify chunks`. Full defaults to SHA256 chunks/files with final file verification; chunks defaults to BLAKE3 chunks/files and publishes after all chunk checks and fsync, omitting the final full-file reread. Omitting `--verify` still selects full. No hash flags are needed.
+
+```bash
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify chunks
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify full
+```
+
+`--chunk-hash` / `--file-hash` remain advanced overrides. Resume/prepared seed manifests retain their algorithms; changing mode never rewrites a manifest. An existing SHA256 job still uses SHA256 chunks after switching to chunks mode.
+
 ## v0.5.0 integrity modes and SSH options
 
 Defaults remain full + SHA256. Choose `--verify chunks` to omit the final disk reread, or `--verify full --chunk-hash xxh3-128 --file-hash blake3` for fast chunks plus a cryptographic file digest. XXH3 is rejected in chunks mode. Initial source hashing still reads every byte. See [guarantees, combinations and measured hardware results](docs/INTEGRITY.en.md).
@@ -37,7 +62,7 @@ Preconfigure SSH keys, agent or config. Alternatively use `--ssh-user alice --as
 
 Sources are local to the controller running the command; destinations are local disks on every target. A first trusted manifest requires reading and hashing the source. Later jobs may reuse its local verification cache when source inode/device/size/mtime/ctime and directory membership are unchanged. `--recheck` forces a reread.
 
-Before transfer, each target is inventoried. Existing complete replicas seed missing nodes, skipping controller-to-seed media transfer. Otherwise one initial seed receives an SSH stream and peers exchange data. All peers stop after completion unless `--keep-seeding` is supplied.
+Before transfer, each target is inventoried. Existing complete replicas seed missing nodes, skipping controller-to-seed media transfer. A controller that is also a target directly serves the original files; otherwise one initial seed receives an SSH stream before peer exchange. All peers stop after completion unless `--keep-seeding` is supplied.
 
 ## Multiple files, globs and directories
 
@@ -117,7 +142,7 @@ Jobs live under `~/.local/state/swarmcopy/jobs`, honoring `XDG_STATE_HOME`. Reta
 
 Use `stop --job` to stop owned processes by PID/start-time checks. Nodes run the same normal binary, with `.swarmcopy/<job-id>/process.json` and `peer.log` for diagnosis. Avoid a cluster-wide `pkill swarmcopy`. Leaving watch only exits the monitor.
 
-Incomplete initial SSH import restarts that phase; it is not yet chunk-resumable. P2P transfer supports restart, repair and retries. Legacy v1 single-file jobs and the `prepare --seed-file` workflow remain compatible and retain their existing-final no-overwrite rule. New `--source` jobs use v2 manifests and the conflict policies above.
+Incomplete initial SSH import restarts that phase; it is not yet chunk-resumable. P2P transfer supports restart, repair and retries. Legacy v1 single-file jobs and the `prepare --seed-file` workflow remain compatible and retain their existing-final no-overwrite rule. New SHA256 source jobs use v2; custom algorithms and the chunks preset use v3, with the conflict policies above.
 
 ## Network and integrity
 

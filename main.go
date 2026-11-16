@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.5.0"
+const version = "0.6.0"
 const protocol = "SCDP/1"
 
 type Manifest struct {
@@ -437,6 +437,8 @@ func main() {
 			}
 		case "distribute", "stop":
 			e = clusterCommand(os.Args[1], os.Args[2:])
+		case "remove", "delete":
+			e = removeCommand(os.Args[2:])
 		case "jobs":
 			e = jobsCommand(os.Args[2:])
 		case "inspect":
@@ -738,6 +740,7 @@ func peer(args []string) error {
 	}
 	n.dataClient = dataClient
 	defer closeData()
+	log.Printf("STARTUP checking existing/partial files at %s; listener opens after local verification", o.File)
 	scanStart := time.Now()
 	if m.isTree() {
 		if o.Existing != "" && o.Existing != "keep" && o.Existing != "resume" && o.Existing != "replace" {
@@ -839,6 +842,7 @@ func peer(args []string) error {
 	defer stop()
 	ctx, cancel := context.WithTimeout(signalCtx, o.Lifetime)
 	defer cancel()
+	log.Printf("STARTUP local verification finished in %s; opening listener %s", time.Since(scanStart).Round(time.Second), o.Listen)
 	ln, e := net.Listen("tcp", o.Listen)
 	if e != nil {
 		return e
@@ -931,6 +935,7 @@ func statusCommand(args []string) error {
 		fs.Usage()
 		return e
 	}
+	var jobRecord *Job
 	if *job != "" {
 		if *list != "" || *tf != "" {
 			return errors.New("--job cannot be combined with --peers or --token-file")
@@ -939,6 +944,7 @@ func statusCommand(args []string) error {
 		if e != nil {
 			return e
 		}
+		jobRecord = &j
 		if preparation, ok := preparationState(j); ok {
 			return json.NewEncoder(os.Stdout).Encode(map[string]any{"JobID": j.ID, "State": preparation.State, "Stage": preparation.Stage, "Complete": false, "Preparation": preparation})
 		}
@@ -967,8 +973,17 @@ func statusCommand(args []string) error {
 	defer c.CloseIdleConnections()
 	result := map[string]any{}
 	ok := true
-	for _, a := range addresses {
-		st, err := getStatus(context.Background(), c, t, a)
+	rows := observe(context.Background(), c, t, addresses)
+	if jobRecord != nil {
+		m, x := loadManifest(filepath.Join(jobRecord.Dir, "manifest.json"))
+		if x == nil {
+			annotateJobRows(*jobRecord, &m, rows)
+		} else {
+			annotateJobRows(*jobRecord, nil, rows)
+		}
+	}
+	for _, row := range rows {
+		a, st, err := row.addr, row.st, row.err
 		if err != nil {
 			result[a] = map[string]string{"Error": err.Error()}
 			ok = false

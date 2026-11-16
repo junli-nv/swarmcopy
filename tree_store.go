@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"golang.org/x/sys/unix"
 	"io"
 	"os"
 	"path"
@@ -495,8 +496,27 @@ func (t *treeStore) chunkMayExist(off, size int64) bool {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 	for i := sort.Search(len(t.spans), func(i int) bool { return t.starts[i] > off }); i < len(t.spans) && t.spans[i].offset < off+size; i++ {
-		if !t.spans[i].available {
+		span := t.spans[i]
+		if span.entry.Size == 0 {
+			continue
+		}
+		if !span.available {
 			return false
+		}
+		// A previously created sparse partial may still contain no received bytes.
+		// SEEK_DATA proves holes without reading/hashing gigabytes of zeros.
+		if !span.final {
+			f, e := t.stage.OpenFile(span.entry.Path, os.O_RDONLY, 0)
+			if e == nil {
+				start := max(off, span.offset) - span.offset
+				end := min(off+size, span.offset+span.entry.Size) - span.offset
+				data, x := unix.Seek(int(f.Fd()), start, unix.SEEK_DATA)
+				f.Close()
+				if errors.Is(x, unix.ENXIO) || x == nil && data >= end {
+					return false
+				}
+				// Unsupported filesystems fall back to the ordinary content scan.
+			}
 		}
 	}
 	return true

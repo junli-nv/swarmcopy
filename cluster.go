@@ -26,6 +26,9 @@ import (
 )
 
 type Job struct {
+	SourceAddress, SourceDescription                                             string
+	NodeTimeout                                                                  time.Duration
+	NodeIssues                                                                   map[string]string `json:",omitempty"`
 	Verify, ChunkHash, FileHash                                                  string
 	SSHOptions                                                                   []string
 	SSHCipher                                                                    string
@@ -378,6 +381,7 @@ func clusterCommand(mode string, args []string) error {
 	fs.Var(&sshOptions, "ssh-opt", "additional OpenSSH KEY=VALUE option; repeatable, overrides defaults")
 	var recheck bool
 	var verification string
+	nodeWait := fs.Duration("node-timeout", 0, "per-node SSH/deploy/inventory timeout; default 1m, failures do not cancel healthy nodes")
 	if mode == "resume" {
 		fs.StringVar(&verification, "verify", "", "full or chunks; override saved mode, recheck/restart peers when changed")
 		fs.StringVar(&existing, "existing", "", "conflicts: ask, resume, replace or keep; overrides saved policy")
@@ -385,8 +389,8 @@ func clusterCommand(mode string, args []string) error {
 	}
 	if mode == "distribute" {
 		fs.StringVar(&j.Verify, "verify", "full", "full: disk content verification; chunks: cryptographic chunk checks without final reread")
-		fs.StringVar(&j.ChunkHash, "chunk-hash", "sha256", "chunk digest: sha256, blake3 or xxh3-128 (full only)")
-		fs.StringVar(&j.FileHash, "file-hash", "sha256", "cryptographic file digest: sha256 or blake3")
+		fs.StringVar(&j.ChunkHash, "chunk-hash", "", "advanced override: sha256, blake3 or xxh3-128 (full only); default follows --verify")
+		fs.StringVar(&j.FileHash, "file-hash", "", "advanced override: sha256 or blake3; default follows --verify")
 		fs.IntVar(&j.QUICGSOKiB, "quic-gso-kib", 64, "maximum QUIC GSO batch KiB (16..64), congestion/pacing limited")
 		fs.IntVar(&j.QUICMaxPayload, "quic-max-payload", 8952, "QUIC UDP payload ceiling (1452..8952), with path MTU discovery")
 		fs.IntVar(&j.QUICSockets, "quic-sockets", 4, "QUIC client UDP socket shards (1..32)")
@@ -463,6 +467,7 @@ func clusterCommand(mode string, args []string) error {
 			j.UploadMiB < 0 || j.DownloadMiB < 0 || j.UploadMiB > 100000 || j.DownloadMiB > 100000 || j.Lifetime <= 0 {
 			return errors.New("invalid resource limits")
 		}
+		resolveNewJobIntegrity(&j)
 		if !validHash(j.ChunkHash) || !cryptoHash(j.FileHash) {
 			return errors.New("unsupported chunk/file hash algorithm")
 		}
@@ -554,6 +559,12 @@ func clusterCommand(mode string, args []string) error {
 		if *user != "" {
 			j.SSHUser = *user
 		}
+	}
+	if *nodeWait < 0 {
+		return errors.New("node-timeout must be positive")
+	}
+	if *nodeWait > 0 {
+		j.NodeTimeout = *nodeWait
 	}
 	verificationChanged := mode == "resume" && verification != "" && verifyMode(j.Verify) != verification
 	if mode == "resume" && verification != "" {
@@ -649,6 +660,26 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	j.ControllerStartTicks, _ = startTicks(j.ControllerPID)
 	j.State = "starting"
 	j.LastError = ""
+	j.NodeIssues = map[string]string{}
+	directHost := ""
+	if len(j.Inputs) > 0 {
+		directHost = controllerSourceHost(*j)
+	}
+	localHost, _ := os.Hostname()
+	sourceLabel := j.Source
+	if len(j.Inputs) > 0 {
+		sourceLabel = j.Inputs[0].Source
+		if len(j.Sources) > 1 {
+			sourceLabel = fmt.Sprintf("%s (+%d source roots)", sourceLabel, len(j.Sources)-1)
+		}
+	}
+	if directHost != "" {
+		j.SourceDescription = fmt.Sprintf("SOURCE MODE: direct | %s:%s serves original files; no initial seed copy; ALL targets including this node receive into %s", directHost, sourceLabel, j.Dest)
+	} else {
+		j.SourceAddress = ""
+		j.SourceDescription = fmt.Sprintf("SOURCE MODE: staged | first copy %s:%s -> %s:%s over SSH; then compute-node P2P; this is a seed copy, not archive extraction", localHost, sourceLabel, j.Seed, j.Dest)
+	}
+	fmt.Println(j.SourceDescription)
 	if e = j.save(); e != nil {
 		return e
 	}
@@ -671,15 +702,17 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	if e = j.preparing(ctx, "checking-ssh", "checking SSH login before expensive source hashing", 0, 0, len(j.Hosts)); e != nil {
 		return e
 	}
-	if e = forHosts(ctx, j.Hosts, j.Fanout, func(c context.Context, h string) error {
+	active, e := nodeStage(ctx, j, j.Hosts, "checking-ssh", func(c context.Context, h string) error {
 		_, x := r.run(c, h, "check SSH login before source hashing", "true", nil)
-		if x == nil {
-			reportNode(c)
-		}
 		return x
-	}); e != nil {
+	})
+	if e != nil {
 		return e
 	}
+	if len(active) == 0 {
+		return errors.New("no SSH-reachable target; see per-node errors and resume this job after recovery")
+	}
+
 	if len(j.Inputs) > 0 {
 		mp := filepath.Join(j.Dir, "manifest.json")
 		if _, x := os.Stat(mp); os.IsNotExist(x) {
@@ -700,15 +733,32 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	if e = j.preparing(ctx, "deploying", "deploying executables and job configuration over SSH", 0, 0, len(j.Hosts)); e != nil {
 		return e
 	}
-	if e = forHosts(ctx, j.Hosts, j.Fanout, func(c context.Context, h string) error {
-		x := r.bootstrap(c, *j, h)
-		if x == nil {
-			reportNode(c)
-		}
-		return x
-	}); e != nil {
+	active, e = nodeStage(ctx, j, active, "deploying", func(c context.Context, h string) error { return r.bootstrap(c, *j, h) })
+	if e != nil {
 		return e
 	}
+	if len(active) == 0 {
+		return errors.New("deployment failed on every target; see per-node errors")
+	}
+	if directHost == "" && len(j.Inputs) > 0 {
+		found := false
+		for _, h := range active {
+			if h == j.Seed {
+				found = true
+			}
+		}
+		if !found {
+			oldSeed := j.Seed
+			j.Seed = active[0]
+			j.SourceDescription = strings.Replace(j.SourceDescription, "-> "+oldSeed+":", "-> "+j.Seed+":", 1)
+			j.Imported = false
+			fmt.Printf("SEED FAILOVER: using %s; original target list is retained\n", j.Seed)
+			if e = j.save(); e != nil {
+				return e
+			}
+		}
+	}
+
 	root := j.remoteDir()
 	binary := shellQuote(filepath.Join(root, "swarmcopy"))
 	if len(j.Inputs) == 0 && j.Source != "" && !j.Imported {
@@ -771,13 +821,19 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 		if e = j.preparing(ctx, "checking-existing", "verifying existing files on each node; uncached large files require disk reads", 0, 0, len(j.Hosts)); e != nil {
 			return e
 		}
-		ready, x := preflightTree(ctx, r, j, m, manifest)
+		ready, x := preflightTree(ctx, r, j, m, manifest, active...)
 		if x != nil {
 			return x
 		}
-		if !j.Imported {
+		if directHost != "" {
+			closeOrigin, x := startSourceOrigin(ctx, j, m, directHost)
+			if x != nil {
+				return x
+			}
+			defer closeOrigin()
+		} else if !j.Imported {
 			if !ready {
-				if x = j.preparing(ctx, "importing", "streaming source once to seed; awaiting independent seed verification", m.Size, m.fileCount(), 0); x != nil {
+				if x = j.preparing(ctx, "importing", fmt.Sprintf("SSH seed copy to %s:%s; not archive extraction; awaiting seed verification", j.Seed, j.Dest), m.Size, m.fileCount(), 0); x != nil {
 					return x
 				}
 				if x = importTreeJob(ctx, r, j, binary); x != nil {
@@ -798,25 +854,15 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	if e = j.preparing(ctx, "starting-peers", "starting peers; local files may require verification before listening", 0, 0, len(j.Hosts)); e != nil {
 		return e
 	}
-	if e = forHosts(ctx, j.Hosts, j.Fanout, func(c context.Context, h string) error {
-		x := startRemotePeer(c, r, *j, m, manifest, h)
-		if x == nil {
-			reportNode(c)
-		}
-		return x
-	}); e != nil {
-		return e
-	}
-	if e = j.preparing(ctx, "waiting-peers", "waiting for peer listeners; local files may still be under initial verification", 0, 0, len(j.Hosts)); e != nil {
-		return e
-	}
-	readyToken, x := token(filepath.Join(j.Dir, "job.token"))
+	started, x := nodeStage(ctx, j, active, "starting-peers", func(c context.Context, h string) error { return startRemotePeer(c, r, *j, m, manifest, h) })
 	if x != nil {
 		return x
 	}
-	if e = waitPeerReadiness(ctx, *j, readyToken); e != nil {
-		return e
+	if len(started) == 0 {
+		return errors.New("no target peer could be started; see per-node errors")
 	}
+	fmt.Println("MONITORING: each ready peer transfers independently; unavailable targets remain pending and do not block healthy targets")
+
 	reporter(ctx).phase("running", "P2P data transfer and final verification", 0, 0, 0)
 	j.State = "running"
 	if e = j.save(); e != nil {
@@ -831,6 +877,7 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	previous := map[string]observation{}
 	ticker := time.NewTicker(2 * time.Second)
 	defer ticker.Stop()
+	lastDiagnostic := time.Time{}
 	clear := false
 	if st, e := os.Stdout.Stat(); e == nil {
 		clear = st.Mode()&os.ModeCharDevice != 0
@@ -840,7 +887,30 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 			return errors.New("stop requested; partial files retained")
 		}
 		rows := observe(ctx, c, t, j.addresses())
+		if time.Since(lastDiagnostic) >= 30*time.Second {
+			if e = diagnosePeers(ctx, r, j, rows, previous); e != nil {
+				return e
+			}
+			lastDiagnostic = time.Now()
+		}
+		annotateJobRows(*j, &m, rows)
+		recovered := false
+		for i, row := range rows {
+			if row.err == nil && j.NodeIssues[j.Hosts[i]] != "" {
+				delete(j.NodeIssues, j.Hosts[i])
+				recovered = true
+			}
+		}
+		if recovered {
+			if e = j.save(); e != nil {
+				return e
+			}
+		}
 		all := render(rows, previous, clear)
+		fmt.Println(j.SourceDescription)
+		if !all {
+			fmt.Println("Pending/offline nodes do not block other peers. Keep verified partials; resume --job " + j.ID + " after recovery.")
+		}
 		for _, o := range rows {
 			if o.err == nil {
 				previous[o.addr] = o

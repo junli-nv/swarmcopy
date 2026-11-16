@@ -1,0 +1,8 @@
+{
+  "logical_bytes": 519520194560,
+  "chunks": 30966,
+  "scan_seconds": 0.15266871,
+  "ready_wall_seconds": 0.598374156281352,
+  "verified_bytes": 0,
+  "all_holes_remain_missing": true
+}

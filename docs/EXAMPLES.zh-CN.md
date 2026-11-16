@@ -4,6 +4,31 @@
 
 以下是统一版 main 的用法。将二进制命名为 `swarmcopy`；异构集群把两种原名二进制放入同级 `dist`（自动识别），或每条命令指定 `--bin-dir /path/to/dist`。示例节点和路径请换成实际值。
 
+## 推荐使用：计算节点直接供种
+
+介质已经在计算节点本地盘时，优先在该节点执行，并把本机列入 `--hosts`。v0.6.0 会直接读取原文件供种，跳过初始种子复制；本机和远端目标同步接收。若在 BCM 执行且 BCM 不在目标列表，则先经 SSH 复制到计算节点作种子。开始前与 watch 均明确显示来源方式、主机和路径。[两种场景、网络要求及故障处理](SOURCE-MODES.zh-CN.md)。
+
+```bash
+# 在 HGX167 上执行；本机也在目标列表中
+./swarmcopy distribute --hosts 'HGX[061,066,082,138,169,167]' \
+  --source /raid/local-ai/dist/local-ai.tar --dest /raid/images --verify chunks
+```
+
+新作业只需 `--verify chunks`（BLAKE3/BLAKE3），或 `--verify full`（默认 SHA256/SHA256）。异常节点不取消健康节点；仍保留未完成状态，恢复后用同一 ID 续传。恢复时跳过能确认的稀疏空洞，避免对未收到的几百 GB 零重复计算。
+
+删除作业并清理独占暂存：`./swarmcopy remove --job <ID> --purge-partials`，`delete` 为别名。它先停止本作业控制器和 peer，再清理记录、远端作业目录及独占暂存；原始源文件、已发布成品和共享数据保留。清理失败时保留记录供重试。只想暂停请用 `stop`。
+
+## 两种校验预设（v0.6.0）
+
+日常只需选择 `--verify full` 或 `--verify chunks`：新建 `--source` 作业时，full 默认 SHA256 分块和文件摘要，并检查最终文件；chunks 默认 BLAKE3 分块和文件摘要，全部验块、fsync 后发布，省略最终整文件回读。省略 `--verify` 仍为 full。无需再记两项 hash 参数。
+
+```bash
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify chunks
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify full
+```
+
+`--chunk-hash` / `--file-hash` 保留为高级覆盖参数。续传和已有种子清单沿用原摘要算法，选择模式不会改写清单；旧 SHA256 作业切换 chunks 仍用 SHA256 验块。
+
 ## 1. 单文件、多个文件、目录
 
 ~~~bash

@@ -220,11 +220,15 @@ func promptExisting(in io.Reader, out io.Writer) (string, error) {
 		}
 	}
 }
-func preflightTree(ctx context.Context, r sshRunner, j *Job, m Manifest, manifest []byte) (bool, error) {
+func preflightTree(ctx context.Context, r sshRunner, j *Job, m Manifest, manifest []byte, selected ...string) (bool, error) {
 	var mu sync.Mutex
 	anyComplete := false
 	var conflicts int
-	err := forHosts(ctx, j.Hosts, j.Fanout, func(c context.Context, h string) error {
+	hosts := selected
+	if len(hosts) == 0 {
+		hosts = j.Hosts
+	}
+	_, err := nodeStage(ctx, j, hosts, "checking-existing", func(c context.Context, h string) error {
 		mp := j.remoteDir() + "/manifest.json"
 		if e := r.write(c, h, mp, bytes.NewReader(manifest), false); e != nil {
 			return e

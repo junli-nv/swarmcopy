@@ -63,8 +63,12 @@ func agentCommand(args []string) error {
 	fs := flag.NewFlagSet("agent", flag.ContinueOnError)
 	configureUsage(fs, "agent")
 	config := fs.String("config", "", "trusted local peer configuration")
+	purge := fs.Bool("purge-partials", false, "remove only exclusive unpublished partials during cleanup")
 	if e := fs.Parse(args[1:]); e != nil {
 		return e
+	}
+	if mode == "cleanup" {
+		return cleanupPeer(*config, *purge)
 	}
 	data, e := os.ReadFile(*config)
 	if e != nil {
@@ -97,7 +101,7 @@ func agentCommand(args []string) error {
 	alive := ownedProcess(p, exe, o)
 	switch mode {
 	case "inspect":
-		return json.NewEncoder(os.Stdout).Encode(map[string]any{"Alive": alive, "PID": p.PID, "Log": filepath.Join(root, "peer.log")})
+		return json.NewEncoder(os.Stdout).Encode(map[string]any{"Alive": alive, "PID": p.PID, "Log": filepath.Join(root, "peer.log"), "LastLog": recentPeerLog(filepath.Join(root, "peer.log"))})
 	case "stop":
 		if !alive {
 			fmt.Println("already stopped")
@@ -117,7 +121,7 @@ func agentCommand(args []string) error {
 		return errors.New("peer did not stop in 30s; no forced kill performed")
 	case "start":
 		if alive {
-			if !o.Recheck {
+			if !o.Recheck && peerArgumentsMatch(p.PID, o) {
 				fmt.Println("already running", p.PID)
 				return nil
 			}
@@ -196,4 +200,23 @@ func agentCommand(args []string) error {
 	default:
 		return errors.New("unknown agent operation")
 	}
+}
+
+func peerArgumentsMatch(pid int, o Options) bool {
+	b, e := os.ReadFile(fmt.Sprintf("/proc/%d/cmdline", pid))
+	if e != nil {
+		return false
+	}
+	args := bytes.Split(b, []byte{0})
+	havePeers := ""
+	haveVerify := "full"
+	for i := 0; i+1 < len(args); i++ {
+		switch string(args[i]) {
+		case "--peers":
+			havePeers = string(args[i+1])
+		case "--verify":
+			haveVerify = string(args[i+1])
+		}
+	}
+	return havePeers == o.Peers && haveVerify == verifyMode(o.Verify)
 }

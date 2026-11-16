@@ -133,7 +133,13 @@ func render(observations []observation, previous map[string]observation, clear b
 			if old, ok := previous[o.addr]; ok && old.err == nil && old.st.Size == expected {
 				verified += old.st.VerifiedBytes
 			}
-			fmt.Printf("%-25s %7s %20s %11s %11s  OFFLINE: %v\n", o.addr, "?", "?", "-", "-", o.err)
+			state := "OFFLINE"
+			if strings.Contains(o.err.Error(), "STARTING:") {
+				state = "STARTING"
+			} else if strings.Contains(o.err.Error(), "FAILED:") {
+				state = "FAILED"
+			}
+			fmt.Printf("%-25s %7s %20s %11s %11s  %s: %v\n", o.addr, "?", "?", "-", "-", state, o.err)
 			all = false
 			continue
 		}
@@ -315,7 +321,24 @@ func watchCommand(args []string) error {
 		}
 		if !handled {
 			rows := observe(ctx, c, t, addresses)
+			description := ""
+			if *job != "" {
+				current, x := loadJob(*job)
+				if x != nil {
+					return x
+				}
+				m, x := loadManifest(filepath.Join(current.Dir, "manifest.json"))
+				if x == nil {
+					annotateJobRows(current, &m, rows)
+				} else {
+					annotateJobRows(current, nil, rows)
+				}
+				description = current.SourceDescription
+			}
 			all = render(rows, previous, clear)
+			if description != "" {
+				fmt.Println(description)
+			}
 			for _, o := range rows {
 				if o.err == nil {
 					previous[o.addr] = o

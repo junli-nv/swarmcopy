@@ -4,6 +4,31 @@
 
 Use the unified main release, named `swarmcopy`. For mixed architectures, put both original architecture binaries in a sibling `dist` directory (automatically detected), or supply `--bin-dir /path/to/dist`. Replace example hosts and paths.
 
+## Recommended: seed directly from a compute node
+
+If media already resides on a compute node, run there and include it in `--hosts`. v0.6.0 serves original files directly, skipping initial seed copying; local and remote destinations receive concurrently. A BCM controller outside the target list instead stages a compute seed through SSH. Startup and watch explicitly show the selected mode and endpoints. [Scenarios, network requirements and failures](SOURCE-MODES.en.md).
+
+```bash
+# Run on HGX167; include this host as a destination
+./swarmcopy distribute --hosts 'HGX[061,066,082,138,169,167]' \
+  --source /raid/local-ai/dist/local-ai.tar --dest /raid/images --verify chunks
+```
+
+New jobs need only `--verify chunks` (BLAKE3/BLAKE3) or `--verify full` (default SHA256/SHA256). Failed targets do not cancel healthy siblings and remain incomplete; resume the same ID after recovery. Resumed sparse holes are skipped without treating unwritten bytes as verified.
+
+Remove a job and exclusive partials with `./swarmcopy remove --job <ID> --purge-partials` (`delete` is an alias). It stops owned controller/peers, then removes records/remote job metadata and exclusive partials. Source files, published media and shared data remain. Failed cleanup keeps the local record for retry. Use `stop` when you only want to pause.
+
+## Two integrity presets (v0.6.0)
+
+For new `--source` jobs, choose `--verify full` or `--verify chunks`. Full defaults to SHA256 chunks/files with final file verification; chunks defaults to BLAKE3 chunks/files and publishes after all chunk checks and fsync, omitting the final full-file reread. Omitting `--verify` still selects full. No hash flags are needed.
+
+```bash
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify chunks
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify full
+```
+
+`--chunk-hash` / `--file-hash` remain advanced overrides. Resume/prepared seed manifests retain their algorithms; changing mode never rewrites a manifest. An existing SHA256 job still uses SHA256 chunks after switching to chunks mode.
+
 ## Files, globs and directories
 
 ~~~bash

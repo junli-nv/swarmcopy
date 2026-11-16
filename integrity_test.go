@@ -323,3 +323,40 @@ func BenchmarkIntegritySourcePipeline(b *testing.B) {
 		})
 	}
 }
+
+func TestNewJobIntegrityPresets(t *testing.T) {
+	cases := []struct {
+		name        string
+		job         Job
+		chunk, file string
+	}{
+		{"default", Job{}, "sha256", "sha256"},
+		{"full", Job{Verify: "full"}, "sha256", "sha256"},
+		{"chunks", Job{Verify: "chunks"}, "blake3", "blake3"},
+		{"explicit-chunk", Job{Verify: "chunks", ChunkHash: "sha256"}, "sha256", "blake3"},
+		{"explicit-file", Job{Verify: "chunks", FileHash: "sha256"}, "blake3", "sha256"},
+		{"mixed-full", Job{Verify: "full", ChunkHash: "xxh3-128", FileHash: "blake3"}, "xxh3-128", "blake3"},
+		{"legacy-prepared", Job{Verify: "chunks", SeedFile: "/raid/images/seed"}, "sha256", "sha256"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			j := tc.job
+			resolveNewJobIntegrity(&j)
+			if j.ChunkHash != tc.chunk || j.FileHash != tc.file {
+				t.Fatalf("unexpected preset: %+v", j)
+			}
+			if err := validateVerification(j.Verify, newSourceManifest(j)); err != nil {
+				t.Fatal(err)
+			}
+			m, _, _, _ := algorithmFixture(t, j.ChunkHash, j.FileHash)
+			if m.chunkAlgorithm() != tc.chunk || m.fileAlgorithm() != tc.file {
+				t.Fatal("manifest did not bind preset algorithms")
+			}
+		})
+	}
+	j := Job{Verify: "chunks", ChunkHash: "xxh3-128"}
+	resolveNewJobIntegrity(&j)
+	if validateVerification(j.Verify, newSourceManifest(j)) == nil {
+		t.Fatal("weak chunks accepted")
+	}
+}

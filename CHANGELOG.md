@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0 — direct sources, isolated failures, sparse recovery and job removal
+
+- Prefer original-file direct seeding when the controller is also a target; retain staged compute-seed import for head-node controllers. Print source mode, source host/path and destination explicitly.
+- Remove the all-listeners monitoring barrier. Isolate per-node SSH/deployment/inventory failures with bounded attempts; keep failed targets pending and preserve resume. Persist process/log diagnostics for watch/status.
+- New source jobs need only --verify full or --verify chunks. Full keeps SHA256/SHA256; chunks selects BLAKE3/BLAKE3 automatically. Full remains the default mode.
+- Preserve explicit advanced hash overrides and original algorithms when resuming saved jobs or using prepared seed manifests.
+- Skip proven sparse holes in existing partial files; preserve actual received chunks and handle empty-file boundaries.
+- Add remove/delete with owned-process stopping, remote metadata cleanup, optional exclusive partial purge, shared-data protection and retryable failed cleanup.
+- Update English help and bilingual examples/developer documentation.
+
 ## 0.5.0 — composable integrity and extensible SSH options
 
 - Add full/chunks verification with SHA256, BLAKE3 and XXH3-128 chunk checks; require cryptographic full-file checks with XXH3. Preserve SHA256/full defaults.

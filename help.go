@@ -26,12 +26,13 @@ QUICK START
   swarmcopy resume --job <ID>
 
 COMMANDS
-  distribute  Deploy peers through SSH, stage one seed, distribute and monitor
+  distribute  Deploy peers through SSH, select direct/staged source, distribute and monitor
   jobs        List saved job IDs and recorded states on this controller
   inspect     Show a saved job's configuration and directory
   status      Print JSON; default: latest active job, otherwise latest job
   watch       Show global progress; default: latest active/latest saved job
   resume      Reconnect a saved job and recover missing/corrupt chunks
+  remove      Stop a job and remove records/logs; alias: delete; optional partial cleanup
   stop        Stop only the selected job's recorded peer processes
   prepare     Copy an immutable source into a seed file and build its manifest
   peer        Run one peer directly with a manifest and token
@@ -61,13 +62,20 @@ func usageText(name string) string {
 		return "Measure SHA256 without changing input files. CPU profiles require a NEW path.\n\nExamples:\n  swarmcopy hashbench --bytes-mib 2048\n  swarmcopy hashbench --file /raid/images/media.sqsh --cpu-profile /tmp/new-sha.pprof\n"
 	case "distribute":
 		return `Create a saved job and distribute files or directory trees through SSH/P2P.
+Source selection is automatic and printed before preparation:
+  Controller is a target: serve original local files directly (recommended).
+  Controller is not a target: copy once to a compute seed through SSH.
+Direct mode still creates requested destination files on the local target.
+The direct source listens on a separate dynamic TCP port (also UDP for QUIC);
+compute nodes must reach it. Keep the source controller running while needed.
+
 SSH cipher defaults to auto: prefer AES-GCM on AES/GCM-capable controllers,
 with negotiation fallback; --ssh-cipher system leaves OpenSSH selection alone.
 SSH login is checked before source hashing. SSH uses StrictHostKeyChecking=no,
 UserKnownHostsFile=/dev/null, LogLevel=quiet and CheckHostIP=no.
 Repeat --ssh-opt KEY=VALUE to extend these defaults; the last same-key value wins.
 Options are saved for resume. Explicit --ssh-cipher overrides --ssh-opt Ciphers.
-Source hashing and initial seed streaming show byte progress, rate and estimated
+Source hashing and staged seed copying show byte progress, rate and estimated
 time remaining every two seconds. Other preparation stages show node counts
 and elapsed time. Ctrl-C cancels source hashing between read buffers.
 Multiple files go directly under --dest; directories retain their basename.
@@ -78,6 +86,12 @@ Conflicting regular files prompt once with --existing ask (default).
 Use --existing resume to reuse matching chunks, replace to receive conflicting
 files afresh, or keep to cancel safely. Old files stay intact until verification.
 Publication is atomic per file, not across the whole dataset.
+Healthy nodes continue when other nodes are unavailable. Monitoring starts
+without waiting for every listener. Failed/pending nodes remain incomplete.
+Per-node diagnostics identify the host, stage, peer process and recent log.
+--node-timeout bounds each SSH/deployment/inventory attempt (default 1m);
+slow existing-file inventory can continue inside the peer after startup.
+Resume the same job after recovery; this does not automatically redeploy offline hosts.
 
 Examples:
   swarmcopy distribute --hosts 'node[001-005]' --source /shared/nemo.sqsh --dest /raid/images
@@ -88,7 +102,7 @@ Examples:
   swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --workers 8 --uploads 8
   swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --adaptive --workers 4 --min-workers 2 --max-workers 16 --uploads 8
   swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --verify full --chunk-hash xxh3-128 --file-hash blake3
-  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --verify chunks --chunk-hash blake3
+  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --verify chunks
   swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --ssh-opt ServerAliveInterval=15 --ssh-opt ConnectTimeout=20
   swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --transport quic
   swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --ssh-user alice --ask-pass --bin-dir ./dist
@@ -100,7 +114,11 @@ Minimum defaults to initial workers; maximum defaults to 16.
 Concurrency is saved at startup; no live-edit command is provided.
 Bandwidth defaults to unlimited; upload-mib/download-mib set per-node MiB/s.
 TCP stays default; optional QUIC needs UDP as well as TCP on the chosen port.
-Integrity defaults: --verify full --chunk-hash sha256 --file-hash sha256.
+Choose one preset for a NEW source job:
+  --verify full    SHA256 chunks + SHA256 files, with final disk verification (default)
+  --verify chunks  BLAKE3 chunks + BLAKE3 files, without final disk reread
+No hash flags are needed; --chunk-hash/--file-hash are advanced overrides.
+Saved jobs and prepared seed manifests keep their original algorithms.
 --verify chunks validates every cryptographic chunk, then syncs/publishes without
 a final disk reread. It cannot detect damage after a successful chunk write.
 --chunk-hash sha256|blake3|xxh3-128; --file-hash sha256|blake3.
@@ -132,6 +150,7 @@ Initial controller-to-seed import is not yet chunk-resumable.
 Use --recheck to bypass unchanged final-file verification caches.
 --verify full|chunks changes verification mode and forces a peer restart/recheck.
 Hash algorithms are bound to the saved manifest; changing them needs a new job.
+The new-job BLAKE3 preset does not rewrite existing SHA256 manifests on resume.
 Repeat --ssh-opt KEY=VALUE to extend or override saved SSH options.
 `
 	case "watch":
@@ -171,6 +190,17 @@ Examples:
 `
 	case "inspect":
 		return "Show saved metadata (never password/token contents).\n\nExample:\n  swarmcopy inspect --job <ID>\n"
+	case "remove", "delete":
+		return `Stop this job controller/owned peers, then remove its records and remote job directories.
+Source files and published destination files are preserved.
+--purge-partials also removes exclusive unpublished partials; shared datasets stay.
+Any unreachable/failed cleanup retains the local job record for retry.
+
+Examples:
+  swarmcopy remove --job <ID>
+  swarmcopy remove --job <ID> --purge-partials
+  swarmcopy delete --job <ID> --purge-partials --ask-pass
+`
 	case "stop":
 		return `Stop only the selected job's owned processes; preserve all media/partial files.
 A job ID is required. Resume it later using the same record.
@@ -289,6 +319,8 @@ func commandHelp(name string) error {
 		return watchCommand(args)
 	case "status":
 		return statusCommand(args)
+	case "remove", "delete":
+		return removeCommand(args)
 	case "jobs":
 		return jobsCommand(args)
 	case "inspect":

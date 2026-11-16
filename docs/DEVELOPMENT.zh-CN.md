@@ -89,3 +89,13 @@ progress.go 通过 context 传递线程安全 reporter，每两秒输出并原�
 `Job.SSHOptions` 保存重复的 `--ssh-opt`。`mergeSSHOptions` 按不区分大小写的键合并默认、已保存和本次覆盖值，不进行 shell 二次拆分；显式 cipher 优先。新增 SSH 参数使用这个集合，避免多个调用路径默认值分裂。SSH 登录预检必须保留在来源大文件读取之前。
 
 新增 BLAKE3/XXH3 固定依赖已 vendor 并附许可证；改依赖后执行 `scripts/vendor-quic.sh`，保留 QUIC bulk 补丁。以 CGO_ENABLED=0 构建 amd64/arm64，明确交叉构建不等于 ARM 真机验证；保留测速参数，不把 CPU 微基准倍数说成网络收益。
+
+v0.6.0：`resolveNewJobIntegrity` 只在新建作业时解析模式预设：full→SHA256/SHA256，chunks→BLAKE3/BLAKE3；显式算法优先。禁止把预设应用到 loadJob 或已存在 manifest，否则会破坏续传兼容性。旧 seed-file 以其清单为准。
+
+## v0.6.0 来源与生命周期约束
+
+`source_origin.go` 将可信来源清单的逻辑偏移映射到原始只读文件；开始供种前验证来源指纹与布局。控制器退出时关闭 HTTP/QUIC 和文件句柄。`controllerSourceHost` 仅在本机真实主机名匹配目标时选择 direct。`SourceAddress` 不计入接收目标总数。agent 复用时比较来源地址及校验模式，来源端口改变时重启 peer，但不因此无条件清空成品验证缓存。
+
+`resilience.go` 为各节点操作提供独立、有界上下文；所有保存的记录都必须保留完整 Hosts，盘点阶段也不例外。监控没有全体就绪门槛，诊断有界并持久化，失败节点绝不能计为完成。
+
+`remove.go` 持有控制器/agent 锁，验证进程身份和配置归属；部分清理失败保留记录。清理暂存命名空间前检查其他作业引用，保护源文件、成品和共享数据，拒绝非作业目录及符号链接根。`resilience_test.go`、`remove_test.go` 验证这些边界。稀疏检测必须跳过空文件；不支持 SEEK_DATA 时保守回退。

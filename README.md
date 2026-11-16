@@ -6,6 +6,31 @@ Linux 集群的可续传 P2P 文件与目录分发工具，协议名 **SCDP/1**�
 
 **只维护 main 一个长期分支。** 同一个二进制包含 TCP、可选 UDP/QUIC、流水校验、自适应并发、多文件和目录功能，不需要另外安装 UDP 版或 race 版。历史标签和测速报告仅供追溯。
 
+## 推荐使用：计算节点直接供种
+
+介质已经在计算节点本地盘时，优先在该节点执行，并把本机列入 `--hosts`。v0.6.0 会直接读取原文件供种，跳过初始种子复制；本机和远端目标同步接收。若在 BCM 执行且 BCM 不在目标列表，则先经 SSH 复制到计算节点作种子。开始前与 watch 均明确显示来源方式、主机和路径。[两种场景、网络要求及故障处理](docs/SOURCE-MODES.zh-CN.md)。
+
+```bash
+# 在 HGX167 上执行；本机也在目标列表中
+./swarmcopy distribute --hosts 'HGX[061,066,082,138,169,167]' \
+  --source /raid/local-ai/dist/local-ai.tar --dest /raid/images --verify chunks
+```
+
+新作业只需 `--verify chunks`（BLAKE3/BLAKE3），或 `--verify full`（默认 SHA256/SHA256）。异常节点不取消健康节点；仍保留未完成状态，恢复后用同一 ID 续传。恢复时跳过能确认的稀疏空洞，避免对未收到的几百 GB 零重复计算。
+
+删除作业并清理独占暂存：`./swarmcopy remove --job <ID> --purge-partials`，`delete` 为别名。它先停止本作业控制器和 peer，再清理记录、远端作业目录及独占暂存；原始源文件、已发布成品和共享数据保留。清理失败时保留记录供重试。只想暂停请用 `stop`。
+
+## 两种校验预设（v0.6.0）
+
+日常只需选择 `--verify full` 或 `--verify chunks`：新建 `--source` 作业时，full 默认 SHA256 分块和文件摘要，并检查最终文件；chunks 默认 BLAKE3 分块和文件摘要，全部验块、fsync 后发布，省略最终整文件回读。省略 `--verify` 仍为 full。无需再记两项 hash 参数。
+
+```bash
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify chunks
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify full
+```
+
+`--chunk-hash` / `--file-hash` 保留为高级覆盖参数。续传和已有种子清单沿用原摘要算法，选择模式不会改写清单；旧 SHA256 作业切换 chunks 仍用 SHA256 验块。
+
 ## v0.5.0 校验模式与 SSH 扩展
 
 默认保留 full + SHA256；可选 `--verify chunks` 省略最终整文件回读，或 `--verify full --chunk-hash xxh3-128 --file-hash blake3` 混用快速分块与密码学文件摘要。XXH3 不允许用于 chunks 模式。首次来源清单仍要读完整源文件。详见[模式、完整性边界、硬件实测](docs/INTEGRITY.zh-CN.md)。
@@ -37,7 +62,7 @@ v0.4.1 起，建立来源清单和初始种子导入每约 2 秒显示字节、�
 
 源在**运行命令的控制端**。目标在每个节点自己的本地磁盘上。首次建立可信 SHA256 清单需要读取源文件；源 inode/大小/mtime/ctime 和目录成员不变时，后续新任务可复用本地校验缓存，`--recheck` 可强制重读。
 
-分发前会检查各节点。已有完整副本时，直接从这些节点补齐缺失节点，跳过控制端到种子的介质传输。否则先通过 SSH 向一个种子流式导入一次，再由节点互传。默认任务全体完成后停止 peer。
+分发前会检查各节点。已有完整副本时，直接从这些节点补齐缺失节点，跳过控制端到种子的介质传输。本机在目标列表时直接供种；否则先通过 SSH 向一个种子复制一次，再由节点互传。默认任务全体完成后停止 peer。
 
 ## 多文件、通配符、目录
 
@@ -121,7 +146,7 @@ Job 默认在 `~/.local/state/swarmcopy/jobs`，遵循 `XDG_STATE_HOME`。保留
 
 优先用 `stop --job` 停止，按 PID 和启动时间确认归属。每节点只有一个普通 swarmcopy 二进制；`.swarmcopy/<job-id>/process.json` 和 `peer.log` 可用于定位。不要为停止单个任务而执行全局 `pkill swarmcopy`。退出 watch 不会停止任务。
 
-初始控制端到种子的导入尚不支持按块续传，导入未完成时重做该阶段；P2P 阶段可以续传、修复和重传。旧版 v1 单文件任务及 `prepare --seed-file` 工作流仍兼容，其已有成品继续采用原来的不覆盖规则；新建 `--source` 任务使用 v2 清单和上述冲突策略。
+初始控制端到种子的导入尚不支持按块续传，导入未完成时重做该阶段；P2P 阶段可以续传、修复和重传。旧版 v1 单文件任务及 `prepare --seed-file` 工作流仍兼容，其已有成品继续采用原来的不覆盖规则；新建 SHA256 `--source` 任务使用 v2，自选算法或 chunks 预设使用 v3；采用上述冲突策略。
 
 ## 网络与校验默认值
 

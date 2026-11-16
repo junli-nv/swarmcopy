@@ -326,6 +326,9 @@ func (j *Job) preparing(ctx context.Context, stage, detail string, total int64, 
 func renderSavedJob(j Job, live, clear bool) (bool, bool, error) {
 	if s, ok := preparationState(j); ok {
 		renderPreparation(s, clear)
+		if j.SourceDescription != "" {
+			fmt.Println(j.SourceDescription)
+		}
 		return true, false, nil
 	}
 	if j.State == "complete" && !live {
@@ -338,46 +341,6 @@ func renderSavedJob(j Job, live, clear bool) (bool, bool, error) {
 	}
 	return false, false, nil
 }
-func waitPeerReadiness(ctx context.Context, j Job, t string) error {
-	c := client()
-	defer c.CloseIdleConnections()
-	addresses := j.addresses()
-	ready := map[string]bool{}
-	tick := time.NewTicker(time.Second)
-	defer tick.Stop()
-	for {
-		for _, addr := range addresses {
-			if ready[addr] {
-				continue
-			}
-			one, cancel := context.WithTimeout(ctx, time.Second)
-			st, err := getStatus(one, c, t, addr)
-			cancel()
-			if err == nil && st.Error != "" {
-				return fmt.Errorf("peer %s failed during startup: %s", addr, st.Error)
-			}
-			if err == nil && st.Error == "" && verifyMode(st.Verify) != verifyMode(j.Verify) {
-				return fmt.Errorf("peer %s verification mode %s does not match job mode %s", addr, verifyMode(st.Verify), verifyMode(j.Verify))
-			}
-			if err == nil && st.Error == "" {
-				ready[addr] = true
-				reportNode(ctx)
-			}
-			if ctx.Err() != nil {
-				return ctx.Err()
-			}
-		}
-		if len(ready) == len(addresses) {
-			return nil
-		}
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-tick.C:
-		}
-	}
-}
-
 // A bounded heartbeat keeps SSH stdin open until cancellation. It also lets
 // os/exec finish its stdin copier promptly when the remote command exits.
 type keepaliveReader struct{ ctx context.Context }

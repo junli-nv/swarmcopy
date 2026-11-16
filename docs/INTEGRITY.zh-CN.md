@@ -4,6 +4,17 @@
 
 v0.5.0 在同一个二进制中提供可组合校验。默认仍为 `--verify full --chunk-hash sha256 --file-hash sha256`。不提供完全跳过校验或抽样冒充完整校验的模式。
 
+## 两种校验预设（v0.6.0）
+
+日常只需选择 `--verify full` 或 `--verify chunks`：新建 `--source` 作业时，full 默认 SHA256 分块和文件摘要，并检查最终文件；chunks 默认 BLAKE3 分块和文件摘要，全部验块、fsync 后发布，省略最终整文件回读。省略 `--verify` 仍为 full。无需再记两项 hash 参数。
+
+```bash
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify chunks
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify full
+```
+
+`--chunk-hash` / `--file-hash` 保留为高级覆盖参数。续传和已有种子清单沿用原摘要算法，选择模式不会改写清单；旧 SHA256 作业切换 chunks 仍用 SHA256 验块。
+
 ## 模式选择
 
 | 模式 | 接收分块 | 最终文件 | 适用场景 |
@@ -35,7 +46,7 @@ XXH3-128 是快速非密码学摘要，**只允许 full**，必须配 SHA256 或
 
 # 可信本地存储，省略最终回读；每块仍用 BLAKE3 校验
 ./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images --verify chunks --chunk-hash blake3 --file-hash blake3
+  --dest /raid/images --verify chunks
 
 # 改变模式：重新检查并重启本作业的 peer，即便显式 --recheck=false
 ./swarmcopy resume --job <ID> --verify full
