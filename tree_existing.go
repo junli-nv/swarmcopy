@@ -185,7 +185,7 @@ func treeCheckCommand(args []string) error {
 	if err != nil {
 		return err
 	}
-	if m.Version != 2 {
+	if !m.isTree() {
 		return errors.New("tree-check requires a v2 manifest")
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)

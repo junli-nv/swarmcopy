@@ -154,3 +154,16 @@ SSH 登录会在耗时来源哈希前先检查，旧任务 resume 也采用这�
 ~~~
 
 system 完全沿用 OpenSSH 的 cipher 协商。密码、用户名、密钥／agent 的用法不变；SSH 加密只影响部署／初始导入，不等于 SCDP 数据校验。
+
+## v0.5.0 校验模式与 SSH 扩展
+
+默认保留 full + SHA256；可选 `--verify chunks` 省略最终整文件回读，或 `--verify full --chunk-hash xxh3-128 --file-hash blake3` 混用快速分块与密码学文件摘要。XXH3 不允许用于 chunks 模式。首次来源清单仍要读完整源文件。详见[模式、完整性边界、硬件实测](INTEGRITY.zh-CN.md)。
+
+SSH 默认包含 `StrictHostKeyChecking=no`、`UserKnownHostsFile=/dev/null`、`LogLevel=quiet`、`CheckHostIP=no`，可重复 `--ssh-opt KEY=VALUE` 扩展或覆盖，设置随作业保存。比如 `--ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15`。AES-GCM 可用 `--ssh-cipher aes128-gcm@openssh.com` 选择。
+
+```bash
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images \
+  --verify full --chunk-hash xxh3-128 --file-hash blake3 \
+  --ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15
+./swarmcopy resume --job <ID> --ssh-opt ConnectTimeout=30 --verify full
+```

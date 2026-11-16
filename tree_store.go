@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -18,10 +17,11 @@ import (
 )
 
 type treeSpan struct {
-	entry  TreeEntry
-	offset int64
-	final  bool
-	old    *fileFingerprint
+	available bool
+	entry     TreeEntry
+	offset    int64
+	final     bool
+	old       *fileFingerprint
 }
 type treeStore struct {
 	mu              sync.RWMutex
@@ -62,6 +62,9 @@ func strictDirs(r *os.Root, p string) error {
 }
 func fileSHA(r *os.Root, p string) (string, error) { return fileSHAContext(context.Background(), r, p) }
 func fileSHAContext(ctx context.Context, r *os.Root, p string) (string, error) {
+	return fileHashContext(ctx, r, p, "sha256")
+}
+func fileHashContext(ctx context.Context, r *os.Root, p, algorithm string) (string, error) {
 	f, err := r.OpenFile(p, os.O_RDONLY, 0)
 	if err != nil {
 		return "", err
@@ -74,7 +77,7 @@ func fileSHAContext(ctx context.Context, r *os.Root, p string) (string, error) {
 	if !st.Mode().IsRegular() {
 		return "", errors.New("not a regular file")
 	}
-	h := sha256.New()
+	h := newHash(algorithm)
 	if _, err = io.CopyBuffer(h, contextReader{ctx, f}, make([]byte, 1<<20)); err != nil {
 		return "", err
 	}
@@ -97,8 +100,8 @@ func sameTreeFileContext(ctx context.Context, r *os.Root, e TreeEntry) (bool, er
 	if st.Size() != e.Size {
 		return false, nil
 	}
-	sum, err := fileSHAContext(ctx, r, e.Path)
-	return sum == e.SHA256, err
+	sum, err := fileHashContext(ctx, r, e.Path, e.fileAlgorithm())
+	return sum == e.fileDigest(), err
 }
 func openTreeStore(dest string, m Manifest, policy string, rechecks ...bool) (t *treeStore, err error) {
 	if err = m.validateTree(); err != nil {
@@ -157,7 +160,7 @@ func openTreeStore(dest string, m Manifest, policy string, rechecks ...bool) (t 
 				return nil, x
 			}
 		}
-		s := treeSpan{entry: e, offset: offset}
+		s := treeSpan{entry: e, offset: offset, available: true}
 		offset += e.Size
 		var same bool
 		same, err = cachedTreeFile(r, e, cache)
@@ -217,6 +220,9 @@ func openTreeStore(dest string, m Manifest, policy string, rechecks ...bool) (t 
 			}
 			f, x := t.stage.OpenFile(e.Path, os.O_CREATE|os.O_EXCL|os.O_RDWR, 0600)
 			fresh := x == nil
+			if fresh && !(s.old != nil && policy == "resume") {
+				s.available = false
+			}
 			if os.IsExist(x) {
 				f, x = t.stage.OpenFile(e.Path, os.O_RDWR, 0)
 			}
@@ -325,8 +331,15 @@ func (t *treeStore) ioAt(p []byte, off int64, write bool) (int, error) {
 	}
 	return total, nil
 }
-func (t *treeStore) ReadAt(p []byte, off int64) (int, error)  { return t.ioAt(p, off, false) }
-func (t *treeStore) WriteAt(p []byte, off int64) (int, error) { return t.ioAt(p, off, true) }
+func (t *treeStore) ReadAt(p []byte, off int64) (int, error) { return t.ioAt(p, off, false) }
+func (t *treeStore) WriteAt(p []byte, off int64) (int, error) {
+	t.mu.Lock()
+	for i := sort.Search(len(t.spans), func(i int) bool { return t.starts[i] > off }); i < len(t.spans) && t.spans[i].offset < off+int64(len(p)); i++ {
+		t.spans[i].available = true
+	}
+	t.mu.Unlock()
+	return t.ioAt(p, off, true)
+}
 func (t *treeStore) Sync() error {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
@@ -358,7 +371,7 @@ func syncRootDir(r *os.Root, p string) error {
 	defer f.Close()
 	return f.Sync()
 }
-func (t *treeStore) Publish(ctx context.Context) error {
+func (t *treeStore) Publish(ctx context.Context, fullVerification ...bool) error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 	for _, e := range t.m.Entries {
@@ -456,6 +469,10 @@ func (t *treeStore) Publish(ctx context.Context) error {
 	if err = syncRootDir(t.root, path.Dir(marker)); err != nil {
 		return err
 	}
+	if len(fullVerification) > 0 && !fullVerification[0] {
+		t.complete = true
+		return nil
+	}
 	cache := treeVerified{}
 	for _, s := range t.spans {
 		st, e := t.root.Lstat(s.entry.Path)
@@ -472,4 +489,15 @@ func (t *treeStore) Publish(ctx context.Context) error {
 	}
 	t.complete = true
 	return nil
+}
+
+func (t *treeStore) chunkMayExist(off, size int64) bool {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+	for i := sort.Search(len(t.spans), func(i int) bool { return t.starts[i] > off }); i < len(t.spans) && t.spans[i].offset < off+size; i++ {
+		if !t.spans[i].available {
+			return false
+		}
+	}
+	return true
 }

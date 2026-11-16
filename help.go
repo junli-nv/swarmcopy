@@ -65,6 +65,8 @@ SSH cipher defaults to auto: prefer AES-GCM on AES/GCM-capable controllers,
 with negotiation fallback; --ssh-cipher system leaves OpenSSH selection alone.
 SSH login is checked before source hashing. SSH uses StrictHostKeyChecking=no,
 UserKnownHostsFile=/dev/null, LogLevel=quiet and CheckHostIP=no.
+Repeat --ssh-opt KEY=VALUE to extend these defaults; the last same-key value wins.
+Options are saved for resume. Explicit --ssh-cipher overrides --ssh-opt Ciphers.
 Source hashing and initial seed streaming show byte progress, rate and estimated
 time remaining every two seconds. Other preparation stages show node counts
 and elapsed time. Ctrl-C cancels source hashing between read buffers.
@@ -85,6 +87,9 @@ Examples:
   swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --existing resume
   swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --workers 8 --uploads 8
   swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --adaptive --workers 4 --min-workers 2 --max-workers 16 --uploads 8
+  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --verify full --chunk-hash xxh3-128 --file-hash blake3
+  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --verify chunks --chunk-hash blake3
+  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --ssh-opt ServerAliveInterval=15 --ssh-opt ConnectTimeout=20
   swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --transport quic
   swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --ssh-user alice --ask-pass --bin-dir ./dist
   swarmcopy distribute --hosts @hosts.txt --seed node001 --seed-file /raid/images/nemo.sqsh
@@ -95,9 +100,15 @@ Minimum defaults to initial workers; maximum defaults to 16.
 Concurrency is saved at startup; no live-edit command is provided.
 Bandwidth defaults to unlimited; upload-mib/download-mib set per-node MiB/s.
 TCP stays default; optional QUIC needs UDP as well as TCP on the chosen port.
-Pipelined SHA256 and a 256-chunk window default ON.
+Integrity defaults: --verify full --chunk-hash sha256 --file-hash sha256.
+--verify chunks validates every cryptographic chunk, then syncs/publishes without
+a final disk reread. It cannot detect damage after a successful chunk write.
+--chunk-hash sha256|blake3|xxh3-128; --file-hash sha256|blake3.
+XXH3-128 requires full mode and a cryptographic file hash.
+Pipelined full-file verification and a 256-chunk window default ON in full mode.
 --pipeline-verify=false disables both; --verify-window-chunks 0 disables the window.
-New jobs use v2 manifests. Legacy prepared --seed-file workflows remain supported.
+SHA256 jobs use v2 manifests; custom hash jobs use v3 and require v0.5+ peers.
+Legacy prepared --seed-file workflows remain supported.
 Symbolic links/special files and overlapping roots are rejected.
 Unmatched globs and duplicate top-level basenames are errors.
 Completed peers stop automatically unless --keep-seeding is set.
@@ -119,6 +130,9 @@ Keep the job directory, token, manifest, and node .part files or
 Saved input selections do not expand again during resume.
 Initial controller-to-seed import is not yet chunk-resumable.
 Use --recheck to bypass unchanged final-file verification caches.
+--verify full|chunks changes verification mode and forces a peer restart/recheck.
+Hash algorithms are bound to the saved manifest; changing them needs a new job.
+Repeat --ssh-opt KEY=VALUE to extend or override saved SSH options.
 `
 	case "watch":
 		return `Monitor all nodes; no arguments selects the latest active/latest saved job.
@@ -180,6 +194,7 @@ command, or use "resume" with these same low-level flags (without --job).
 Example:
   swarmcopy peer --file /raid/images/nemo.sqsh --manifest ./manifest.json --token-file ./job.token --peers node001:19700,node003:19700
 
+--verify full|chunks selects final verification; algorithms come from the manifest.
 For automated SSH deployment, prefer "distribute" instead.
 `
 	}

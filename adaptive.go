@@ -12,6 +12,7 @@ import (
 
 // Performance durations are sums of concurrent request work unless named as a phase.
 type Performance struct {
+	Verify, ChunkHash, FileHash                                                              string
 	QUICGSOKiB                                                                               int
 	QUICMaxPayload                                                                           int
 	QUICSockets                                                                              int
@@ -90,6 +91,9 @@ func (n *Node) performanceLocked() *Performance {
 	p.QUICChunkRequests = n.quicRequests.Load()
 	p.Adaptive = n.o.Adaptive
 	p.PipelineVerify = n.o.PipelineVerify
+	p.Verify = verifyMode(n.o.Verify)
+	p.ChunkHash = n.m.chunkAlgorithm()
+	p.FileHash = n.m.fileAlgorithm()
 	p.VerifyWindowChunks = n.o.VerifyWindowChunks
 	p.ActiveDownloads = n.active
 	p.TargetDownloads = n.target

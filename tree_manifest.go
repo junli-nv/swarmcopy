@@ -1,7 +1,6 @@
 package main
 
 import (
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -15,6 +14,7 @@ import (
 
 // Entry paths are relative to --dest. Only directories and regular files are supported.
 type TreeEntry struct {
+	Digest   string `json:",omitempty"`
 	Path     string
 	Kind     string
 	Size     int64
@@ -33,6 +33,12 @@ func treeDigest(entries []TreeEntry) string {
 	return digest(b)
 }
 func (m Manifest) validateTree() error {
+	if !m.isTree() {
+		return errors.New("not a tree manifest")
+	}
+	if err := m.validateAlgorithms(); err != nil {
+		return err
+	}
 	if m.Name != "files" || m.Size < 0 || m.Size > 1<<50 ||
 		m.ChunkSize < 65536 || m.ChunkSize > 64<<20 ||
 		len(m.Entries) == 0 || len(m.Entries) > 100000 ||
@@ -57,17 +63,20 @@ func (m Manifest) validateTree() error {
 		}
 		switch e.Kind {
 		case "dir":
-			if e.Size != 0 || e.SHA256 != "" {
+			if e.Size != 0 || e.SHA256 != "" || e.Digest != "" {
 				return errors.New("invalid directory entry")
 			}
 		case "file":
 			if e.Size < 0 || e.Size > 1<<50 || total > 1<<50-e.Size {
 				return errors.New("invalid file size")
 			}
-			b, err := hex.DecodeString(e.SHA256)
-			if err != nil || len(b) != 32 {
-				return errors.New("invalid file SHA256")
+			if m.Version == 2 && e.Digest != "" || m.Version == 3 && (e.SHA256 != "" || e.fileAlgorithm() != m.fileAlgorithm() || e.Digest == "") {
+				return errors.New("entry digest algorithm does not match manifest version")
 			}
+			if !validDigest(m.fileAlgorithm(), e.fileDigest()) {
+				return errors.New("invalid file digest")
+			}
+
 			total += e.Size
 		default:
 			return errors.New("unsupported tree entry type")
@@ -79,8 +88,8 @@ func (m Manifest) validateTree() error {
 	}
 	for _, s := range m.Chunks {
 		b, e := hex.DecodeString(s)
-		if e != nil || len(b) != 32 {
-			return errors.New("invalid chunk SHA256")
+		if e != nil || len(b) != newHash(m.chunkAlgorithm()).Size() {
+			return errors.New("invalid chunk digest")
 		}
 	}
 	return nil
@@ -98,8 +107,8 @@ type treeHash struct {
 }
 
 func newContentHash(m Manifest) hash.Hash {
-	if m.Version != 2 {
-		return sha256.New()
+	if !m.isTree() {
+		return newHash("sha256")
 	}
 	h := &treeHash{entries: m.Entries, expected: m.SHA256}
 	h.advance()
@@ -112,13 +121,13 @@ func (h *treeHash) advance() {
 			h.index++
 			continue
 		}
-		h.current = sha256.New()
+		h.current = newHash(e.fileAlgorithm())
 		h.remaining = e.Size
 		if e.Size > 0 {
 			return
 		}
-		if digest(nil) != e.SHA256 && h.err == nil {
-			h.err = fmt.Errorf("empty-file SHA256 mismatch: %s", e.Path)
+		if contentDigest(e.fileAlgorithm(), nil) != e.fileDigest() && h.err == nil {
+			h.err = fmt.Errorf("empty-file digest mismatch: %s", e.Path)
 		}
 		h.index++
 	}
@@ -138,8 +147,8 @@ func (h *treeHash) Write(p []byte) (int, error) {
 		p = p[n:]
 		h.remaining -= n
 		if h.remaining == 0 {
-			if hex.EncodeToString(h.current.Sum(nil)) != h.entries[h.index].SHA256 && h.err == nil {
-				h.err = fmt.Errorf("file SHA256 mismatch: %s", h.entries[h.index].Path)
+			if hex.EncodeToString(h.current.Sum(nil)) != h.entries[h.index].fileDigest() && h.err == nil {
+				h.err = fmt.Errorf("file digest mismatch: %s", h.entries[h.index].Path)
 			}
 			h.index++
 			h.advance()

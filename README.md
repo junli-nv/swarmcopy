@@ -6,6 +6,12 @@ Linux 集群的可续传 P2P 文件与目录分发工具，协议名 **SCDP/1**�
 
 **只维护 main 一个长期分支。** 同一个二进制包含 TCP、可选 UDP/QUIC、流水校验、自适应并发、多文件和目录功能，不需要另外安装 UDP 版或 race 版。历史标签和测速报告仅供追溯。
 
+## v0.5.0 校验模式与 SSH 扩展
+
+默认保留 full + SHA256；可选 `--verify chunks` 省略最终整文件回读，或 `--verify full --chunk-hash xxh3-128 --file-hash blake3` 混用快速分块与密码学文件摘要。XXH3 不允许用于 chunks 模式。首次来源清单仍要读完整源文件。详见[模式、完整性边界、硬件实测](docs/INTEGRITY.zh-CN.md)。
+
+SSH 默认包含 `StrictHostKeyChecking=no`、`UserKnownHostsFile=/dev/null`、`LogLevel=quiet`、`CheckHostIP=no`，可重复 `--ssh-opt KEY=VALUE` 扩展或覆盖，设置随作业保存。比如 `--ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15`。AES-GCM 可用 `--ssh-cipher aes128-gcm@openssh.com` 选择。
+
 ## 大文件准备进度与 Ctrl+C
 
 v0.4.1 起，建立来源清单和初始种子导入每约 2 秒显示字节、百分比、速度与预计剩余时间。部署、检查节点和等待监听显示步骤、完成节点数及耗时；watch 不再把准备阶段误报为全体离线。Ctrl+C 会在源读取块之间响应；估算值只覆盖当前阶段，不含后续工作。[显示示例、取消边界与验证](docs/PROGRESS.zh-CN.md)。

@@ -2,7 +2,7 @@
 
 [中文（主文档）](DEVELOPMENT.zh-CN.md) · [Usage](../README.en.md) · [Examples](EXAMPLES.en.md)
 
-This describes unified main v0.4.1. Maintain one long-lived branch, main. TCP, optional UDP, adaptive scheduling, pipelined integrity and trees belong to one executable. Retain historical tags; do not maintain parallel feature releases.
+This describes unified main v0.5.0. Maintain one long-lived branch, main. TCP, optional UDP, adaptive scheduling, pipelined integrity and trees belong to one executable. Retain historical tags; do not maintain parallel feature releases.
 
 ## Source map
 
@@ -79,3 +79,13 @@ Future priorities: small-file metadata/FD profiling, combined partial replicas a
 ## Preparation telemetry
 
 progress.go passes a synchronized reporter through context, emitting and atomically recording progress.json every two seconds. Stage/bytes/files/nodes are separate. Attempt and controller PID/start identity reject stale progress. ETA is a current-phase average-rate estimate, not a whole-job promise. Metadata/listener stages without reliable rates show action and elapsed time. Watch reloads jobs and handles recorded completion. Readers must retain per-buffer cancellation; remote inventory uses stdin heartbeats to detect controller exit. See [progress design and validation](PROGRESS.en.md).
+
+## Integrity implementation v0.5.0
+
+`integrity.go` centralizes algorithm factories, manifest algorithm binding and verification-policy validation. Empty legacy fields mean SHA256/full; v1/v2 JSON identities must remain unchanged. v3 requires explicit supported algorithms and tagged per-file digests. `integrity_test.go` covers vectors, valid/invalid combinations, HTTP transfer, weak-chunk/strong-file mismatch, cache isolation, source-stream round trips, and fresh sparse-range inventory. See [integrity semantics](INTEGRITY.en.md).
+
+Changes must preserve these invariants: XXH3 requires full; chunks must never create a full-read cache; mode changes force peer recheck/restart; incoming staged content must match the trusted source manifest; final publication stays behind the selected verification gate. Existing partials are always content-checked on restart. No size-only completion assumption is allowed.
+
+`Job.SSHOptions` stores explicit repeated `--ssh-opt` values. `mergeSSHOptions` merges defaults, saved options and new overrides case-insensitively without shell splitting. Explicit cipher selection takes priority. SSH login preflight stays before source hashing. Add options to this collection instead of introducing parallel SSH invocation paths.
+
+Pinned BLAKE3/XXH3 libraries are vendored with licenses. Run `scripts/vendor-quic.sh` after dependency changes so the existing QUIC bulk patch remains applied. Cross-build with CGO_ENABLED=0 for amd64 and arm64; distinguish cross-build validation from physical ARM tests. Preserve raw benchmark configuration and do not report CPU-only ratios as network speedups.

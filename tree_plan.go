@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -14,18 +13,22 @@ import (
 )
 
 func sourceManifest(ctx context.Context, j Job) (Manifest, error) {
-	m := Manifest{Version: 2, Name: "files", ChunkSize: 16 << 20}
+	m := newSourceManifest(j)
 	if err := checkSourcePlanContext(ctx, j.Inputs, j.Sources); err != nil {
 		return m, err
 	}
 	key, _ := json.Marshal(j.Inputs)
+	if m.Version == 3 {
+		key, _ = json.Marshal([]any{j.Inputs, m.ChunkHash, m.FileHash})
+	}
 	cachePath := filepath.Join(filepath.Dir(j.Dir), ".source-manifests", digest(key)+".json")
 	if !j.Recheck {
-		if cached, err := loadManifest(cachePath); err == nil && cached.Version == 2 && cached.ChunkSize == m.ChunkSize && len(cached.Entries) == len(j.Inputs) {
+		if cached, err := loadManifest(cachePath); err == nil && cached.Version == m.Version && cached.ChunkHash == m.ChunkHash && cached.FileHash == m.FileHash && cached.ChunkSize == m.ChunkSize && len(cached.Entries) == len(j.Inputs) {
 			valid := true
 			for i, s := range j.Inputs {
 				e := cached.Entries[i]
 				e.SHA256 = ""
+				e.Digest = ""
 				if e != s.Entry {
 					valid = false
 					break
@@ -45,7 +48,7 @@ func sourceManifest(ctx context.Context, j Job) (Manifest, error) {
 			}
 		}
 	}
-	chunks := &chunkBuilder{size: m.ChunkSize}
+	chunks := &chunkBuilder{size: m.ChunkSize, algorithm: m.chunkAlgorithm()}
 	buf := make([]byte, 1<<20)
 	for _, s := range j.Inputs {
 		if err := ctx.Err(); err != nil {
@@ -67,7 +70,7 @@ func sourceManifest(ctx context.Context, j Job) (Manifest, error) {
 					err = errors.New("source changed before hashing")
 				}
 			}
-			h := sha256.New()
+			h := newHash(m.fileAlgorithm())
 			if err == nil {
 				var count int64
 				count, err = io.CopyBuffer(progressWriter{ctx, io.MultiWriter(h, chunks)}, contextReader{ctx, f}, buf)
@@ -93,7 +96,7 @@ func sourceManifest(ctx context.Context, j Job) (Manifest, error) {
 			if fp != s.Fingerprint {
 				return m, fmt.Errorf("source changed while hashing: %s", s.Source)
 			}
-			e.SHA256 = hex.EncodeToString(h.Sum(nil))
+			setEntryDigest(&e, m, hex.EncodeToString(h.Sum(nil)))
 			m.Size += e.Size
 			reportFile(ctx, s.Source, true)
 		}

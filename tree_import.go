@@ -3,7 +3,6 @@ package main
 import (
 	"archive/tar"
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -18,6 +17,7 @@ import (
 )
 
 type chunkBuilder struct {
+	algorithm  string
 	size, used int64
 	h          hash.Hash
 	chunks     []string
@@ -27,7 +27,7 @@ func (b *chunkBuilder) Write(p []byte) (int, error) {
 	count := len(p)
 	for len(p) > 0 {
 		if b.h == nil {
-			b.h = sha256.New()
+			b.h = newHash(b.algorithm)
 		}
 		n := min(int64(len(p)), b.size-b.used)
 		b.h.Write(p[:n])
@@ -50,6 +50,14 @@ func (b *chunkBuilder) finish() []string {
 }
 func receiveTree(ctx context.Context, in io.Reader, dest, manifestPath string, chunkSize int64, expected ...Manifest) (Manifest, error) {
 	m := Manifest{Version: 2, Name: "files", ChunkSize: chunkSize}
+	if len(expected) > 0 {
+		m.Version = expected[0].Version
+		m.ChunkHash = expected[0].ChunkHash
+		m.FileHash = expected[0].FileHash
+	}
+	if err := m.validateAlgorithms(); err != nil {
+		return m, err
+	}
 	if err := os.MkdirAll(dest, 0755); err != nil {
 		return m, err
 	}
@@ -72,7 +80,7 @@ func receiveTree(ctx context.Context, in io.Reader, dest, manifestPath string, c
 	}
 	defer r.Close()
 	tr := tar.NewReader(in)
-	chunks := &chunkBuilder{size: chunkSize}
+	chunks := &chunkBuilder{size: chunkSize, algorithm: m.chunkAlgorithm()}
 	complete := false
 	previous := ""
 	for {
@@ -123,7 +131,7 @@ func receiveTree(ctx context.Context, in io.Reader, dest, manifestPath string, c
 			if e != nil {
 				return m, e
 			}
-			whole := sha256.New()
+			whole := newHash(m.fileAlgorithm())
 			_, e = io.CopyBuffer(io.MultiWriter(f, whole, chunks), tr, make([]byte, 256<<10))
 			if e == nil {
 				e = f.Sync()
@@ -135,7 +143,7 @@ func receiveTree(ctx context.Context, in io.Reader, dest, manifestPath string, c
 			if ce != nil {
 				return m, ce
 			}
-			e2.SHA256 = hex.EncodeToString(whole.Sum(nil))
+			setEntryDigest(&e2, m, hex.EncodeToString(whole.Sum(nil)))
 			m.Size += h.Size
 		default:
 			return m, errors.New("symlinks, hardlink entries and special files are unsupported")
@@ -229,7 +237,7 @@ func prepareTreeCommand(args []string) error {
 	return err
 }
 func (m Manifest) fileCount() int {
-	if m.Version != 2 {
+	if !m.isTree() {
 		return 1
 	}
 	n := 0

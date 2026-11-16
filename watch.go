@@ -93,6 +93,7 @@ func render(observations []observation, previous map[string]observation, clear b
 	for _, o := range observations {
 		if o.err == nil && o.st.Entries > 0 {
 			fmt.Printf("Dataset: %d files / %d entries per node; bytes aggregate across all files\n", o.st.Files, o.st.Entries)
+			fmt.Printf("Integrity: verify=%s chunk-hash=%s file-hash=%s\n", verifyMode(o.st.Verify), hashName(o.st.ChunkHash), hashName(o.st.FileHash))
 			break
 		}
 	}

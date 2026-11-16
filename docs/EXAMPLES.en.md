@@ -142,3 +142,16 @@ SSH login is checked before expensive source hashing; old jobs use the same sett
 ~~~
 
 system leaves cipher negotiation entirely to OpenSSH. Username/password/key/agent behavior is unchanged. SSH encryption affects deployment/initial staging, not SCDP content verification.
+
+## v0.5.0 integrity modes and SSH options
+
+Defaults remain full + SHA256. Choose `--verify chunks` to omit the final disk reread, or `--verify full --chunk-hash xxh3-128 --file-hash blake3` for fast chunks plus a cryptographic file digest. XXH3 is rejected in chunks mode. Initial source hashing still reads every byte. See [guarantees, combinations and measured hardware results](INTEGRITY.en.md).
+
+SSH defaults include `StrictHostKeyChecking=no`, `UserKnownHostsFile=/dev/null`, `LogLevel=quiet`, `CheckHostIP=no`. Repeat `--ssh-opt KEY=VALUE` to extend/override saved defaults, e.g. `--ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15`. Select AES-GCM with `--ssh-cipher aes128-gcm@openssh.com`.
+
+```bash
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images \
+  --verify full --chunk-hash xxh3-128 --file-hash blake3 \
+  --ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15
+./swarmcopy resume --job <ID> --ssh-opt ConnectTimeout=30 --verify full
+```

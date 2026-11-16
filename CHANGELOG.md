@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0 — composable integrity and extensible SSH options
+
+- Add full/chunks verification with SHA256, BLAKE3 and XXH3-128 chunk checks; require cryptographic full-file checks with XXH3. Preserve SHA256/full defaults.
+- Bind custom algorithms in v3 manifests; preserve v1/v2 identities and resume support. Prevent chunks-only completion from creating a full-file verification cache.
+- Skip unwritten fresh sparse ranges without trusting existing partial files by size. Force recheck/restart when resume changes verification mode.
+- Add repeatable, persisted --ssh-opt KEY=VALUE over the four requested defaults, with explicit cipher precedence.
+- Expand bilingual examples/development/integrity documentation and English help; record two-node functional checks and CPU-only algorithm benchmarks separately from cluster throughput.
+
 ## 0.4.2 — cluster SSH defaults
 
 - Use the requested no-host-key-checking, null known-hosts, quiet, no-host-IP-check options for all controller SSH calls, including old-job resume.

@@ -140,6 +140,7 @@ func agentCommand(args []string) error {
 		if o.Existing != "" {
 			argv = append(argv, "--existing", o.Existing)
 		}
+		argv = append(argv, "--verify", verifyMode(o.Verify))
 		// Always pass saved values: old jobs and explicit opt-outs must not inherit new CLI defaults.
 		argv = append(argv, "--verify-window-chunks", strconv.Itoa(o.VerifyWindowChunks),
 			"--pipeline-verify="+strconv.FormatBool(o.PipelineVerify))

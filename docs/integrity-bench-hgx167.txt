@@ -1,0 +1,23 @@
+goos: linux
+goarch: amd64
+pkg: swarmcopy
+cpu: Intel(R) Xeon(R) 6776P
+BenchmarkIntegritySourcePipeline/sha256+sha256         	     255	   1872517 ns/op	 559.98 MB/s	      19 B/op	       0 allocs/op
+BenchmarkIntegritySourcePipeline/sha256+sha256         	     255	   1872018 ns/op	 560.13 MB/s	      19 B/op	       0 allocs/op
+BenchmarkIntegritySourcePipeline/sha256+sha256         	     255	   1871938 ns/op	 560.16 MB/s	      19 B/op	       0 allocs/op
+BenchmarkIntegritySourcePipeline/blake3+blake3         	     519	    905512 ns/op	1157.99 MB/s	   90647 B/op	     340 allocs/op
+BenchmarkIntegritySourcePipeline/blake3+blake3         	     524	    905463 ns/op	1158.05 MB/s	   90646 B/op	     340 allocs/op
+BenchmarkIntegritySourcePipeline/blake3+blake3         	     526	    906458 ns/op	1156.78 MB/s	   90644 B/op	     340 allocs/op
+BenchmarkIntegritySourcePipeline/xxh3-128+blake3       	     882	    525917 ns/op	1993.80 MB/s	   45302 B/op	     170 allocs/op
+BenchmarkIntegritySourcePipeline/xxh3-128+blake3       	     866	    525485 ns/op	1995.44 MB/s	   45302 B/op	     170 allocs/op
+BenchmarkIntegritySourcePipeline/xxh3-128+blake3       	     891	    528283 ns/op	1984.88 MB/s	   45301 B/op	     170 allocs/op
+BenchmarkIntegritySourcePipeline/xxh3-128+sha256       	     480	    995976 ns/op	1052.81 MB/s	      85 B/op	       0 allocs/op
+BenchmarkIntegritySourcePipeline/xxh3-128+sha256       	     481	    995982 ns/op	1052.81 MB/s	      87 B/op	       0 allocs/op
+BenchmarkIntegritySourcePipeline/xxh3-128+sha256       	     481	    996056 ns/op	1052.73 MB/s	      87 B/op	       0 allocs/op
+BenchmarkIntegritySourcePipeline/sha256+blake3         	     343	   1390249 ns/op	 754.24 MB/s	   45236 B/op	     170 allocs/op
+BenchmarkIntegritySourcePipeline/sha256+blake3         	     342	   1389498 ns/op	 754.64 MB/s	   45237 B/op	     170 allocs/op
+BenchmarkIntegritySourcePipeline/sha256+blake3         	     343	   1389066 ns/op	 754.88 MB/s	   45236 B/op	     170 allocs/op
+BenchmarkIntegritySourcePipeline/blake3+sha256         	     342	   1389868 ns/op	 754.44 MB/s	   45434 B/op	     170 allocs/op
+BenchmarkIntegritySourcePipeline/blake3+sha256         	     340	   1392086 ns/op	 753.24 MB/s	   45435 B/op	     170 allocs/op
+BenchmarkIntegritySourcePipeline/blake3+sha256         	     342	   1390559 ns/op	 754.07 MB/s	   45434 B/op	     170 allocs/op
+PASS

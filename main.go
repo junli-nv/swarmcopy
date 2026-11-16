@@ -24,10 +24,12 @@ import (
 	"time"
 )
 
-const version = "0.4.2"
+const version = "0.5.0"
 const protocol = "SCDP/1"
 
 type Manifest struct {
+	ChunkHash string      `json:",omitempty"`
+	FileHash  string      `json:",omitempty"`
 	Entries   []TreeEntry `json:",omitempty"`
 	Version   int
 	Name      string
@@ -47,7 +49,10 @@ func (m Manifest) length(i int) int64 {
 	return n
 }
 func (m Manifest) validate() error {
-	if m.Version == 2 {
+	if err := m.validateAlgorithms(); err != nil {
+		return err
+	}
+	if m.isTree() {
 		return m.validateTree()
 	}
 	if len(m.Entries) != 0 {
@@ -228,6 +233,7 @@ func prepare(args []string) error {
 }
 
 type Options struct {
+	Verify                                   string
 	Existing                                 string
 	QUICGSOKiB                               int
 	QUICMaxPayload                           int
@@ -247,21 +253,22 @@ type Options struct {
 	Lifetime, Stall                          time.Duration
 }
 type Status struct {
-	Files                int
-	Entries              int
-	Transport            string
-	Performance          *Performance `json:",omitempty"`
-	Protocol             string
-	Size, VerifiedBytes  int64
-	Recorded             bool
-	ID                   string
-	Version              string
-	Have                 []bool
-	Complete             bool
-	Origin               bool
-	Downloaded, Uploaded int64
-	From                 map[string]int64
-	Error                string
+	Verify, ChunkHash, FileHash string
+	Files                       int
+	Entries                     int
+	Transport                   string
+	Performance                 *Performance `json:",omitempty"`
+	Protocol                    string
+	Size, VerifiedBytes         int64
+	Recorded                    bool
+	ID                          string
+	Version                     string
+	Have                        []bool
+	Complete                    bool
+	Origin                      bool
+	Downloaded, Uploaded        int64
+	From                        map[string]int64
+	Error                       string
 }
 type pacer struct {
 	mu   sync.Mutex
@@ -468,14 +475,19 @@ func (n *Node) scan() error {
 	count := 0
 	for i, h := range n.m.Chunks {
 		b := buf[:n.m.length(i)]
+		if tree, ok := n.f.(*treeStore); ok && !tree.chunkMayExist(int64(i)*n.m.ChunkSize, n.m.length(i)) {
+			continue
+		}
 		_, e := n.f.ReadAt(b, int64(i)*n.m.ChunkSize)
-		if e == nil && digest(b) == h {
+		if e == nil && contentDigest(n.m.chunkAlgorithm(), b) == h {
 			n.have[i] = true
 			count++
-			whole.Write(b)
+			if verifyMode(n.o.Verify) == "full" {
+				whole.Write(b)
+			}
 		}
 	}
-	if count == len(n.have) && (contentHashError(whole) != nil || hex.EncodeToString(whole.Sum(nil)) != n.m.SHA256) {
+	if verifyMode(n.o.Verify) == "full" && count == len(n.have) && (contentHashError(whole) != nil || hex.EncodeToString(whole.Sum(nil)) != n.m.SHA256) {
 		return errors.New("whole-file hash contradicts manifest")
 	}
 	if n.origin && count != len(n.have) {
@@ -492,7 +504,7 @@ func (n *Node) snapshot() Status {
 	for k, v := range n.from {
 		from[k] = v
 	}
-	return Status{Files: n.m.fileCount(), Entries: len(n.m.Entries), Transport: transportName(n.o.Transport), Performance: n.performanceLocked(), Protocol: protocol, Size: n.m.Size, VerifiedBytes: verifiedBytes(n.m, n.have), ID: n.m.id(), Version: version, Have: append([]bool(nil), n.have...), Complete: n.complete,
+	return Status{Verify: verifyMode(n.o.Verify), ChunkHash: n.m.chunkAlgorithm(), FileHash: n.m.fileAlgorithm(), Files: n.m.fileCount(), Entries: len(n.m.Entries), Transport: transportName(n.o.Transport), Performance: n.performanceLocked(), Protocol: protocol, Size: n.m.Size, VerifiedBytes: verifiedBytes(n.m, n.have), ID: n.m.id(), Version: version, Have: append([]bool(nil), n.have...), Complete: n.complete,
 		Origin: n.origin, Downloaded: n.downloaded.Load(), Uploaded: n.uploaded.Load(), From: from, Error: n.failure}
 }
 func (n *Node) serve(w http.ResponseWriter, r *http.Request) {
@@ -598,11 +610,12 @@ func peer(args []string) error {
 	var o Options
 	fs := flag.NewFlagSet("peer", flag.ContinueOnError)
 	configureUsage(fs, "peer")
+	fs.StringVar(&o.Verify, "verify", "full", "verification mode: full (disk reread) or chunks (cryptographic chunk hashes)")
 	fs.IntVar(&o.QUICGSOKiB, "quic-gso-kib", 64, "maximum QUIC GSO batch KiB (16..64), still congestion/pacing limited")
 	fs.IntVar(&o.QUICMaxPayload, "quic-max-payload", 8952, "QUIC UDP payload ceiling (1452..8952); larger packets require PMTU confirmation")
 	fs.IntVar(&o.QUICSockets, "quic-sockets", 4, "QUIC client UDP socket shards (1..32); distribute sources across receive loops")
 	fs.StringVar(&o.Transport, "transport", "tcp", "chunk data transport: tcp or quic (UDP); control stays TCP")
-	fs.StringVar(&o.File, "file", "", "local destination file; destination directory for v2 tree manifests")
+	fs.StringVar(&o.File, "file", "", "local destination file; destination directory for v2/v3 tree manifests")
 	fs.StringVar(&o.Existing, "existing", "keep", "tree conflicts: keep, resume or replace (controller can prompt)")
 	fs.IntVar(&o.VerifyWindowChunks, "verify-window-chunks", 256, "prefer this many upcoming hash chunks; 0=global rarity, requires pipeline-verify")
 	fs.BoolVar(&o.PipelineVerify, "pipeline-verify", true, "overlap ordered whole-file SHA256 with chunk transfer")
@@ -663,12 +676,20 @@ func peer(args []string) error {
 	if o.MaxWorkers < o.Workers || o.MaxWorkers > 32 || o.HedgeDelay <= 0 {
 		return errors.New("invalid max-workers or hedge-delay")
 	}
+	if o.Verify == "chunks" {
+		o.PipelineVerify = false
+		o.VerifyWindowChunks = 0
+	}
 	normalizeVerifyFlags(fs, o.PipelineVerify, &o.VerifyWindowChunks)
 	if o.VerifyWindowChunks < 0 || o.VerifyWindowChunks > 4096 || o.VerifyWindowChunks > 0 && !o.PipelineVerify {
 		return errors.New("verify-window-chunks must be 0..4096 and requires pipeline-verify")
 	}
 	if o.VerifyBufferMiB < 1 || o.VerifyBufferMiB > 64 {
 		return errors.New("verify-buffer-mib must be 1..64")
+	}
+	if o.Verify == "chunks" {
+		o.PipelineVerify = false
+		o.VerifyWindowChunks = 0
 	}
 	finishProfile, profileErr := peerCPUProfile()
 	if profileErr != nil {
@@ -679,7 +700,10 @@ func peer(args []string) error {
 	if e != nil {
 		return e
 	}
-	if m.Version == 2 {
+	if e = validateVerification(o.Verify, m); e != nil {
+		return e
+	}
+	if m.isTree() {
 		o.File, e = filepath.Abs(o.File)
 		if e != nil {
 			return e
@@ -715,7 +739,7 @@ func peer(args []string) error {
 	n.dataClient = dataClient
 	defer closeData()
 	scanStart := time.Now()
-	if m.Version == 2 {
+	if m.isTree() {
 		if o.Existing != "" && o.Existing != "keep" && o.Existing != "resume" && o.Existing != "replace" {
 			return errors.New("invalid existing-file policy")
 		}
@@ -794,7 +818,7 @@ func peer(args []string) error {
 			if e = n.scan(); e != nil {
 				return e
 			}
-			if n.origin {
+			if n.origin && verifyMode(o.Verify) == "full" {
 				if info, err := n.f.Stat(); err == nil {
 					rememberVerified(o.File, m, info)
 				}
@@ -955,7 +979,7 @@ func statusCommand(args []string) error {
 					count++
 				}
 			}
-			result[a] = map[string]any{"Protocol": st.Protocol, "Size": st.Size, "VerifiedBytes": st.VerifiedBytes, "Complete": st.Complete, "Chunks": count, "TotalChunks": len(st.Have),
+			result[a] = map[string]any{"Verify": verifyMode(st.Verify), "ChunkHash": hashName(st.ChunkHash), "FileHash": hashName(st.FileHash), "Protocol": st.Protocol, "Size": st.Size, "VerifiedBytes": st.VerifiedBytes, "Complete": st.Complete, "Chunks": count, "TotalChunks": len(st.Have),
 				"Downloaded": st.Downloaded, "Uploaded": st.Uploaded, "From": st.From, "Error": st.Error, "ID": st.ID}
 			if !st.Complete || st.Error != "" {
 				ok = false

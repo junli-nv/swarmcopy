@@ -26,6 +26,8 @@ import (
 )
 
 type Job struct {
+	Verify, ChunkHash, FileHash                                                  string
+	SSHOptions                                                                   []string
 	SSHCipher                                                                    string
 	Attempt, ControllerHost, ControllerStartTicks                                string
 	ControllerPID                                                                int
@@ -212,9 +214,13 @@ type sshRunner struct {
 	user     string
 	password bool
 	cipher   string
+	options  []string
 }
 
 func (r sshRunner) run(ctx context.Context, host, reason, command string, in io.Reader) ([]byte, error) {
+	if _, err := mergeSSHOptions(nil, r.options); err != nil {
+		return nil, err
+	}
 	target := host
 	if r.user != "" && !strings.Contains(host, "@") {
 		target = r.user + "@" + host
@@ -368,12 +374,19 @@ func clusterCommand(mode string, args []string) error {
 	var hosts string
 	var sources sourceFlags
 	var existing string
+	var sshOptions sourceFlags
+	fs.Var(&sshOptions, "ssh-opt", "additional OpenSSH KEY=VALUE option; repeatable, overrides defaults")
 	var recheck bool
+	var verification string
 	if mode == "resume" {
+		fs.StringVar(&verification, "verify", "", "full or chunks; override saved mode, recheck/restart peers when changed")
 		fs.StringVar(&existing, "existing", "", "conflicts: ask, resume, replace or keep; overrides saved policy")
 		fs.BoolVar(&recheck, "recheck", false, "force full existing-file verification")
 	}
 	if mode == "distribute" {
+		fs.StringVar(&j.Verify, "verify", "full", "full: disk content verification; chunks: cryptographic chunk checks without final reread")
+		fs.StringVar(&j.ChunkHash, "chunk-hash", "sha256", "chunk digest: sha256, blake3 or xxh3-128 (full only)")
+		fs.StringVar(&j.FileHash, "file-hash", "sha256", "cryptographic file digest: sha256 or blake3")
 		fs.IntVar(&j.QUICGSOKiB, "quic-gso-kib", 64, "maximum QUIC GSO batch KiB (16..64), congestion/pacing limited")
 		fs.IntVar(&j.QUICMaxPayload, "quic-max-payload", 8952, "QUIC UDP payload ceiling (1452..8952), with path MTU discovery")
 		fs.IntVar(&j.QUICSockets, "quic-sockets", 4, "QUIC client UDP socket shards (1..32)")
@@ -449,6 +462,16 @@ func clusterCommand(mode string, args []string) error {
 		if j.Port < 1 || j.Port > 65535 || j.Workers < 1 || j.Workers > 32 || j.Uploads < 1 || j.Uploads > 32 ||
 			j.UploadMiB < 0 || j.DownloadMiB < 0 || j.UploadMiB > 100000 || j.DownloadMiB > 100000 || j.Lifetime <= 0 {
 			return errors.New("invalid resource limits")
+		}
+		if !validHash(j.ChunkHash) || !cryptoHash(j.FileHash) {
+			return errors.New("unsupported chunk/file hash algorithm")
+		}
+		if e = validateVerification(j.Verify, newSourceManifest(j)); e != nil {
+			return e
+		}
+		if j.Verify == "chunks" {
+			j.PipelineVerify = false
+			j.VerifyWindowChunks = 0
 		}
 		normalizeVerifyFlags(fs, j.PipelineVerify, &j.VerifyWindowChunks)
 		if j.VerifyWindowChunks < 0 || j.VerifyWindowChunks > 4096 || j.VerifyWindowChunks > 0 && !j.PipelineVerify {
@@ -532,6 +555,23 @@ func clusterCommand(mode string, args []string) error {
 			j.SSHUser = *user
 		}
 	}
+	verificationChanged := mode == "resume" && verification != "" && verifyMode(j.Verify) != verification
+	if mode == "resume" && verification != "" {
+		if verification != "full" && verification != "chunks" {
+			return errors.New("verify must be full or chunks")
+		}
+		if verifyMode(j.Verify) != verification {
+			j.Recheck = true
+		}
+		j.Verify = verification
+		if verification == "chunks" {
+			j.PipelineVerify = false
+			j.VerifyWindowChunks = 0
+		}
+	}
+	if _, err := mergeSSHOptions(nil, j.SSHOptions); err != nil {
+		return err
+	}
 	if mode == "resume" && existing != "" {
 		if existing != "ask" && existing != "resume" && existing != "replace" && existing != "keep" {
 			return errors.New("invalid existing policy")
@@ -540,6 +580,15 @@ func clusterCommand(mode string, args []string) error {
 	}
 	if mode == "resume" && hasFlag(args, "recheck") {
 		j.Recheck = recheck
+	}
+	if verificationChanged {
+		j.Recheck = true // Never reuse a live peer with a different integrity contract.
+	}
+	if len(sshOptions) > 0 {
+		if _, err := mergeSSHOptions(j.SSHOptions, sshOptions); err != nil {
+			return err
+		}
+		j.SSHOptions, _ = mergeSSHOptions(j.SSHOptions, sshOptions)
 	}
 	if *sshCipher != "" {
 		j.SSHCipher = *sshCipher
@@ -557,7 +606,7 @@ func clusterCommand(mode string, args []string) error {
 		return e
 	}
 	defer cleanup()
-	r := sshRunner{env: env, user: j.SSHUser, password: *ask, cipher: j.SSHCipher}
+	r := sshRunner{env: env, user: j.SSHUser, password: *ask, cipher: j.SSHCipher, options: j.SSHOptions}
 	if mode == "stop" {
 		if e = os.WriteFile(filepath.Join(j.Dir, "stop.request"), []byte(time.Now().String()), 0600); e != nil {
 			return e
@@ -710,11 +759,15 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	if e != nil {
 		return e
 	}
+	if e = validateVerification(j.Verify, m); e != nil {
+		return e
+	}
+	fmt.Println("INTEGRITY " + integrityDescription(j.Verify, m))
 	manifest, e := os.ReadFile(manifestPath)
 	if e != nil {
 		return e
 	}
-	if m.Version == 2 {
+	if m.isTree() {
 		if e = j.preparing(ctx, "checking-existing", "verifying existing files on each node; uncached large files require disk reads", 0, 0, len(j.Hosts)); e != nil {
 			return e
 		}
@@ -809,7 +862,7 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 			if e = j.save(); e != nil {
 				return e
 			}
-			fmt.Printf("JOB COMPLETE: %s; every target passed SHA256\n", j.ID)
+			fmt.Printf("JOB COMPLETE: %s; every target passed content verification (%s)\n", j.ID, integrityDescription(j.Verify, m))
 			return nil
 		}
 		select {
@@ -867,11 +920,24 @@ func (r sshRunner) arguments(target, command string) []string {
 	if r.password {
 		batch = "no"
 	}
-	args := []string{"-T", "-o", "BatchMode=" + batch, "-o", "ConnectTimeout=8",
-		"-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null",
-		"-o", "LogLevel=quiet", "-o", "CheckHostIP=no",
-		"-o", "NumberOfPasswordPrompts=1"}
+	defaults := []string{"BatchMode=" + batch, "ConnectTimeout=8", "StrictHostKeyChecking=no", "UserKnownHostsFile=/dev/null", "LogLevel=quiet", "CheckHostIP=no", "NumberOfPasswordPrompts=1"}
+	merged, _ := mergeSSHOptions(defaults, r.options)
+	args := []string{"-T"}
+	hasCipher := false
+	for _, option := range merged {
+		if strings.EqualFold(strings.SplitN(option, "=", 2)[0], "Ciphers") && r.cipher != "" && r.cipher != "auto" && r.cipher != "system" {
+			continue
+		}
+		args = append(args, "-o", option)
+		if strings.EqualFold(strings.SplitN(option, "=", 2)[0], "Ciphers") {
+			hasCipher = true
+		}
+	}
+
 	cipher := r.cipher
+	if (cipher == "" || cipher == "auto") && hasCipher {
+		cipher = "system"
+	}
 	if cipher == "" || cipher == "auto" {
 		if cpu.X86.HasAES && cpu.X86.HasPCLMULQDQ || cpu.ARM64.HasAES && cpu.ARM64.HasPMULL {
 			cipher = aesSSHPreference
@@ -883,4 +949,25 @@ func (r sshRunner) arguments(target, command string) []string {
 		args = append(args, "-c", cipher)
 	}
 	return append(args, "--", target, command)
+}
+
+func mergeSSHOptions(base, extra []string) ([]string, error) {
+	out := []string{}
+	index := map[string]int{}
+	for _, options := range [][]string{base, extra} {
+		for _, s := range options {
+			pair := strings.SplitN(s, "=", 2)
+			if len(pair) != 2 || pair[0] == "" || strings.ContainsAny(pair[0], " \t\r\n") || strings.ContainsAny(pair[1], "\r\n\x00") {
+				return nil, fmt.Errorf("ssh-opt must be KEY=VALUE without newlines: %q", s)
+			}
+			key := strings.ToLower(pair[0])
+			if i, ok := index[key]; ok {
+				out[i] = s
+			} else {
+				index[key] = len(out)
+				out = append(out, s)
+			}
+		}
+	}
+	return out, nil
 }

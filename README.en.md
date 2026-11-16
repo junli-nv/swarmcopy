@@ -6,6 +6,12 @@ Resumable P2P file and directory distribution for Linux clusters, using **SCDP/1
 
 **main is the only long-lived branch.** One binary includes TCP, optional UDP/QUIC, pipelined verification, optional adaptive concurrency, multiple files and directories. No separate UDP or race executable is needed. Historical tags and measurements remain available.
 
+## v0.5.0 integrity modes and SSH options
+
+Defaults remain full + SHA256. Choose `--verify chunks` to omit the final disk reread, or `--verify full --chunk-hash xxh3-128 --file-hash blake3` for fast chunks plus a cryptographic file digest. XXH3 is rejected in chunks mode. Initial source hashing still reads every byte. See [guarantees, combinations and measured hardware results](docs/INTEGRITY.en.md).
+
+SSH defaults include `StrictHostKeyChecking=no`, `UserKnownHostsFile=/dev/null`, `LogLevel=quiet`, `CheckHostIP=no`. Repeat `--ssh-opt KEY=VALUE` to extend/override saved defaults, e.g. `--ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15`. Select AES-GCM with `--ssh-cipher aes128-gcm@openssh.com`.
+
 ## Large-source progress and Ctrl+C
 
 From v0.4.1, source hashing and initial seed import report bytes, percent, rate and estimated remaining phase time about every two seconds. Deployment, inventory and listener readiness report stage/node counts/elapsed time. Watch no longer labels preparation as all peers offline. Source reads honor Ctrl+C between buffers. Estimates exclude later work. [Examples, cancellation limits and validation](docs/PROGRESS.en.md).

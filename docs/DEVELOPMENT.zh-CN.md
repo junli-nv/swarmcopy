@@ -2,7 +2,7 @@
 
 [English](DEVELOPMENT.en.md) · [中文使用说明](../README.md) · [示例](EXAMPLES.zh-CN.md)
 
-本文描述统一主线 v0.4.1。只维护 main 一个长期分支；常规 TCP、可选 UDP、自适应、流水校验及目录分发都在同一二进制内。旧标签保留历史，后续直接在 main 改进，不另行发布长期并行功能版。
+本文描述统一主线 v0.5.0。只维护 main 一个长期分支；常规 TCP、可选 UDP、自适应、流水校验及目录分发都在同一二进制内。旧标签保留历史，后续直接在 main 改进，不另行发布长期并行功能版。
 
 ## 源码地图
 
@@ -79,3 +79,13 @@ scripts/build.sh 输出 dist 下两种静态二进制和 SHA256SUMS。实际 CPU
 ## 准备进度维护
 
 progress.go 通过 context 传递线程安全 reporter，每两秒输出并原子保存 progress.json；阶段、字节、文件和节点计数独立。Job 的 attempt 与控制器 PID/启动时刻用于拒绝陈旧进度。ETA 是当前阶段平均速率估计，不是全任务保证；metadata/监听准备没有可信速率时只报步骤和耗时。watch 每次重载 Job 并识别完成记录。读取器必须保留按缓冲区检查取消，远端库存校验通过 stdin 心跳感知控制器离开。详见 [进度设计及验证](PROGRESS.zh-CN.md)。
+
+## v0.5.0 开发约束
+
+`integrity.go` 集中管理算法、清单绑定和模式合法性；`integrity_test.go` 覆盖算法向量、合法组合、错误组合、真实 HTTP 接收、弱块摘要与强文件摘要不匹配、缓存隔离、清单流和新稀疏文件扫描。详见[校验语义和实测](INTEGRITY.zh-CN.md)。
+
+必须保留：旧 v1/v2 空算法字段等于 SHA256/full，不能改变旧 JSON ID；v3 必须明确算法并标记逐文件摘要；XXH3 只能 full；chunks 不能生成 full 回读缓存；模式改变必须重启并重查 peer；种子接收必须与可信源清单一致；最终发布不能绕过所选校验门槛。重新启动后现有部分文件仍需检查，不能只按长度认定完成。
+
+`Job.SSHOptions` 保存重复的 `--ssh-opt`。`mergeSSHOptions` 按不区分大小写的键合并默认、已保存和本次覆盖值，不进行 shell 二次拆分；显式 cipher 优先。新增 SSH 参数使用这个集合，避免多个调用路径默认值分裂。SSH 登录预检必须保留在来源大文件读取之前。
+
+新增 BLAKE3/XXH3 固定依赖已 vendor 并附许可证；改依赖后执行 `scripts/vendor-quic.sh`，保留 QUIC bulk 补丁。以 CGO_ENABLED=0 构建 amd64/arm64，明确交叉构建不等于 ARM 真机验证；保留测速参数，不把 CPU 微基准倍数说成网络收益。

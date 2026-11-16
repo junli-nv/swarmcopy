@@ -356,6 +356,9 @@ func waitPeerReadiness(ctx context.Context, j Job, t string) error {
 			if err == nil && st.Error != "" {
 				return fmt.Errorf("peer %s failed during startup: %s", addr, st.Error)
 			}
+			if err == nil && st.Error == "" && verifyMode(st.Verify) != verifyMode(j.Verify) {
+				return fmt.Errorf("peer %s verification mode %s does not match job mode %s", addr, verifyMode(st.Verify), verifyMode(j.Verify))
+			}
 			if err == nil && st.Error == "" {
 				ready[addr] = true
 				reportNode(ctx)

@@ -78,7 +78,7 @@ func (n *Node) download(ctx context.Context, i int, addr string, buffers ...[]by
 	elapsed := time.Since(start)
 	networkDone = true
 	hashStart := time.Now()
-	valid := digest(buf) == n.m.Chunks[i]
+	valid := contentDigest(n.m.chunkAlgorithm(), buf) == n.m.Chunks[i]
 	hashTime := time.Since(hashStart).Seconds()
 	n.mu.Lock()
 	n.initTransfersLocked()
@@ -157,27 +157,43 @@ func (n *Node) finalizeContext(ctx context.Context) (err error) {
 	if err != nil {
 		return err
 	}
-	n.setPhase("final-hash")
-	start = time.Now()
-	var sum string
-	if n.verifier != nil {
-		sum, err = n.verifier.wait(ctx)
-	} else {
-		sum, err = n.serialDigest(ctx)
-		n.mu.Lock()
-		n.perf.FileHashWallSeconds = time.Since(start).Seconds()
-		n.mu.Unlock()
-	}
-
-	n.mu.Lock()
-	n.perf.FinalHashSeconds = time.Since(start).Seconds()
-	n.mu.Unlock()
-	if err != nil {
+	if err = validateVerification(n.o.Verify, n.m); err != nil {
 		return err
 	}
-	if sum != n.m.SHA256 {
-		return errors.New("final SHA256 mismatch")
+	if verifyMode(n.o.Verify) == "chunks" {
+		n.mu.Lock()
+		valid := len(n.have) == len(n.m.Chunks)
+		for _, have := range n.have {
+			valid = valid && have
+		}
+		n.mu.Unlock()
+		if !valid {
+			return errors.New("cannot publish chunks mode with missing verified chunks")
+		}
+	} else {
+		n.setPhase("final-hash")
+		start = time.Now()
+		var sum string
+		if n.verifier != nil {
+			sum, err = n.verifier.wait(ctx)
+		} else {
+			sum, err = n.serialDigest(ctx)
+			n.mu.Lock()
+			n.perf.FileHashWallSeconds = time.Since(start).Seconds()
+			n.mu.Unlock()
+		}
+
+		n.mu.Lock()
+		n.perf.FinalHashSeconds = time.Since(start).Seconds()
+		n.mu.Unlock()
+		if err != nil {
+			return err
+		}
+		if sum != n.m.SHA256 {
+			return errors.New("final SHA256 mismatch")
+		}
 	}
+
 	if err = ctx.Err(); err != nil {
 		return err
 	}
@@ -199,14 +215,14 @@ func (n *Node) finalizeContext(ctx context.Context) (err error) {
 		return err
 	}
 	if tree, ok := n.f.(*treeStore); ok {
-		err = tree.Publish(ctx)
+		err = tree.Publish(ctx, verifyMode(n.o.Verify) == "full")
 	} else {
 		err = publish(n.f.Name(), n.o.File)
 	}
 	if err != nil {
 		return err
 	}
-	if info, e := n.f.Stat(); e == nil && n.m.Version == 1 {
+	if info, e := n.f.Stat(); e == nil && n.m.Version == 1 && verifyMode(n.o.Verify) == "full" {
 		rememberVerified(n.o.File, n.m, info)
 	}
 	n.mu.Lock()
@@ -214,6 +230,6 @@ func (n *Node) finalizeContext(ctx context.Context) (err error) {
 	n.complete = true
 	n.perf.Stage = "complete"
 	n.mu.Unlock()
-	log.Printf("COMPLETE sha256=%s bytes=%d; continuing to seed", n.m.SHA256, n.m.Size)
+	log.Printf("COMPLETE digest=%s bytes=%d; continuing to seed", n.m.SHA256, n.m.Size)
 	return nil
 }
