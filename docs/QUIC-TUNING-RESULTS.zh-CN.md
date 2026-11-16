@@ -1,5 +1,7 @@
 # UDP 实现审查：三项消融与完整结果
 
+> 历史研究/验证记录：保留当时版本、参数与结果，不代表当前默认行为。当前使用方式见[项目首页](../README.md)和[文档索引](README.md)。
+
 [English](QUIC-TUNING-RESULTS.en.md) · [实现与参数](QUIC-TUNING.zh-CN.md) · [原始较慢结果](QUIC-RESULTS.zh-CN.md)
 
 同一45节点、1种子＋44全新接收端，文件40,188,444,672字节（37.43GiB）。以下每张表内部使用同一冻结二进制、同一介质与配置，仅改变标明的变量。不同试验不合并计算倍数。
@@ -77,10 +79,10 @@ CPU诊断为另一次5节点8GiB带采样试验，不能当作正式速度结论
 
 ## 证据和边界
 
-- socket：[汇总](quic-shards-results.json)、[节点](quic-shards-nodes.json)、[缓存屏障](quic-shards-barriers.json)、[内核增量](quic-shards-kernel-deltas.json)
-- PMTU：[汇总](quic-pmtu-results.json)、[节点](quic-pmtu-nodes.json)、[缓存屏障](quic-pmtu-barriers.json)、[内核增量](quic-pmtu-kernel-deltas.json)
-- GSO：[汇总](quic-gso-results.json)、[节点](quic-gso-nodes.json)、[缓存屏障](quic-gso-barriers.json)、[内核增量](quic-gso-kernel-deltas.json)
-- [匿名CPU诊断](quic-cpu-diagnosis.json)、[实际缓冲](quic-socket-probe.json)、[真实入站包长](quic-jumbo-ingress.json)
+- socket：[汇总](data/quic-shards-results.json)、[节点](data/quic-shards-nodes.json)、[缓存屏障](data/quic-shards-barriers.json)、[内核增量](data/quic-shards-kernel-deltas.json)
+- PMTU：[汇总](data/quic-pmtu-results.json)、[节点](data/quic-pmtu-nodes.json)、[缓存屏障](data/quic-pmtu-barriers.json)、[内核增量](data/quic-pmtu-kernel-deltas.json)
+- GSO：[汇总](data/quic-gso-results.json)、[节点](data/quic-gso-nodes.json)、[缓存屏障](data/quic-gso-barriers.json)、[内核增量](data/quic-gso-kernel-deltas.json)
+- [匿名CPU诊断](data/quic-cpu-diagnosis.json)、[实际缓冲](data/quic-socket-probe.json)、[真实入站包长](data/quic-jumbo-ingress.json)
 
 UDP方案使用HTTP/3、QUIC和TLS，TCP数据仍是明文；不是仅切换IP协议号，也不是IBM FASP性能测试。未模拟WAN、未隔离设备缓存及后台负载，没有改变全局网络/sysctl/MTU配置。ARM64仅交叉构建；传输中MTU下降恢复尚未验证。新包长和GSO扩展是明确记录的本地依赖补丁，不冒充未经修改的上游发行版。
 

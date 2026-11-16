@@ -1,6 +1,8 @@
 # Adaptive scheduling: 45-node comparison
 
-[中文](ADAPTIVE-INITIAL-RESULTS.zh-CN.md) · [Design and metric definitions](ADAPTIVE.en.md) · [Numeric results](adaptive-initial-results.json)
+> Historical study/validation record: versions, parameters and results describe that measurement, not current defaults. For current use, see [project home](../README.en.md) and [documentation](README.en.md).
+
+[中文](ADAPTIVE-INITIAL-RESULTS.zh-CN.md) · [Design and metric definitions](ADAPTIVE.en.md) · [Numeric results](data/adaptive-initial-results.json)
 
 This experiment did not show an adaptive speedup over the release. The prototype must not be promoted as a performance improvement; scheduling remains opt-in.
 
@@ -23,7 +25,7 @@ Median ratios: **0.816×** versus v0.1.0 and **0.817×** versus candidate fixed.
 | 2 / adaptive | 61.00 | 4.68 | 42.20 | 4167 | 0 | 277 |
 | 2 / fixed | 35.00 | 5.77 | 40.68 | 3448 | 0 | 0 |
 
-Phase maxima can come from different nodes and overlap; do not sum them into batch time. Transfer includes discovery/scheduling/waiting; controller deployment and stopping are included separately in wall time. [Anonymous node records](adaptive-initial-node-results.json) preserve work sums and application payload reads. ReceivedBytes is not NIC traffic. Hedges may increase traffic, but valid chunks are committed/accounted only once.
+Phase maxima can come from different nodes and overlap; do not sum them into batch time. Transfer includes discovery/scheduling/waiting; controller deployment and stopping are included separately in wall time. [Anonymous node records](data/adaptive-initial-node-results.json) preserve work sums and application payload reads. ReceivedBytes is not NIC traffic. Hedges may increase traffic, but valid chunks are committed/accounted only once.
 
 ## Controls and limits
 
@@ -33,8 +35,8 @@ Post-study checks confirm 45 distinct kernel boot IDs and all 270 owned peer rec
 
 Two observations cannot establish a general performance guarantee. Device caches and background load were uncontrolled. This is not a commercial Aspera test or UDP implementation; speedup ratios must not be multiplied by earlier rsync results. ARM64 is cross-built only.
 
-- [Anonymous per-node data](adaptive-initial-node-results.json)
-- [Cache barriers](adaptive-initial-cache-barriers.json)
+- [Anonymous per-node data](data/adaptive-initial-node-results.json)
+- [Cache barriers](data/adaptive-initial-cache-barriers.json)
 - [Reproduction driver](../scripts/benchmark-adaptive.py)
 
 Actual local study jobs: ./swarmcopy jobs --state-dir ./run/compare45-initial; select --job ./run/compare45-initial/<case-id>-job. Default jobs does not search custom locations.

@@ -1,12 +1,10 @@
 # UDP / QUIC chunk transport
 
-> These features are now integrated in main and the same executable; separate UDP/adaptive branches are no longer maintained. This document retains implementation background. Use the current [README](../README.en.md) and [examples](EXAMPLES.en.md).
+The QUIC implementation includes bounded receive-socket shards, a negotiated payload ceiling and GSO batches with a pinned narrow dependency patch. See [tuning](QUIC-TUNING.en.md) and [historical ablations](QUIC-TUNING-RESULTS.en.md). · [Documentation](README.en.md)
 
-The current candidate adds four client socket shards, an8952 negotiated ceiling and a64KiB GSO bound, with an explicitly recorded local dependency patch. See [current design](QUIC-TUNING.en.md) and [complete ablations](QUIC-TUNING-RESULTS.en.md). Base transport behavior follows below.
+[中文](QUIC.zh-CN.md) · [Unified download](https://github.com/junli-nv/swarmcopy/releases/latest)
 
-[中文](QUIC.zh-CN.md) · [TCP release](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0)
-
-`--transport quic` selects HTTP/3 reliable streams over QUIC/UDP. TCP stays the default. Pipelined whole-file SHA-256 and the 256-chunk prefix window stay on; adaptive concurrency stays off. This is not IBM FASP and UDP is not assumed to be faster.
+Optional --transport quic uses reliable HTTP/3 streams over UDP. TCP remains default. New chunks/BLAKE3 and optional full both work; full alone uses whole-file pipelining/window controls. Adaptive remains off. This is not FASP and UDP is not assumed faster.
 
 ~~~bash
 ./swarmcopy distribute --hosts 'node[001-005]' \
@@ -25,7 +23,7 @@ QUIC /chunk must use actual HTTP/3. TCP chunk requests are refused and no silent
 
 ## Integrity and identity
 
-Pinned quic-go v0.65.0 supplies reliable streams, loss recovery, congestion/flow control, and TLS 1.3. Chunk SHA-256, WriteAt commit, ordinary whole-file SHA-256, fsync, atomic publication, and restart revalidation remain mandatory. Unreliable datagrams do not carry file chunks.
+Pinned quic-go v0.65.0 supplies reliable streams, recovery, congestion/flow control and TLS 1.3. Preserve manifest-bound chunk checks, writes, selected chunks/full gates, fsync, per-file publication and restart revalidation. Unreliable datagrams do not carry file chunks.
 
 A shared job Ed25519 identity is derived from the high-entropy random job token. Both ends present certificates; mandatory public-key pinning, validity, and signature checks replace DNS/CA validation. No certificate files are required. Identity authenticates the job, not individual hosts; all token holders are trusted peers. Manually supplied tokens must be random and strong.
 
@@ -44,9 +42,9 @@ Initial/max stream windows are 2/32 MiB and connection windows 8/128 MiB, per co
 
 Build requires Go 1.26+ (tested toolchain 1.27.4) and pinned pure-Go modules. Runtime remains a standalone static CGO_ENABLED=0 executable for Linux x86_64/aarch64; dependency licenses are in THIRD_PARTY_NOTICES.txt. ARM64 is cross-built only.
 
-## Verification and limits
+## Historical verification and limits
 
-Race unit tests and go vet pass. A real race-instrumented three-process chain passes interrupted/corrupt-partial recovery and forwarding with `--transport quic --verify-window-chunks 4 --endgame --adaptive --min-workers 2 --max-workers 8`. Both modes pass two-node real SSH deployment, full hashes, default-window propagation, and HTTP/3 response evidence.
+Race unit tests and go vet pass. A real race-instrumented three-process chain passes interrupted/corrupt-partial recovery and forwarding with `--verify full --transport quic --verify-window-chunks 4 --endgame --adaptive --min-workers 2 --max-workers 8`. Both modes pass two-node real SSH deployment, full hashes, default-window propagation, and HTTP/3 response evidence.
 
 Benchmark methods use identical worker/upload counts and integrity requirements, fresh directories, per-compute-node sync/drop_caches barriers, continuous timing including retries/deployment/shutdown, and prepared common seed staging outside timing.
 

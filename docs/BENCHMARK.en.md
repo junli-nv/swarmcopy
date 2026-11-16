@@ -1,8 +1,10 @@
 # Distribution benchmark
 
+> Historical study/validation record: versions, parameters and results describe that measurement, not current defaults. For current use, see [project home](../README.en.md) and [documentation](README.en.md).
+
 [157-node three-pair cold-cache study](COLD-RESULTS.en.md)
 
-[中文（主文档）](BENCHMARK.zh-CN.md) · [Numeric results](benchmark-results.json) · [Validation](VALIDATION.en.md)
+[中文（主文档）](BENCHMARK.zh-CN.md) · [Numeric results](data/benchmark-results.json) · [Validation](VALIDATION.en.md)
 
 Development measurements on 2026-11-15: one 40,188,444,672-byte (37.43 GiB) file, the same compute seed and receiver cohort, and node-local RAID. Every round uses fresh destination files. SCDP has unlimited bandwidth, four workers/four upload slots, and a prepared unchanged verified seed.
 

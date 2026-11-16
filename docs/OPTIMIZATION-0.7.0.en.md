@@ -1,6 +1,8 @@
 # v0.7.0: scheduling, native local copies and completion accounting
 
-[中文（主文档）](OPTIMIZATION-0.7.0.zh-CN.md) · [Examples](EXAMPLES.en.md) · [Development](DEVELOPMENT.en.md) · [Measurement data](optimization-0.7.0-results.json)
+> Historical study/validation record: versions, parameters and results describe that measurement, not current defaults. For current use, see [project home](../README.en.md) and [documentation](README.en.md).
+
+[中文（主文档）](OPTIMIZATION-0.7.0.zh-CN.md) · [Examples](EXAMPLES.en.md) · [Development](DEVELOPMENT.en.md) · [Measurement data](data/optimization-0.7.0-results.json)
 
 ## Result and scope
 

@@ -1,6 +1,8 @@
 # v0.7.0：调度、本地复制与完成统计
 
-[English](OPTIMIZATION-0.7.0.en.md) · [示例](EXAMPLES.zh-CN.md) · [开发指南](DEVELOPMENT.zh-CN.md) · [可复核数据](optimization-0.7.0-results.json)
+> 历史研究/验证记录：保留当时版本、参数与结果，不代表当前默认行为。当前使用方式见[项目首页](../README.md)和[文档索引](README.md)。
+
+[English](OPTIMIZATION-0.7.0.en.md) · [示例](EXAMPLES.zh-CN.md) · [开发指南](DEVELOPMENT.zh-CN.md) · [可复核数据](data/optimization-0.7.0-results.json)
 
 ## 本次结论
 

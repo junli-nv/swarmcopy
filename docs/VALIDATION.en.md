@@ -1,4 +1,6 @@
-# Validation record
+# Historical validation record
+
+> Historical study/validation record: versions, parameters and results describe that measurement, not current defaults. For current use, see [project home](../README.en.md) and [documentation](README.en.md).
 
 [中文](VALIDATION.zh-CN.md) · [Development](DEVELOPMENT.en.md) · [Preliminary benchmark](BENCHMARK.en.md) · [Cold-cache study protocol](COLD-STUDY.en.md)
 
@@ -21,7 +23,7 @@ Pipeline and 256-chunk window default on; adaptive concurrency stays off. Flag t
 Default-enabled race chain recovery, explicit opt-out recovery, and all help routes pass. Two real SSH nodes confirm both modes, full hashed byte counts, remote window settings, and disabled adaptive concurrency.
 
 
-## Current verification experiment (0.2.0-dev.2)
+## Historical verification experiment (0.2.0-dev.2)
 
 - Ordered SHA-256 tests cover prefix gaps, short tails, coalesced signals, corrupt disk content, whole-digest mismatch, read errors, and cancellation while waiting or after hashing. Window tests cover rarity, frontier tracking, busy-prefix fallback, and disabled behavior.
 - Race unit tests and go vet pass; a real race-instrumented chain tests pipeline/window/endgame/adaptive together, including corrupt-partial interruption/resume and forwarding.
@@ -31,7 +33,7 @@ Default-enabled race chain recovery, explicit opt-out recovery, and all help rou
 
 Historical adaptive and v0.1.0 coverage remains scoped below.
 
-## Current adaptive experiment
+## Historical adaptive experiment
 
 - Race unit tests and go vet pass, including request deduplication/cancellation, corrupt-copy recovery, admission bounds, and write feedback.
 - The actual race executable passes interrupted/corrupt-partial forwarding with adaptive/endgame and a custom minimum concurrency.

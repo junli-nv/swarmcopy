@@ -1,8 +1,8 @@
 # 来源方式与节点故障
 
-[English](SOURCE-MODES.en.md) · [中文 README](../README.md) · [示例](EXAMPLES.zh-CN.md)
+[English](SOURCE-MODES.en.md) · [中文 README](../README.md) · [示例](EXAMPLES.zh-CN.md) · [文档索引](README.md)
 
-v0.7.0 起，本机目标通过本地读取、验块和写入填充，不通过 TCP/QUIC 回传；监控的 Local source copied 与网络 DL 分开。
+本机目标路径与源文件不同时，通过本地读取、验块和写入填充；监控的 Local source copied 与网络 DL 分开。源和目标为同一文件时，校验后直接复用，无需复制。
 
 [Optimization report](OPTIMIZATION-0.7.0.zh-CN.md)
 
@@ -32,7 +32,7 @@ no initial seed copy; ALL targets including this node receive into /raid/images
 
 ~~~bash
 ./swarmcopy distribute --hosts 'HGX[061,066,082]' \
-  --source /home/cmsupport/workspace/nemo-26.08.00.sqsh \
+  --source /shared/nemo.sqsh \
   --dest /raid/images --verify chunks
 ~~~
 
@@ -50,7 +50,7 @@ no initial seed copy; ALL targets including this node receive into /raid/images
 
 ## 节点异常不阻断健康节点
 
-v0.6.0 删除等待所有监听端口就绪才进入监控的门槛。peer 启动后独立传输；单节点 SSH、部署、盘点或启动失败，不会取消其他节点。
+监控不等待所有监听端口就绪。peer 启动后独立传输；单节点 SSH、部署、盘点或启动失败，不会取消其他节点。
 
 - 输出指出具体节点和失败阶段；节点错误保存到 job.json。
 - 正常节点立即显示下载、校验和完成进度。
@@ -68,13 +68,13 @@ v0.6.0 删除等待所有监听端口就绪才进入监控的门槛。peer 启�
 ./swarmcopy resume --job <ID>
 ~~~
 
-无需把已完成目标从原作业删除。旧 v0.5 作业保留原来的摘要算法；v0.7.1 新建作业默认 chunks/BLAKE3，无需显式 --verify chunks。--verify full 默认 SHA256/SHA256。
+无需把已完成目标从原作业删除。旧 v0.5 作业保留原来的摘要算法；新建作业默认 chunks/BLAKE3，无需显式 --verify chunks。--verify full 默认 SHA256/SHA256。
 
-## 本轮验证
+## 历史来源与故障隔离验证
 
 139,460,641 字节、多文件及目录夹具：BCM 式 staged、HGX061 原文件 direct、QUIC direct 均通过，两个目标逐文件独立 SHA256 一致。合成不可达初始种子不会取消另外两台；另在 HGX061/HGX066/HGX082 三台中途停止 HGX066 的接收进程，其余两台继续完成，明确记录故障，同 ID 续传复用部分数据，最终三台独立 SHA256 一致。另通过 race、vet、CLI 及源文件变化检测测试。
 
-这些是功能验证，不是新一轮 483.84 GiB 或百节点性能报告。aarch64 仅静态交叉构建，本轮未做 ARM 真机验证。
+这些是功能验证，不是新一轮 483.84 GiB 或百节点性能报告。aarch64 仅静态交叉构建，当时未做 ARM 真机验证。
 
 
 ## 删除作业与稀疏文件修复
@@ -88,4 +88,4 @@ remove 先用 PID/start-time 记录停止本作业控制器，锁定作业，再
 
 恢复稀疏暂存时，用 SEEK_DATA 确认未分配空洞，跳过其读取和摘要计算，仍标记为缺块。零长度文件不参与物理范围判定；不支持该接口的文件系统回退普通校验，不按文件长度假定完整。1 GiB 稀疏文件重开、有效块复用及独立删除保护测试通过。
 
-真实 RAID 再次打开 519,520,194,560 字节的空洞文件，30,966 块扫描耗时 0.153 秒，约 0.60 秒开放监听；仍为 0 已验证字节。这是一次元数据空洞扫描验证，不是传输测速，也不是对旧版本的配对性能比值。[记录](sparse-recovery-results.json)。
+真实 RAID 再次打开 519,520,194,560 字节的空洞文件，30,966 块扫描耗时 0.153 秒，约 0.60 秒开放监听；仍为 0 已验证字节。这是一次元数据空洞扫描验证，不是传输测速，也不是对旧版本的配对性能比值。[记录](data/sparse-recovery-results.json)。

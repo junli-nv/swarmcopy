@@ -1,8 +1,10 @@
 # 分发速度对比
 
+> 历史研究/验证记录：保留当时版本、参数与结果，不代表当前默认行为。当前使用方式见[项目首页](../README.md)和[文档索引](README.md)。
+
 [157 节点三轮冷页缓存正式对照](COLD-RESULTS.zh-CN.md)
 
-[English](BENCHMARK.en.md) · [原始数值](benchmark-results.json) · [验证记录](VALIDATION.zh-CN.md)
+[English](BENCHMARK.en.md) · [原始数值](data/benchmark-results.json) · [验证记录](VALIDATION.zh-CN.md)
 
 2026-11-15，开发期粗测。单文件 40,188,444,672 字节（约 37.43 GiB），同一计算种子、同一组接收节点、本地 RAID；每轮使用新目标目录并实际传输完整文件。SCDP 默认不限速，4 个下载 worker、4 个上传槽位。种子已准备且校验缓存有效。
 

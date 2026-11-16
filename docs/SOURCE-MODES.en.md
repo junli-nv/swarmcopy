@@ -1,8 +1,8 @@
 # Source modes and node failures
 
-[中文（主文档）](SOURCE-MODES.zh-CN.md) · [README](../README.en.md)
+[中文（主文档）](SOURCE-MODES.zh-CN.md) · [README](../README.en.md) · [Documentation](README.en.md)
 
-From v0.7.0, the local target uses native source reads, chunk checks and writes rather than TCP/QUIC reception; watch separates Local source copied from network DL.
+When the local destination differs from the source, the local target uses native source reads, chunk checks and writes; watch separates Local source copied from network DL. When source and destination are the same file, it is validated and reused without copying.
 
 [Optimization report](OPTIMIZATION-0.7.0.en.md)
 
@@ -25,7 +25,7 @@ If the controller is not among the targets, it copies the source through SSH to 
 
 ~~~bash
 ./swarmcopy distribute --hosts 'HGX[061,066,082]' \
-  --source /home/cmsupport/workspace/nemo-26.08.00.sqsh \
+  --source /shared/nemo.sqsh \
   --dest /raid/images --verify chunks
 ~~~
 
@@ -56,9 +56,9 @@ Status requests are bounded. Peers avoid unavailable sources through discovery/r
 
 Each SSH/deployment/inventory attempt defaults to one minute; --node-timeout 5m increases it. Timed-out inventory is unknown, not complete; a started peer can perform its own checks and show STARTING. Global unreadable source/no deployable target/unique-seed loss can still prevent progress.
 
-From v0.7.1, new source jobs default to chunks/BLAKE3; explicit --verify full selects SHA256/SHA256. Saved manifests retain their algorithms.
+New source jobs default to chunks/BLAKE3; explicit --verify full selects SHA256/SHA256. Saved manifests retain their algorithms.
 
-## Validation
+## Historical source/failure validation
 
 A 139,460,641-byte file/tree fixture passed staged, direct and QUIC direct tests with independent SHA256 checks on both targets. An unavailable initial seed did not cancel two healthy targets. In a three-node HGX061/HGX066/HGX082 test, HGX066 was stopped mid-transfer; both siblings finished, failure details named it, and same-ID resume reused partials and passed independent SHA256 on all three. Race/vet/CLI and source-change tests passed.
 
@@ -76,4 +76,4 @@ Removal verifies controller PID/start-time, holds the job lock and stops owned p
 
 Sparse recovery uses SEEK_DATA to prove unwritten holes, skips their read/hash work and still marks them missing. Empty files do not invalidate spanning chunks. Unsupported filesystems fall back to normal validation. Reopened 1-GiB sparse, retained-chunk reuse and removal-scope tests pass.
 
-A real-RAID reopened 519,520,194,560-byte hole file (30,966 chunks) scanned in 0.153 s and listened in about 0.60 s, with zero verified bytes. This single metadata-scan check is not a transfer benchmark or paired old/new speed ratio. [Record](sparse-recovery-results.json).
+A real-RAID reopened 519,520,194,560-byte hole file (30,966 chunks) scanned in 0.153 s and listened in about 0.60 s, with zero verified bytes. This single metadata-scan check is not a transfer benchmark or paired old/new speed ratio. [Record](data/sparse-recovery-results.json).

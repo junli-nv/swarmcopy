@@ -1,6 +1,8 @@
 # 流水线完整校验：45 节点对照
 
-[English](PIPELINE-RESULTS.en.md) · [设计与使用](PIPELINE.zh-CN.md) · [CPU 后端证据](sha-hardware-results.json)
+> 历史研究/验证记录：保留当时版本、参数与结果，不代表当前默认行为。当前使用方式见[项目首页](../README.md)和[文档索引](README.md)。
+
+[English](PIPELINE-RESULTS.en.md) · [设计与使用](PIPELINE.zh-CN.md) · [CPU 后端证据](data/sha-hardware-results.json)
 
 测试文件 40,188,444,672 字节（37.43 GiB），同一 45 节点，1 个已准备种子＋44 个全新接收端。完整文件 SHA-256 为 b4b4781e7392957eb24d45e9f480ea6d8ec2d20f9200a1c48aeeefd64d2e77c1。所有方法均使用固定 4 个下载 worker、4 个上传槽位、无限速 HTTP/TCP；没有混入自适应并发。
 
@@ -39,8 +41,8 @@
 
 CPU profile 实测自动模式执行 blockSHANI，关闭 SHA 指令后为 blockAVX2，关闭可选 CPU 特性后为 blockGeneric，三种模式摘要相同。SHA-NI 在旧版已经生效，不把其相对通用实现的微测倍数算作新版本提升。
 
-- [匿名内存微测与指令路径](sha-hardware-results.json)
-- [独立文件读取与计算诊断](sha-file-results.json)
+- [匿名内存微测与指令路径](data/sha-hardware-results.json)
+- [独立文件读取与计算诊断](data/sha-file-results.json)
 
 文件诊断不是配对冷缓存测速，含 profile 开销，不能直接与正式传输某一阶段作因果比较。FileComputeSeconds 也是调用墙钟时间，不是硬件 CPU 周期计数。ARM64 仅交叉构建。
 
@@ -50,8 +52,8 @@ CPU profile 实测自动模式执行 blockSHANI，关闭 SHA 指令后为 blockA
 
 每次试验结束核对 45 个不同内核 boot ID，合计 540 个任务进程记录均已停止。设备缓存与后台负载未隔离；对照包含部署和停止，控制端观察也有采样粒度。原始节点身份、token、完整任务日志仅保留在控制端私有 run/。程序、部署文件和驱动摘要见 JSON。
 
-- 初始：[汇总](pipeline-initial-results.json)、[匿名节点](pipeline-initial-nodes.json)、[缓存屏障](pipeline-initial-barriers.json)
-- 窗口：[汇总](pipeline-window-results.json)、[匿名节点](pipeline-window-nodes.json)、[缓存屏障](pipeline-window-barriers.json)
+- 初始：[汇总](data/pipeline-initial-results.json)、[匿名节点](data/pipeline-initial-nodes.json)、[缓存屏障](data/pipeline-initial-barriers.json)
+- 窗口：[汇总](data/pipeline-window-results.json)、[匿名节点](data/pipeline-window-nodes.json)、[缓存屏障](data/pipeline-window-barriers.json)
 - 驱动：[初始试验](../scripts/benchmark-verify.py)、[窗口对照](../scripts/benchmark-verify-window.py)
 
 当前控制端分别使用 ./swarmcopy jobs --state-dir ./run/verify45 和 ./swarmcopy jobs --state-dir ./run/verify45-window 查询；单项 --job 传对应 <case-id>-job 目录。默认 jobs 不递归搜索这些自定义目录。

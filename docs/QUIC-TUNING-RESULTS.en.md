@@ -1,5 +1,7 @@
 # UDP integration audit: three controlled ablations
 
+> Historical study/validation record: versions, parameters and results describe that measurement, not current defaults. For current use, see [project home](../README.en.md) and [documentation](README.en.md).
+
 [中文](QUIC-TUNING-RESULTS.zh-CN.md) · [Implementation](QUIC-TUNING.en.md) · [Retained initial results](QUIC-RESULTS.en.md)
 
 All studies use the same45-node cohort, one prepared seed and44 fresh receivers, and a40,188,444,672-byte file (37.43GiB). Each table compares the same frozen binary and configuration, except the stated variable. Ratios from different studies are not multiplied.
@@ -75,9 +77,9 @@ Separate five-node8GiB CPU profiling is diagnostic only. One receiver samples ap
 
 One auxiliary capture assertion mixed BPF packet length with decoded UDP payload length. The8GiB transfer and full hash passed; the assertion was corrected against the original capture (7993/8232-byte payloads), without rerunning/resuming a formal case to replace results.
 
-Evidence by study: [socket summary](quic-shards-results.json), [nodes](quic-shards-nodes.json), [barriers](quic-shards-barriers.json), [kernel deltas](quic-shards-kernel-deltas.json); [PMTU summary](quic-pmtu-results.json), [nodes](quic-pmtu-nodes.json), [barriers](quic-pmtu-barriers.json), [kernel deltas](quic-pmtu-kernel-deltas.json); [GSO summary](quic-gso-results.json), [nodes](quic-gso-nodes.json), [barriers](quic-gso-barriers.json), [kernel deltas](quic-gso-kernel-deltas.json).
+Evidence by study: [socket summary](data/quic-shards-results.json), [nodes](data/quic-shards-nodes.json), [barriers](data/quic-shards-barriers.json), [kernel deltas](data/quic-shards-kernel-deltas.json); [PMTU summary](data/quic-pmtu-results.json), [nodes](data/quic-pmtu-nodes.json), [barriers](data/quic-pmtu-barriers.json), [kernel deltas](data/quic-pmtu-kernel-deltas.json); [GSO summary](data/quic-gso-results.json), [nodes](data/quic-gso-nodes.json), [barriers](data/quic-gso-barriers.json), [kernel deltas](data/quic-gso-kernel-deltas.json).
 
-Additional evidence: [anonymous CPU profiles](quic-cpu-diagnosis.json), [socket probe](quic-socket-probe.json), [actual ingress payload lengths](quic-jumbo-ingress.json).
+Additional evidence: [anonymous CPU profiles](data/quic-cpu-diagnosis.json), [socket probe](data/quic-socket-probe.json), [actual ingress payload lengths](data/quic-jumbo-ingress.json).
 
 This compares HTTP/3+QUIC+TLS with plaintext HTTP/TCP, not UDP alone or IBM FASP. WAN conditions, device caches, and background load were not isolated/simulated. Global network/sysctl/MTU settings were unchanged. ARM64 is cross-built only; mid-transfer MTU-reduction recovery remains unverified. Local dependency changes are explicitly recorded, not described as unmodified upstream.
 

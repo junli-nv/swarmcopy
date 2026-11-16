@@ -1,14 +1,12 @@
-# Adaptive transfer experiment
+# Adaptive concurrency and endgame
 
-> These features are now integrated in main and the same executable; separate UDP/adaptive branches are no longer maintained. This document retains implementation background. Use the current [README](../README.en.md) and [examples](EXAMPLES.en.md).
-
-[45-node two-round measurements](ADAPTIVE-RESULTS.en.md)
+[45-node two-round measurements](ADAPTIVE-RESULTS.en.md) · [Documentation](README.en.md)
 
 [Initial regression measurements](ADAPTIVE-INITIAL-RESULTS.en.md)
 
 [中文](ADAPTIVE.zh-CN.md) · [Development](DEVELOPMENT.en.md)
 
-This 0.2.0-dev transport prototype borrows resource-feedback ideas from Aspera while retaining SCDP/1 over TCP, P2P forwarding, and SHA-256. It does not implement FASP or UDP. New scheduling features are opt-in until evidence supports a production default.
+Adaptive scheduling is an optional application-level download/source feedback controller in the same executable, off by default. It works with supported TCP/QUIC chunk transports, is not FASP and does not replace their congestion control. Selected chunks/full integrity remains independent; new jobs default to chunks/BLAKE3.
 
 ## Usage
 
@@ -25,21 +23,21 @@ Omit --adaptive and --endgame for fixed scheduling. New jobs persist the options
 
 ## Concurrency feedback
 
-Every two seconds the node measures application-read HTTP payload throughput. It probes one additional slot, rolling back if the gain is below roughly 5%, then cooling down for two intervals. A completed-work write-call share above 35% also removes one slot. The target stays between the effective --min-workers floor and configured cap. By default it cannot drop below initial concurrency.
+Every two seconds the node measures application-read network chunk payload throughput. It probes one additional slot, rolling back if the gain is below roughly 5%, then cooling down for two intervals. A completed-work write-call share above 35% also removes one slot. The target stays between the effective --min-workers floor and configured cap. By default it cannot drop below initial concurrency.
 
 The initial prototype collapsed many receivers to a single worker based on write-work share, causing a measured regression. The corrected default preserves initial concurrency; a lower floor requires an explicit --min-workers choice. See the [retained initial evaluation](ADAPTIVE-INITIAL-RESULTS.en.md).
 
-This is a heuristic application scheduler, not FASP packet-level congestion control or a replacement for TCP control. WriteAt may complete into page cache: call latency is not physical RAID throughput and may reveal writeback pressure only when writes block. Final fsync is measured separately. Background I/O and network queue causes are not fully classified.
+This is a heuristic application scheduler, not FASP packet-level congestion control or a replacement for TCP/QUIC control. WriteAt may complete into page cache: call latency is not physical RAID throughput and may reveal writeback pressure only when writes block. Final fsync is measured separately. Background I/O and network queue causes are not fully classified.
 
 Reducing the target drains existing work without canceling ordinary requests. Worker buffers are allocated lazily and retained until exit; the cap times chunk size bounds their approximate capacity. At defaults this is up to 16×16 MiB of download buffers, plus HTTP/state/runtime memory.
 
 ## Sources and endgame
 
-Rarest-first selection is preserved. Source ranking considers an EWMA of measured request network duration, local outstanding work, remote upload-slot occupancy, and a preference for forwarding peers over the original seed. Each receiver uses at most two concurrent chunks from one source. Busy/failed sources retain bounded cooldown across status refreshes. Unknown sources start with a neutral estimate. There is no rack topology model or guarantee of globally optimal choices.
+Chunk selection uses bounded approximate rarity with sparse-source fallback; native source-host copies prefer local reads. With adaptive enabled, source scores use network-duration EWMA, local outstanding work and remote upload occupancy, preferring peer forwarding. Per-source concurrency is at most two per receiver. Cooldowns survive status refreshes; unknown sources start neutral. No rack model or global optimum is promised.
 
 When few chunks remain and no ordinary chunk can be scheduled, an overdue request may be hedged to a different source. At most two requests exist for one chunk, within the node-wide target. Every copy is hashed before commit. A per-chunk lock allows exactly one write and one unique-byte accounting update, followed by cancellation of the losing requests. A corrupt hedge does not cancel a good original. Different chunks retain parallel writes.
 
-Whole-file SHA-256, fsync, atomic publication, and partial rehash-on-resume remain mandatory. Local write failures terminate with a retained partial rather than blaming the source.
+Retain selected chunk/full verification, fsync and atomic publication: full additionally checks file contents, while chunks omits final whole-file verification. Local source/write failures retain recovery data and are not remote-source retries. Resume rehashes partials rather than trusting an old in-memory bitmap.
 
 ## Diagnostics
 
@@ -74,10 +72,12 @@ SWARMCOPY_TEST_FLAGS='--adaptive --max-workers 8 --endgame' python3 scripts/inte
 python3 scripts/benchmark-adaptive.py --help
 ~~~
 
-The baseline/fixed/adaptive comparison uses fresh directories and sync/drop_caches before each method, with time through shutdown. Two reversed rounds provide only two observations, not a universal guarantee. Directories and multiple-file support remain future work outside this transport prototype.
+The baseline/fixed/adaptive comparison uses fresh directories and sync/drop_caches before each method, with time through shutdown. Two reversed rounds provide only two observations, not a universal guarantee. These historical prototype measurements do not mean that current default chunks, multi-file or native local-copy paths have been benchmarked again under the same conditions.
 
 ## References
 
 - [IBM FASP deployment conditions](https://www.ibm.com/docs/en/connect-direct/6.2.0?topic=v62-using-fasp)
 - [IBM transfer rate controls](https://www.ibm.com/docs/en/ahts/4.4.x?topic=csfcl-asperaconf-transfer-configuration-2)
 - [Aspera storage feedback](https://download.asperasoft.com/download/docs/csrv/3.2.1/linux/html/fasp/conf-file_system-cmd.html)
+
+Current metrics also include LocalCopied/LocalReadWorkSeconds and SchedulerCalls/Candidates/WorkSeconds; local copies are not network traffic. See [development contracts](DEVELOPMENT.en.md).

@@ -1,6 +1,6 @@
-# Unified metadata and automatic cleanup (v0.8.0)
+# Unified metadata and automatic cleanup
 
-[中文（主文档）](CLEANUP.zh-CN.md) · [Examples](EXAMPLES.en.md) · [Development](DEVELOPMENT.en.md)
+[中文（主文档）](CLEANUP.zh-CN.md) · [Examples](EXAMPLES.en.md) · [Development](DEVELOPMENT.en.md) · [Documentation](README.en.md)
 
 Use one `.swarmcopy` under each destination. After every target passes its selected integrity mode and publication, the default controller stops owned peers, removes this job's deployment and exhausted staging, and saves completion statistics. Media/partials are not migrated to the user's home directory. Source and published files stay in place; controller jobs/status/watch records remain.
 

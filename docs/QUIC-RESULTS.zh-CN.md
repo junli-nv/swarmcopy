@@ -1,5 +1,7 @@
 # UDP/QUIC：45 节点完整对照
 
+> 历史研究/验证记录：保留当时版本、参数与结果，不代表当前默认行为。当前使用方式见[项目首页](../README.md)和[文档索引](README.md)。
+
 [English](QUIC-RESULTS.en.md) · [实现与使用](QUIC.zh-CN.md)
 
 文件 40,188,444,672 字节（37.43 GiB），SHA-256 为 b4b4781e7392957eb24d45e9f480ea6d8ec2d20f9200a1c48aeeefd64d2e77c1。45 个独立计算节点，1 个已准备种子、44 个全新接收端。
@@ -39,10 +41,10 @@ QUICChunkRequests 只统计实际 HTTP/3 分块响应，包含 429 等失败状�
 
 TCP 继续作为默认数据通道。流水线和窗口是 v0.2.0 的正式默认功能，自适应并发仍关闭；UDP 是单独选择的通道，是否采用应以具体环境结果判断。
 
-证据：[汇总与冻结摘要](quic-results.json)、[匿名各节点](quic-nodes.json)、[缓存屏障](quic-barriers.json)、[复现驱动](../scripts/benchmark-quic.py)。私有任务记录在控制端 run/quic45；查询使用 ./swarmcopy jobs --state-dir ./run/quic45，单项 --job 使用对应 <case-id>-job 目录。公开材料不包含实际主机列表、token 或完整日志。ARM64 仅交叉构建。
+证据：[汇总与冻结摘要](data/quic-results.json)、[匿名各节点](data/quic-nodes.json)、[缓存屏障](data/quic-barriers.json)、[复现驱动](../scripts/benchmark-quic.py)。私有任务记录在控制端 run/quic45；查询使用 ./swarmcopy jobs --state-dir ./run/quic45，单项 --job 使用对应 <case-id>-job 目录。公开材料不包含实际主机列表、token 或完整日志。ARM64 仅交叉构建。
 
 ## 计时后实现核查
 
 普通 rmem_max 为256 KiB，但相同程序的短时种子探针实际 socket 读/写缓冲均为14 MiB（Linux报告值），quic-go 会尝试特权 socket 扩容。因此不能将本次变慢简单归因于256 KiB限制。测试区间44节点共增加2,712,406次 UDP 接收缓冲溢出计数，整机计数含其他流量。默认 http3.Transport 在各目标间共享一个接收 UDP socket；这是接下来要检验的接入设计瓶颈，不是已确认全部原因。
 
-证据：[内核计数](quic-kernel-counters.json)、[日志摘要](quic-log-diagnostics.json)、[socket探针](quic-socket-probe.json)。
+证据：[内核计数](data/quic-kernel-counters.json)、[日志摘要](data/quic-log-diagnostics.json)、[socket探针](data/quic-socket-probe.json)。

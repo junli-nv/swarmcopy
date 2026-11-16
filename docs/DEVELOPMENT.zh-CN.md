@@ -1,125 +1,92 @@
 # 开发指南
 
-[English](DEVELOPMENT.en.md) · [中文使用说明](../README.md) · [示例](EXAMPLES.zh-CN.md)
+[English](DEVELOPMENT.en.md) · [文档索引](README.md) · [使用示例](EXAMPLES.zh-CN.md)
 
-本文描述统一主线 v0.8.0。只维护 main 一个长期分支；常规 TCP、可选 UDP、自适应、流水校验及目录分发都在同一二进制内。旧标签保留历史，后续直接在 main 改进，不另行发布长期并行功能版。
+本文记录当前主线的架构、兼容约束和验证方法。只维护 `main`，所有传输与调度选项都在同一二进制内；发布沿革见 [CHANGELOG](../CHANGELOG.md)，历史测量见文档索引。
 
-## 源码地图
+## 构建与本地验证
 
-| 文件 | 职责 |
-| --- | --- |
-| main.go | Manifest 入口、v1 prepare、peer、HTTP 服务与 CLI 分派 |
-| cluster.go / parallel.go | 主机展开、持久 Job、SSH 部署、控制器与并行启动／停止 |
-| cli_sources.go / tree_source.go | 混合参数、来源 glob／目录快照、SSH 流生成 |
-| tree_plan.go / tree_import.go | 可信来源清单缓存、种子直接接收并复核流 |
-| tree_manifest.go | v2 条目校验、树摘要、流式逐文件校验、contentFile |
-| tree_store.go / tree_detach.go | 逻辑偏移映射、暂存、原子发布及硬链接崩溃恢复 |
-| tree_existing.go | 成品盘点、逐文件指纹缓存和冲突交互 |
-| adaptive.go / transfer.go | 调度、自适应下载并发、尾块去重、分块传输与阶段统计 |
-| verify.go / verified_linux.go | 有序流水校验及 v1 最终文件缓存 |
-| quic.go / patches / vendor | 可选可靠 UDP、任务身份、分片／PMTU／GSO 集成 |
-| agent.go / auth_linux.go | 按 PID 与启动时间认领进程，隐藏密码与内存 askpass |
-| statefiles.go / watch.go / help.go | 原子记录、全局进度和英文帮助 |
-| *_test.go / scripts | 单元、race、CLI、进程链、构建及基准辅助 |
+需要 Go 1.26+；依赖已 vendor。Go/Python 只供开发使用，分发程序运行时不依赖它们。
 
-运行依赖 OpenSSH 和基本 Linux 工具；Go/Python 仅开发时需要。Linux amd64/arm64 静态二进制不依赖目标 glibc。当前依赖 quic-go v0.65.0，构建需 Go 1.26+。
-
-## 关键契约
-
-- SCDP/1 的块 API 与版本 1 清单 ID 不变；新来源任务用 v2。不要给 v1 添加会改变 JSON 编码的必填字段。
-- v1 Manifest.SHA256 是整文件内容哈希；v2 是 Entries JSON 的树摘要，逐文件哈希在 Entries 中。详见 [多文件设计](TREES.zh-CN.md)。
-- 下载块先用清单绑定算法验证再写盘／声明 Have；full 追加整文件摘要，chunks 在全部验块后 fsync／发布。流水完成不等于节点完成。
-- v2 多文件为一个逻辑流，允许块跨文件边界；空目录与空文件仍要发布。
-- 网络重试、endgame 取消、源切换均不能重复重写已完成块；取消后不得将未验证内容标为 Complete。
-- 续传重新验证临时块；缓存必须同时绑定可信 manifest 和数据文件指纹。目录自身 stat 不能代替其内容。
-- 同名不同文件默认交互；resume／replace 保留旧成品到验证完成。逐文件原子，没有跨整个集合的原子事务。
-- 不跟随树中的符号链接；操作受 os.Root 和祖先类型检查约束。添加新类型须同时补安全、崩溃与恢复测试。
-- 所有来源和成品在任务期间应保持不被外部程序修改；仅在检测出竞态时拒绝不能替代系统层面的写入互斥。
-
-## 控制、状态、监控
-
-控制平面用 SSH 上传同一个程序、token、可信清单和配置；agent 启动有归属记录的 peer。数据默认 HTTP/TCP，QUIC 显式启用；控制及监控始终走 TCP。没有 tracker 或 NFS 回源逻辑。
-
-Job 大致经过 created → starting → hashing-source／importing（如需）→ running → complete，失败记录 interrupted。stop 写停止请求并按进程归属结束任务。记录状态不是实时集群共识，watch/status 使用现场数据或明确标记的完成记录。
-
-v2 先全节点盘点，有完整副本就不从控制端上传介质；否则初始 tar 仅作为 SSH 内存流，直接落各文件，且必须匹配控制器清单。首次建立清单的控制端读盘成本与网络分发是两回事。
-
-workers/uploads 默认 4/4；固定与自适应共用 worker 池。自适应只改下载目标数，min 默认初始 workers、max 默认 16；默认关闭。参数创建时保存，当前无运行中调参 API。旧记录中显式 false/0 不能被新版默认值偷偷覆盖。
-
-全局显示 bytes 是全文件集合的已验证块字节，Complete 还需最终校验／发布。零字节数据集的百分比必须以实际 Complete 为依据，不能除零或提前当作成功。结果保存每个节点的阶段统计和来源流量。
-
-## 构建与验证
-
-~~~bash
+```bash
 go test -mod=vendor -race ./...
 go vet -mod=vendor ./...
 bash scripts/build.sh
 SWARMCOPY_BINARY="$PWD/dist/swarmcopy-linux-x86_64" python3 scripts/cli-smoke.py
 SWARMCOPY_BINARY="$PWD/dist/swarmcopy-linux-x86_64" python3 scripts/integration.py
-~~~
+```
 
-最后两项是本地临时目录回归测试；不要在生产目录运行会改数据的测试。集群功能验证使用独立 dest，只处理测试自己创建的文件，结束后按归属停止 peer。[本版五节点验证及限制](TREES.zh-CN.md)。
+build.sh 输出两种静态 Linux 二进制和 SHA256SUMS；可通过 SWARMCOPY_GO 指定编译器。最后两项在独立临时目录检查 CLI 和真实进程链。x86_64 已有集群实机验证；ARM 交叉编译成功不代表实机测试。
 
-scripts/build.sh 输出 dist 下两种静态二进制和 SHA256SUMS。实际 CPU 加速由 Go 的 SHA 实现按平台选择；hashbench 可测内存／文件哈希，不要把已有 SHA-NI 误称为新加速算法。
+## 源码地图
 
-重建 vendor 需先查看 [QUIC 参数与 patch 维护](QUIC-TUNING.zh-CN.md) 和 THIRD_PARTY_NOTICES。保持依赖版本、vendor diff、patch、默认参数和窄 MTU／小上限对端测试一致。
+| 模块 | 职责 |
+| --- | --- |
+| main.go / help.go | CLI、peer 生命周期、HTTP 服务与帮助 |
+| cluster.go / parallel.go | 主机展开、作业持久化、SSH 部署与控制器 |
+| cli_sources.go / tree_source.go | 多来源参数、glob、只读来源快照与流 |
+| tree_plan.go / tree_import.go | 可信清单缓存、种子导入与复核 |
+| tree_manifest.go / integrity.go | v1/v2/v3 清单、逻辑流、算法与模式合法性 |
+| tree_store.go / tree_detach.go / tree_existing.go | 暂存、盘点、冲突、发布和成品缓存 |
+| source_origin.go / resilience.go | 原文件直接供种、节点隔离与诊断 |
+| adaptive.go / transfer.go | 有界选块、来源排名、worker、去重和阶段统计 |
+| verify.go / verified_linux.go | full 有序流水校验及旧单文件缓存 |
+| quic.go / patches / vendor | QUIC/HTTP3、来源分片、PMTU/GSO 与依赖补丁 |
+| agent.go / auth_linux.go | PID/启动时间归属、SSH 隐藏密码与内存 askpass |
+| progress.go / watch.go / completion.go | 准备进度、全局监控与完成摘要 |
+| cleanup.go / remove.go / statefiles.go | 完成清理、显式删除、锁和原子状态文件 |
 
-## 性能优化与发布
+## 清单与完整性契约
 
-[流水校验](PIPELINE.zh-CN.md) · [自适应背景](ADAPTIVE.zh-CN.md) · [全部 UDP 研究](QUIC-TUNING-RESULTS.zh-CN.md) · [冷缓存方法](COLD-STUDY.zh-CN.md)
+- SCDP/1 与旧 v1/v2 清单 JSON 身份保持兼容，不能用新增必填字段改变旧 ID。v1 的 SHA256 是裸文件摘要；树清单的 SHA256 是 Entries 元数据树摘要。
+- SHA256 树可用 v2；BLAKE3/其他自定义算法用 v3，明确记录块/文件算法及逐文件 `algorithm:digest`。默认 chunks/BLAKE3 新作业使用 v3。版本号描述协议格式，不是文件数量。
+- 默认预设只在新建 distribute 时解析。`verifyMode("")` 仍代表旧记录/低级 peer 的 full，不能为了新默认改它；resume 不重写算法或缺省语义。
+- 块摘要匹配后才能写盘并声明 Have。full 另外检查实际文件内容，chunks 要求全部密码学块通过、fsync 与发布。XXH3 只能搭配 full 密码学文件校验。
+- chunks 验块完成不能伪造 full 成品缓存。缓存必须绑定完整清单 ID 以及每个文件的 device/inode/size/mtime/ctime，不能只看长度或目录 stat。
+- 多文件为逻辑字节流，块可跨文件；full 按清单的各文件摘要验证，空文件和目录也必须发布。详见[文件布局](TREES.zh-CN.md)和[完整性](INTEGRITY.zh-CN.md)。
 
-先区分哈希、磁盘、元数据、syscall、拥塞和部署开销，再改并发或速率控制。UDP 不会天然快于 TCP；不能把 socket 数、PMTU 和 GSO 多次相对收益相乘。不要用续传数据代替从零测速，传输过程重试则应正常计入时间。
+## 来源、存储与恢复
 
-发布前同步中英文 README、示例、英文帮助、开发说明、CHANGELOG；检查旧任务兼容、源变化、缓存失效、磁盘数据损坏、空集合、冲突、取消、发布中断、TCP 和可选 UDP；按改动风险选择测试，避免无意义重复跑大规模作业。
+源节点在目标列表时，原文件只读供种。同路径目标复用已有文件；异路径本机副本通过相同验块/提交路径生成，LocalCopied 与网络计数分离。来源布局及指纹必须保持不变，源读错误不能算远端网络重试。
 
-只发布同一次提交的 x86_64/aarch64 构建、校验和及许可证声明。未在 ARM 实机跑过须明确写明。仓库不包含 token、job token、介质、私有日志、逆向材料或测试的绝对内部路径。GitHub token 只能从授权的本地文件在内存读取，不进入参数、输出或提交。
+staged 模式先盘点已有副本；没有完整来源时，SSH tar 仅作为内存流，接收端直接形成文件并与可信清单匹配，没有完整 tar 中间件。首轮源摘要和初始导入成本应分别记录；初始导入尚无块级续传。
 
-后续重点：大量小文件的元数据／FD profiling、组合部分副本避免初始回源、初始导入续传；任何速率控制改造仍要保留默认稳定 TCP 和全量校验。具体数据模型、不变量及验证案例见 TREES。
+新暂存与导入都在 `.swarmcopy` 内、与成品同盘；旧 `.swarmcopy-trees` 按需原位恢复，禁止批量搬介质。稀疏检测跳过能确认的空洞，空文件不能让跨界块误判缺失；不支持 SEEK_DATA 时保守回退。
 
-## 准备进度维护
+冲突 resume/replace 使用独立暂存，保留旧成品到所选验证通过。逐文件原子发布，不是集合事务；link 成功/unlink 前崩溃时必须脱离保留硬链接后再修复，避免改写成品。文件和目录元数据/fsync 错误不得误报 Complete。路径受 os.Root、相对路径与逐层类型检查约束，拒绝符号链接和特殊文件；来源与目标须与外部写入者互斥。
 
-progress.go 通过 context 传递线程安全 reporter，每两秒输出并原子保存 progress.json；阶段、字节、文件和节点计数独立。Job 的 attempt 与控制器 PID/启动时刻用于拒绝陈旧进度。ETA 是当前阶段平均速率估计，不是全任务保证；metadata/监听准备没有可信速率时只报步骤和耗时。watch 每次重载 Job 并识别完成记录。读取器必须保留按缓冲区检查取消，远端库存校验通过 stdin 心跳感知控制器离开。详见 [进度设计及验证](PROGRESS.zh-CN.md)。
+## 调度与指标
 
-## v0.5.0 开发约束
+固定 workers/uploads 默认 4/4，自适应和 endgame 默认关闭。自适应只改变下载目标数，范围是有效 min-workers 到 max-workers；没有运行中热调参 API。降低并发不能无故取消普通请求。
 
-`integrity.go` 集中管理算法、清单绑定和模式合法性；`integrity_test.go` 覆盖算法向量、合法组合、错误组合、真实 HTTP 接收、弱块摘要与强文件摘要不匹配、缓存隔离、清单流和新稀疏文件扫描。详见[校验语义和实测](INTEGRITY.zh-CN.md)。
+选块以随机起点和互素步长覆盖范围，每次范围选择最多评分 255 个缺块，必要时经稀疏来源位图补选一个；补选仍可遍历位图，不能把评分上限称为全部工作常数时间。保留窗口优先、来源上限、过期/冷却过滤和去重。它是近似稀缺块优先，不承诺全局最优。
 
-必须保留：旧 v1/v2 空算法字段等于 SHA256/full，不能改变旧 JSON ID；v3 必须明确算法并标记逐文件摘要；XXH3 只能 full；chunks 不能生成 full 回读缓存；模式改变必须重启并重查 peer；种子接收必须与可信源清单一致；最终发布不能绕过所选校验门槛。重新启动后现有部分文件仍需检查，不能只按长度认定完成。
+Node.manifestID 构造后不可变，状态/发现复用它；未来若允许更改清单，需重设缓存生命周期。网络、哈希、写入工作秒数是并发累计值，不是串行阶段。不能把各节点阶段最大值相加，也不能将本地复制算网络吞吐。
 
-`Job.SSHOptions` 保存重复的 `--ssh-opt`。`mergeSSHOptions` 按不区分大小写的键合并默认、已保存和本次覆盖值，不进行 shell 二次拆分；显式 cipher 优先。新增 SSH 参数使用这个集合，避免多个调用路径默认值分裂。SSH 登录预检必须保留在来源大文件读取之前。
+CompletionSummary 的集群平均分母为本次控制器总耗时；同一 peer 实例续传扣除起始计数，重启实例用新计数，避免历史流量抬高速度。准备阶段已有 peer 也可能在传输，所以不能只用监控阶段作分母。保存/读取均保留可选 Summary，旧记录不补造。
 
-新增 BLAKE3/XXH3 固定依赖已 vendor 并附许可证；改依赖后执行 `scripts/vendor-quic.sh`，保留 QUIC bulk 补丁。以 CGO_ENABLED=0 构建 amd64/arm64，明确交叉构建不等于 ARM 真机验证；保留测速参数，不把 CPU 微基准倍数说成网络收益。
+## 控制与生命周期
 
-v0.6.0：`resolveNewJobIntegrity` 只在新建作业时解析模式预设：full→SHA256/SHA256，chunks→BLAKE3/BLAKE3；显式算法优先。禁止把预设应用到 loadJob 或已存在 manifest，否则会破坏续传兼容性。旧 seed-file 以其清单为准。
+SSH 登录预检在大文件读取之前。`mergeSSHOptions` 按不区分大小写的键合并默认/保存/显式选项，值不做 shell 二次拆分；显式 cipher 优先。密码不进入参数、磁盘日志或 JSON。
 
-## v0.6.0 来源与生命周期约束
+节点操作使用独立、有界上下文；所有作业记录保留完整 Hosts。监控不等待全体监听，健康节点继续，失败节点不能算完成。原文件来源属于控制器且有独立动态端口，控制器退出会停止该来源；没有自动转交控制器或隧道层。
 
-`source_origin.go` 将可信来源清单的逻辑偏移映射到原始只读文件；开始供种前验证来源指纹与布局。控制器退出时关闭 HTTP/QUIC 和文件句柄。`controllerSourceHost` 仅在本机真实主机名匹配目标时选择 direct。`SourceAddress` 不计入接收目标总数。agent 复用时比较来源地址及校验模式，来源端口改变时重启 peer，但不因此无条件清空成品验证缓存。
+agent 按 PID、启动时间、可执行路径和 token 路径判断归属；升级检查启动版本，参数/来源改变按需重启，不因此清空有效缓存。同版本开发构建需主动停止自己的测试 peer，不能依赖版本字符串区分源码。
 
-`resilience.go` 为各节点操作提供独立、有界上下文；所有保存的记录都必须保留完整 Hosts，盘点阶段也不例外。监控没有全体就绪门槛，诊断有界并持久化，失败节点绝不能计为完成。
+progress.json 绑定 attempt 与控制器身份，阶段/字节/节点计数分离，ETA 仅覆盖当前阶段。来源按缓冲区响应取消，远端盘点由输入心跳感知控制连接退出。内核阻塞 I/O 不保证立即被信号打断。完成结果可离线查看，不能因已正常停止的 peer 显示失败。
 
-`remove.go` 持有控制器/agent 锁，验证进程身份和配置归属；部分清理失败保留记录。清理暂存命名空间前检查其他作业引用，保护源文件、成品和共享数据，拒绝非作业目录及符号链接根。`resilience_test.go`、`remove_test.go` 验证这些边界。稀疏检测必须跳过空文件；不支持 SEEK_DATA 时保守回退。
+## 完成清理与安全删除
 
-## v0.7.0 调度、本地源与统计约束
+全部目标验证并发布、peer 停止后才自动清理本作业部署和空暂存。固定 cache.json 只保留最近清单，last-peer.log 最多 8 MiB，控制器保留作业统计。中断、共享、实际数据、未知条目、活动锁或不安全符号链接均保留。
 
-`completion.go` 管理本次调用的完成摘要；保存和加载路径都必须保留可选 Summary，旧结果不补造。集群平均分母为本次总耗时，不能用仅监控阶段的秒数除包含准备期间的数据。resume 同实例扣除初始计数，重启实例不相减，复用字节不算新流量。`optimization_test.go` 包含旧/新结果加载、续传实例计数、准备阶段流量及零时间测试。
+cleanup 持控制器/agent/目标锁并验证归属，清理失败保存 CleanupIssues，不能冒充传输校验失败。重复成功清理不再部署，stop 已完成且清理的作业也应成功。remove/delete 另行删除记录，purge-partials 是显式放弃独占续传数据，不能合并成默认清理。详见[清理契约](CLEANUP.zh-CN.md)。
 
-`Node.manifestID` 构造后不变；若未来允许更改清单，必须重新设计缓存生命周期。`selectRangeLocked` 最多 255 抽样评分和一次稀疏来源补选；补选位图扫描仍可 O(chunks×sources)，不得把评分上限说成全部工作上限。随机互素步长必须覆盖范围；保留稀疏来源、非固定前缀和失败重试测试。
+## 回归、性能与发布
 
-`Options.LocalInputs/LocalRoots` 仅发送给当前源主机对应的 peer；内部 local-source-config 不作为公开用户参数。读取来源沿用指纹/布局检查，数据通过相同 commit 锁和摘要路径，full/chunks 最终门槛不变。localSourceError 与本地写错误均不能记成远端重试。下载限速同样覆盖本地复制。来源流量和 wire 网络字节分离，不能为了好看的速度把本地复制加进网络吞吐。
+按改动风险选择测试：身份与旧清单、源变化、坏块/短尾块、乱序/跨文件、空集合、冲突、取消、fsync EIO、发布中断、硬链接恢复、缓存隔离、活动锁/共享数据、TCP/QUIC。集群测试使用独立 dest，及时清理自己创建的介质和进程；不要在生产目录演练破坏性故障。
 
-agent 的启动版本检查需随真实发布更新；二进制升级时允许重启 peer，但不因此强制清掉已验证数据。开发中的相同版本构建需主动停止自己的测试 peer，不能依靠版本字符串分辨所有源码变化。只维护 main；TCP、可选 UDP 和可选自适应在同一发布物中。[完整对照和复现步骤](OPTIMIZATION-0.7.0.zh-CN.md)。
+测速冻结构建、来源和参数，使用全新目标与一致的缓存处理，保留所有轮次和运行中重试。分别报告准备、盘点、传输、校验、fsync、发布、停止/清理；独立成品核验与计时口径写清楚。不能用续传假装从零，或将 CPU 微基准比值当网络收益。历史 JSON 在 [data](data/README.md)，报告入口见[索引](README.md)。
 
-## v0.7.1 默认模式与持久化错误
+发布前同步中文主文档、英文对应页、CLI 帮助和变更记录，检查链接/示例/默认值；文档按主题更新，禁止再将 release 段落逐次堆到 README 顶部。发布同一提交的双架构构建、校验和与许可证。改 vendor 前读 [QUIC 补丁维护](QUIC-TUNING.zh-CN.md)，保持上游版本、补丁和测试一致。仓库不提交凭据、介质、私有日志或逆向材料；第三方文档保留原文。
 
-新建 distribute 的 CLI 和 resolveNewJobIntegrity 默认 chunks/BLAKE3；不得把 verifyMode 空值从 full 改为 chunks。空值用于旧记录和低级 peer 兼容；resume 无显式模式参数时保持保存设置，prepared manifest 保持算法。XXH3 仍必须显式 full。chunks 完成不生成 full 成品缓存。
-
-默认 chunks 并不跳过 fsync。durability_test.go 向最终阶段前两次 Sync 注入 EIO，验证拒绝 Complete/发布、保留暂存、重启重验，完整块保留，坏块缺失，修复后重新刷盘发布。不能把该测试说成真实断电或 RAID 故障测试。fsync 成功依赖底层正确兑现刷新语义，并不代替内容摘要。
-
-## v0.8.0 清理与布局契约
-
-`cleanup.go` 区分成功后清理和显式丢弃数据。新暂存使用 .swarmcopy/trees/id；treeNamespace 优先原地识别旧布局，禁止批量移动大文件。receiveTree 的 import 临时流也在 .swarmcopy 内并保持同盘发布。根目标目录只新增一个 .swarmcopy。
-
-`treeCacheRecord` 用 ManifestID 绑定一份 cache.json，接受规则仍验证完整文件指纹；新清单替换旧缓存，可能牺牲跨清单命中，换取固定文件数量。chunks 不能凭验块伪造 full 缓存。日志只覆盖 last-peer.log，最多 8 MiB，历史现场日志需用户另存；完整作业统计保存在控制器。
-
-全部目标完成、peer 停止之后才能清理。持 agent 和目标同一把锁；有真实数据、未知条目、其他作业引用或符号链接时保留，不能为消灭目录而丢弃续传数据。清理错误单独持久化 CleanupIssues，不伪装成传输校验失败。cleanup 幂等快捷路径不重新部署；stop 已清理完成作业也直接成功。详细测试和维护边界见 [清理设计](CLEANUP.zh-CN.md)。
+后续优化以 profiling 为依据：大量小文件的元数据/FD 开销、分散的部分副本组合、初始导入续传。保持默认 TCP 和所选完整性门槛，不以增加复杂度或默认并发掩盖瓶颈。

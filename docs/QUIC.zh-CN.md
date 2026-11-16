@@ -1,12 +1,10 @@
 # UDP / QUIC 数据通道
 
-> 当前统一版已合入 main，同一二进制通过参数选择功能，不再维护独立 UDP／自适应分支。本文保留原实现背景；当前用法以 [README](../README.md) 和 [示例](EXAMPLES.zh-CN.md) 为准。
+QUIC 数据通道使用有界接收 socket 分片、可协商的负载上限与 GSO 批次，依赖包含固定版本的窄范围补丁。参数和维护见 [QUIC 调优](QUIC-TUNING.zh-CN.md)，历史测量见[消融报告](QUIC-TUNING-RESULTS.zh-CN.md)。 · [文档索引](README.md)
 
-当前候选增加默认4个客户端socket分片、8952协商负载上限与64KiB GSO上限；依赖包含记录在案的本地补丁。见 [最新设计](QUIC-TUNING.zh-CN.md) 和 [完整消融](QUIC-TUNING-RESULTS.zh-CN.md)。以下保留基础通道说明。
+[English](QUIC.en.md) · [下载统一版](https://github.com/junli-nv/swarmcopy/releases/latest)
 
-[English](QUIC.en.md) · [TCP 正式版](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0)
-
-本分支增加可选 `--transport quic`，用 HTTP/3 / QUIC 的可靠字节流传输分块，底层使用 UDP。TCP 仍是默认值，SHA-256 流水线和 256 块前缀窗口默认开启，自适应并发默认关闭。不是 IBM FASP 的实现，也不承诺 UDP 一定更快。
+可选 --transport quic 使用 HTTP/3/QUIC 可靠流，底层为 UDP，默认仍为 TCP。新作业 chunks/BLAKE3 与可选 full 均可用；只有 full 使用整文件流水校验/窗口，自适应默认关闭。它不是 IBM FASP，也不承诺 UDP 一定更快。
 
 ## 使用
 
@@ -20,7 +18,7 @@
 ./swarmcopy resume --job <ID>
 ~~~
 
-新任务把 transport 保存到 job.json，远程部署与 resume 沿用它，旧任务的空值表示 TCP。不能在同一任务内混合 TCP 和 QUIC 数据节点；使用本分支的同版本二进制部署全部参与者。需要退回 TCP 时创建新任务，不改写运行中的任务记录。
+新任务把 transport 保存到 job.json，远程部署与 resume 沿用它，旧任务的空值表示 TCP。不能在同一任务内混合 TCP 和 QUIC 数据节点；使用同一发布的对应架构二进制部署全部参与者。需要退回 TCP 时创建新任务，不改写运行中的任务记录。
 
 同一个端口号同时用于 **TCP 状态/控制**和 **UDP 数据**，默认 19700。控制端需 SSH 和 TCP 可达；计算节点之间还需双向 UDP 可达。仍由 DNS、操作系统路由决定出站网卡，监听所有地址不代表聚合多网卡或原生 RDMA。程序不修改路由、防火墙、MTU、sysctl，也不关闭拥塞控制。
 
@@ -28,7 +26,7 @@ QUIC 模式的 /chunk 请求必须真实使用 HTTP/3；TCP /chunk 会拒绝，�
 
 ## 可靠性与任务身份
 
-使用固定版本 quic-go v0.65.0：QUIC 负责可靠传输、丢包恢复、拥塞控制、流控制与 TLS 1.3。应用层保留分块 SHA-256、实际写入、完整文件 SHA-256、fsync、原子发布和中断重验。没有用不可靠 UDP datagram 直接替代文件字节流，没有删除任何校验步骤。
+固定版本 quic-go v0.65.0 负责可靠流、丢包恢复、拥塞/流控制和 TLS 1.3。应用保留清单绑定的块校验、写入、所选 chunks/full 门槛、fsync、逐文件发布与重启重验；未用不可靠 datagram 替换文件字节流。
 
 TLS 使用由高熵随机 job token 派生的共享任务 Ed25519 身份，不需要证书文件或外部 CA。双方都必须提供证书，并固定校验其公钥、有效期和签名；不是无条件跳过身份验证。身份代表任务，不代表单独某台主机；持有 token 的参与者被视为互信。手工 token 应使用足够强的随机值，不能使用可猜密码。
 
@@ -54,11 +52,11 @@ go test -race ./...
 go vet ./...
 go build -race -o run/swarmcopy-race .
 SWARMCOPY_BINARY="$PWD/run/swarmcopy-race" \
-SWARMCOPY_TEST_FLAGS='--transport quic --verify-window-chunks 4 --endgame --adaptive --min-workers 2 --max-workers 8' \
+SWARMCOPY_TEST_FLAGS='--verify full --transport quic --verify-window-chunks 4 --endgame --adaptive --min-workers 2 --max-workers 8' \
 python3 scripts/integration.py
 ~~~
 
-真实两节点 SSH 已分别通过 TCP/QUIC 部署、完整校验、默认窗口与实际 HTTP/3 请求统计检查。两种传输使用相同的工作线程、上传槽位与完整校验，正式大文件试验使用全新目录，计算节点逐次 sync/drop_caches，正常重传计入连续时间。
+历史两节点 SSH 测试分别通过 TCP/QUIC 部署、完整校验、默认窗口与实际 HTTP/3 请求统计检查。两种传输使用相同的工作线程、上传槽位与完整校验，正式大文件试验使用全新目录，计算节点逐次 sync/drop_caches，正常重传计入连续时间。
 
 这是 HTTP/3+QUIC+TLS 与明文 HTTP/TCP 的整体实现对照，不能分离“UDP 本身”的因果效应。加密、用户态协议、包处理、GSO、UDP socket 缓冲、低 RTT 下 TCP 的成熟卸载都可能影响结果；没有模拟 WAN 或生产网络丢包。单元测试的人为丢包不等于大集群已测试相同丢包率。
 

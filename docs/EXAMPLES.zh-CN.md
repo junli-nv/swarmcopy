@@ -1,243 +1,166 @@
-# 常用示例
+# 操作示例
 
-[English](EXAMPLES.en.md) · [中文 README](../README.md)
+[English](EXAMPLES.en.md) · [快速开始](../README.md) · [文档索引](README.md)
 
-以下是统一版 main 的用法。将二进制命名为 `swarmcopy`；异构集群把两种原名二进制放入同级 `dist`（自动识别），或每条命令指定 `--bin-dir /path/to/dist`。示例节点和路径请换成实际值。
+以下命令在持有源文件的控制节点执行，示例中的主机、路径和 `<ID>` 请替换成实际值。默认使用 chunks/BLAKE3、TCP、每节点 4 个下载与 4 个上传并发，不限速，自适应关闭。
 
-## v0.8.0 自动清理与统一目录
+## 在源节点上分发到相同路径
 
-新作业的节点部署、暂存和缓存统一在目标目录内的 `.swarmcopy`，不搬介质到用户目录。全部目标校验并发布后自动停止 peer，删除本作业部署和空暂存；只复用一份 `cache.json` 和最多 8 MiB 的 `last-peer.log`，不会每个任务留下一个永久目录。中断、共享和无法确认归属的数据保留。旧完成作业或清理失败可用 `swarmcopy cleanup --job <ID>` 收尾，jobs/watch/status 记录保留；`--keep-seeding` 延后清理。[布局、限额与兼容说明](CLEANUP.zh-CN.md)。
-
-## v0.7.0：本地复制与完成摘要
-
-调度避免逐次对全部缺块做昂贵评分；源所在节点的目标副本直接读取本地源、校验后写入，不再经网络绕回。成功结束打印总耗时、准备/分发耗时、网络/本地/复用字节和平均速度；完成后 watch 可重看，status 保持 JSON。自适应默认关闭，固定并发仍是 `--workers 4 --uploads 4`，不限速仍是默认。
-
-九节点、每节点全新 32 GiB 对照：平均分发阶段 32.39 → 25.10 秒（耗时减少 22.50%），控制器总耗时 39.68 → 31.61 秒（减少 20.34%）。每轮清页面缓存、使用新目标并独立 SHA256 校验；不是续传测速。[方法、完整性边界及开发约束](OPTIMIZATION-0.7.0.zh-CN.md)。
-
-## 完成后查看耗时和平均速度
+在 HGX167 上执行，并把 HGX167 列入目标：
 
 ```bash
-./swarmcopy distribute --hosts 'HGX[061,066,167]' \
-  --source /raid/images/source.bin --dest /raid/images/copies \
-  --verify chunks --workers 4 --uploads 4
-# 成功时自动打印 JOB SUMMARY；记住启动时输出的 ID
-./swarmcopy watch --job <ID>
-./swarmcopy status --job <ID>
+./swarmcopy distribute \
+  --hosts 'HGX[061,066,082,138,169,167]' \
+  --source '/raid/nemo*' --dest /raid
 ```
 
-watch 重看保存的文本摘要，status 输出含 Summary 的 JSON。集群平均速度用本次新传字节除以本次总耗时，包含准备；接收节点速度中位数另列。本地复制与已有数据复用都不计作新网络流量。固定并发无需 --adaptive；只有主动选择时才启用自适应。旧版本结果没有的历史耗时不会补造。
+本机已存在的原文件检查后直接复用、供种，不复制到自身。其他节点获得相同路径的文件。`'/raid/nemo*'` 只匹配 `/raid` 的直属条目；匹配到目录才递归其内部，不会搜索 `/raid/images`。
 
-## 推荐使用：计算节点直接供种
+本机不在目标列表时不会自动采用 direct；请使用实际主机名，不依赖程序推断任意 SSH 别名。`SOURCE MODE` 与 `SOURCE READY` 会显示方式和来源端口。
 
-介质已经在计算节点本地盘时，优先在该节点执行，并把本机列入 `--hosts`。v0.7.0 直接读取原文件供种，跳过初始种子复制；本机目标通过本地复制填充，其余目标通过网络互传。若在 BCM 执行且 BCM 不在目标列表，则先经 SSH 复制到计算节点作种子。开始前与 watch 均明确显示来源方式、主机和路径。[两种场景、网络要求及故障处理](SOURCE-MODES.zh-CN.md)。
+## 从 BCM 或源节点分发到另一目录
 
 ```bash
-# 在 HGX167 上执行；本机也在目标列表中
-./swarmcopy distribute --hosts 'HGX[061,066,082,138,169,167]' \
-  --source /raid/local-ai/dist/local-ai.tar --dest /raid/images --verify chunks
-```
-
-新作业默认 chunks（BLAKE3/BLAKE3），需要最终整文件复核时使用 `--verify full`（SHA256/SHA256）。异常节点不取消健康节点；仍保留未完成状态，恢复后用同一 ID 续传。恢复时跳过能确认的稀疏空洞，避免对未收到的几百 GB 零重复计算。
-
-删除作业并清理独占暂存：`./swarmcopy remove --job <ID> --purge-partials`，`delete` 为别名。它先停止本作业控制器和 peer，再清理记录、远端作业目录及独占暂存；原始源文件、已发布成品和共享数据保留。清理失败时保留记录供重试。只想暂停请用 `stop`。
-
-## 两种校验模式（v0.7.1）
-
-日常只需选择 `--verify full` 或 `--verify chunks`：新建 `--source` 作业时，full 默认 SHA256 分块和文件摘要，并检查最终文件；chunks 默认 BLAKE3 分块和文件摘要，全部验块、fsync 后发布，省略最终整文件回读。v0.7.1 起省略 `--verify` 默认 chunks；需要最终整文件复核时显式使用 `--verify full`。无需再记两项 hash 参数。
-
-```bash
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify chunks
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify full
-```
-
-`--chunk-hash` / `--file-hash` 保留为高级覆盖参数。续传和已有种子清单沿用原摘要算法，选择模式不会改写清单；旧 SHA256 作业切换 chunks 仍用 SHA256 验块。
-
-## 1. 单文件、多个文件、目录
-
-~~~bash
-# 当前控制端文件 → 所有目标节点本地目录
-./swarmcopy distribute --hosts 'node[001-005]' \
+# 在 BCM 上：必要时先经 SSH 复制一次到计算节点种子
+./swarmcopy distribute --hosts 'HGX[061,066,082]' \
   --source /shared/nemo.sqsh --dest /raid/images
 
-# 两个文件直接放到 /raid/images 下
+# 在 HGX167 上：原文件直接供种，本机目标副本用本地读取/验块/写入
+./swarmcopy distribute --hosts 'HGX[061,066,167]' \
+  --source /raid/source/nemo.sqsh --dest /raid/images
+```
+
+已有完整副本可用时，程序会跳过不必要的初始介质上传。`importing` 表示种子复制，不是解压。若 BCM 只能访问一个计算节点，请登录该节点执行分发；没有自动转交控制器或 SSH 隧道管理层。
+
+## 多文件、目录与通配符
+
+```bash
 ./swarmcopy distribute --hosts @hosts.txt --dest /raid/images \
   --source /shared/nemo.sqsh --source /shared/config.json
 
-# 选择多个 sqsh；引号让程序展开通配符
 ./swarmcopy distribute --hosts @hosts.txt --dest /raid/images \
   --source '/shared/*.sqsh'
 
-# shell 展开也可以
-./swarmcopy distribute --hosts @hosts.txt --source /shared/*.sqsh --dest /raid/images
+./swarmcopy distribute --hosts @hosts.txt --dest /raid/images \
+  --source /shared/models
+```
 
-# 目录保留名字：/raid/images/nemo/models/...
-./swarmcopy distribute --hosts @hosts.txt --dest /raid/images --source /shared/nemo
-~~~
+| 来源 | 目标布局 |
+| --- | --- |
+| `/shared/nemo.sqsh` | `/raid/images/nemo.sqsh` |
+| 两个来源文件 | 都直接放在 `/raid/images/`，不增加批次目录 |
+| `/shared/models` 或 `/shared/models/` | `/raid/images/models/...` |
 
-一个 `hosts.txt` 每行一个节点；也支持逗号与 `'node[001,006,010-020]'`。目录递归，包括空文件和空目录；不支持符号链接及特殊文件。同名顶层输入或重叠的父子目录要先整理，避免输出路径歧义。
+也支持 shell 展开和位置参数：`./swarmcopy distribute --hosts @hosts.txt --dest /raid/images /shared/*.sqsh`。建议给通配符及方括号主机表达式加引号。glob 支持 `*`、`?`、`[]`；`**` 没有额外递归语义。未匹配、重叠根及重复顶层名称会报错。目录中的空文件/空目录保留，符号链接和特殊文件不支持。
 
-## 2. 固定“下载线程”数量
+## 已有文件与冲突处理
 
-~~~bash
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images --workers 8 --uploads 8
-~~~
-
-| 参数 | 含义 | 默认 |
-| --- | --- | --- |
-| `--workers` | 每节点并行下载分块请求 | 4 |
-| `--uploads` | 每节点并行上传请求上限 | 4 |
-| `--adaptive` | 自动调整下载并发 | 关闭 |
-| `--min-workers` | 自适应下载下限 | 初始 workers |
-| `--max-workers` | 自适应下载上限 | 16 |
-
-workers/uploads 范围 1～32，按节点分别计算；不等于精确的连接数。固定并发时无需开启 adaptive。
-
-## 3. 自动调节下载并发
-
-~~~bash
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images --adaptive \
-  --workers 4 --min-workers 2 --max-workers 16 --uploads 8
-~~~
-
-从 4 个下载请求开始，在 2～16 之间根据表现调整；上传仍最多 8。不会保证更快，因此默认关闭。若省略 `--min-workers`，默认下限是初始 workers，通常不会降到比初始值更低。
-
-并发参数创建任务时保存；恢复沿用保存值。目前没有运行中修改或用 resume 改 workers 的选项。
-
-## 4. 默认不限速；必要时限速
-
-~~~bash
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images --download-mib 200 --upload-mib 200
-~~~
-
-每节点聚合下载和上传各 200 MiB/s，`0` 表示不限速。不是整个集群共用 200 MiB/s。
-
-## 5. 已有文件，只有少数节点缺失
-
-重新执行同一来源和目标即可创建补齐任务：
-
-~~~bash
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images
-~~~
-
-内容一致的文件复用，完整节点参与做种；若有完整副本，就跳过头结点到种子的介质上传。所有节点已有时，新增介质下载为 0。首次建立来源清单和首次验证远端旧文件仍需要读盘，不代表没有校验成本；未变更的缓存可减少后续重读。
-
-## 6. 同名文件不同：续传／替换
-
-交互运行不写 `--existing`，默认询问。按 `r` 续传修复、`p` 重新接收并替换、`c` 保留并取消；选择应用于本任务检测出的全部普通文件冲突。
-
-~~~bash
-# 脚本明确选择：从旧文件复制并重新校验可复用的分块
+```bash
+# 复用旧文件的有效块，补齐后替换
 ./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
   --dest /raid/images --existing resume
 
-# 忽略冲突旧文件的数据，重新接收这些文件
+# 不从冲突旧文件复制数据，重新接收该文件后替换
 ./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
   --dest /raid/images --existing replace
+```
 
-# 检测到内容不同就取消，保留旧文件
+默认 `--existing ask` 在控制端列出冲突并询问一次。`keep` 表示遇到内容冲突时取消，不是“跳过冲突但仍算成功”。相同文件无需重复下载；replace 也不会强制重传已匹配文件。旧成品保留到新内容校验完成后逐文件替换；需留出独立暂存空间。额外目标文件不会被删除。
+
+## 主机列表与 SSH
+
+```bash
+./swarmcopy distribute --hosts 'HGX[061,066,167],node[001-005]' \
+  --source /shared/nemo.sqsh --dest /raid/images
+
 ./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images --existing keep
-~~~
+  --dest /raid/images --ssh-user root --ask-pass
 
-旧文件保持到新数据全部校验成功，逐文件原子替换；其他无关文件不删除。已匹配文件不重下，replace 也不强制重下匹配文件或本任务已保留的有效临时块。跨文件分块可能顺带传输邻接完整文件的一小段，但不会重写该成品。
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+  --dest /raid/images --ssh-opt ConnectTimeout=20 \
+  --ssh-opt ServerAliveInterval=15 --ssh-cipher aes128-gcm@openssh.com
+```
 
-## 7. 找 job ID、监控、停止、继续
+`hosts.txt` 可逐行写主机名；SSH 登录可使用密钥、agent 或 SSH config。`--ask-pass` 隐藏询问一次全部目标共用的密码，不落盘，不自动建立互信。默认 SSH 选项为 `StrictHostKeyChecking=no`、`UserKnownHostsFile=/dev/null`、`LogLevel=quiet`、`CheckHostIP=no`。重复的 `--ssh-opt KEY=VALUE` 按键覆盖并随作业保存；显式 `--ssh-cipher` 优先。
 
-~~~bash
+## 并发、限速、端口和 QUIC
+
+```bash
+# 固定并发；默认是 4/4，参数按每节点计数
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+  --dest /raid/images --workers 8 --uploads 8 --port 19800
+
+# 每节点聚合限速，单位 MiB/s；0 表示不限速
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+  --dest /raid/images --download-mib 200 --upload-mib 200
+
+# 显式自适应下载：初始 4、下限 2、上限 16，上传上限仍为 8
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+  --dest /raid/images --adaptive --workers 4 --min-workers 2 --max-workers 16 --uploads 8
+
+# 同一二进制中的可选 UDP 数据通道
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+  --dest /raid/images --transport quic
+```
+
+workers/uploads 范围 1～32，是并行分块请求数，不保证等于连接数。自适应只调下载，默认关闭；目前不提供运行中热调参。QUIC 需放行 peer 同号 UDP，控制/状态仍走 TCP；direct 来源还有独立动态端口。监听全部网卡不等于聚合网卡带宽。参数随作业保存，续传不应靠修改 JSON 切换数据传输协议。
+
+## 校验选择
+
+```bash
+# 默认就是 chunks/BLAKE3，无需再写两项 hash 参数
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images
+
+# 最终整文件内容复核；默认 SHA256，流水校验开启
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+  --dest /raid/images --verify full
+
+# 高级混合：非密码学块摘要必须配 full 密码学文件复核
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+  --dest /raid/images --verify full --chunk-hash xxh3-128 --file-hash blake3
+```
+
+首次来源清单仍需完整读取；chunks 只省略最终整文件复核，不省验块和 fsync。full 的校验可能与下载重叠。已有作业保持原算法，`resume --verify full` 不会将已有 BLAKE3 清单改成 SHA256。详见[校验模式](INTEGRITY.zh-CN.md)。
+
+## 监控、停止与恢复
+
+```bash
 ./swarmcopy jobs
-./swarmcopy jobs --help
+./swarmcopy jobs --json
 ./swarmcopy inspect --job <ID>
-./swarmcopy watch --job <ID> --plain --interval 2s
+./swarmcopy watch --job <ID> --interval 2s --plain
 ./swarmcopy status --job <ID>
 ./swarmcopy stop --job <ID>
 ./swarmcopy resume --job <ID>
-./swarmcopy resume --job <ID> --existing resume
-~~~
-
-`<ID>` 换成创建时输出或 jobs 列出的 ID；保留任务目录和节点暂存数据。watch 默认最近活动／最近保存任务；退出 watch 不会停止分发。完成任务默认查看历史结果，只有 `--live` 才查实时节点。
-
-“resume --job”恢复同一清单、同一任务的有效块；“distribute”创建新任务，检查已有成品后补齐。恢复不会重新展开来源通配符。初始 SSH 导入未完成时重做导入，P2P 部分支持断点续传。
-
-## 8. 密码 SSH、UDP、强制校验
-
-~~~bash
-./swarmcopy distribute --hosts @hosts.txt --ssh-user alice --ask-pass \
-  --source /shared/nemo.sqsh --dest /raid/images
-
-# 同一二进制的 UDP 数据通道，控制和状态仍使用 TCP
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images --transport quic
-
-# 强制重读来源和已有文件，绕过验证缓存
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images --recheck
-~~~
-
-`--ask-pass` 询问所有节点共用的一个 SSH 密码，不配置永久登录互信、不保存密码；SSH 不要求预登记主机密钥。QUIC 需 TCP 和 UDP 同端口可达，不保证比 TCP 快，默认仍 TCP。监听所有网口不等于叠加多个网卡带宽，主机名应解析到正确的数据网络。
-
-更多参数和默认值见 `./swarmcopy distribute --help`。本手册的新冲突策略适用于 v2 的新建来源任务；历史 v1 prepared-seed 任务保留原先的成品不覆盖规则。
-
-## 大文件开始后先看准备阶段
-
-无需增加参数。hashing-source 是建立可信清单，importing 是初次上传到种子；每约 2 秒显示百分比、速度和当前阶段 ETA。watch 会自动从准备切到传输，字节 100% 仍可能在校验／收尾。哈希时 Ctrl+C 或 stop --job 可取消；重跑会重做未完成的初始哈希。[详细说明](PROGRESS.zh-CN.md)。
-
-## SSH 默认参数与加密加速
-
-v0.4.2 起统一使用以下参数，不再提供 strict 开关：
-
-~~~text
--o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -o CheckHostIP=no
-~~~
-
-SSH 登录会在耗时来源哈希前先检查，旧任务 resume 也采用这些参数。默认 --ssh-cipher auto：本机有 AES 与 GCM 多项式硬件支持时优先协商 AES-GCM，并保留 ChaCha20／AES-CTR 回退；没有检测到时沿用 OpenSSH 默认。实际指令加速由 OpenSSH／加密库提供。
-
-~~~bash
-./swarmcopy resume --job <ID>
-./swarmcopy resume --job <ID> --ssh-cipher aes128-gcm@openssh.com
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --ssh-cipher system
-~~~
-
-system 完全沿用 OpenSSH 的 cipher 协商。密码、用户名、密钥／agent 的用法不变；SSH 加密只影响部署／初始导入，不等于 SCDP 数据校验。
-
-## 校验算法与 SSH 扩展
-
-默认 chunks + BLAKE3，省略最终整文件回读；可显式选择 `--verify full`，或 `--verify full --chunk-hash xxh3-128 --file-hash blake3` 混用快速分块与密码学文件摘要。XXH3 不允许用于 chunks 模式。首次来源清单仍要读完整源文件。详见[模式、完整性边界、硬件实测](INTEGRITY.zh-CN.md)。
-
-SSH 默认包含 `StrictHostKeyChecking=no`、`UserKnownHostsFile=/dev/null`、`LogLevel=quiet`、`CheckHostIP=no`，可重复 `--ssh-opt KEY=VALUE` 扩展或覆盖，设置随作业保存。比如 `--ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15`。AES-GCM 可用 `--ssh-cipher aes128-gcm@openssh.com` 选择。
-
-```bash
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images \
-  --verify full --chunk-hash xxh3-128 --file-hash blake3 \
-  --ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15
-./swarmcopy resume --job <ID> --ssh-opt ConnectTimeout=30 --verify full
+./swarmcopy resume --job <ID> --existing resume --ask-pass
 ```
 
-## fsync 报错后如何恢复
+完成时的 JOB SUMMARY 保存本次总耗时、准备/分发耗时、网络/本地复制/复用字节和平均速度。集群平均用本次新字节除以本次总耗时，包含准备；接收节点速度中位数单列。watch 重看完成记录，status 保持 JSON。没有历史耗时的旧记录不会补造摘要。
 
-数据 fsync 失败不会完成或发布该数据；保留作业和暂存。先排除磁盘空间、RAID/文件系统或 I/O 故障，原控制器仍在等待时先停止，再恢复同一作业：
+单节点失败不取消其他节点，但不会虚报全体完成。退出 watch 不停止任务；Ctrl+C 停止控制器后 peer 可能继续，明确停作业用 stop。若 fsync/I/O 失败，先修复存储，再 stop（原控制器仍在等时）并 resume 同 ID；完整块复用，坏块/缺块补传。后续目录 fsync 出错时可能已有部分成品，仍不能算作业成功。保留作业记录和节点暂存，不要先 purge。
 
-```bash
-./swarmcopy jobs
-./swarmcopy stop --job <ID>
-./swarmcopy resume --job <ID>
-```
-
-恢复会重新检查保留的数据，复用校验通过的块，补齐缺块/坏块，重新尝试完成；通常无需从头传整个文件。若写入后断电或设备丢数据，丢失块仍需补传；存储持续报错时不能保证完成。不要删除作业或使用 remove --purge-partials，否则会失去该恢复入口。
-
-如果已经完成改名/链接，后续目录或完成标记 fsync 才报错，某些目标文件可能已存在，但作业仍不算成功；恢复会检查并复用有效文件。多文件发布逐文件进行，不是全目录事务。fsync 成功依赖操作系统和底层设备正确兑现刷盘请求，不能代替内容复核；需要额外最终内容检查时用 --verify full。
-
-## 保留作业记录，只清理完成后的临时内容
+## 清理和删除作业
 
 ```bash
-# 正常完成后自动执行收尾；下面用于旧完成作业或重试
+# 正常完成后自动清理；用于旧完成作业或清理失败重试
 ./swarmcopy cleanup --job <ID>
-./swarmcopy cleanup --help
-./swarmcopy jobs
-./swarmcopy watch --job <ID>
+
+# 删除作业记录和部署，保留源和成品
+./swarmcopy remove --job <ID>
+
+# 另行丢弃本作业独占暂存，不再保留这份续传数据
+./swarmcopy remove --job <ID> --purge-partials
 ```
 
-cleanup 保留源、成品和控制器记录；remove/delete 则删除作业记录。不要对仍要续传的任务丢弃 partials。--keep-seeding 作业用 cleanup 停止本作业供种并收尾。若遇到共享或未知内容，按提示保留处理，不用 rm -rf 整个 .swarmcopy。
+cleanup 保留 jobs/watch/status 历史；remove/delete 删除记录。`.swarmcopy` 中只固定保留最近缓存与有上限的日志，未完成及共享数据受保护。`--keep-seeding` 在完成后继续供种，之后用 cleanup 收尾。规则及旧布局兼容见[清理说明](CLEANUP.zh-CN.md)。
+
+## 查帮助与进一步阅读
+
+```bash
+./swarmcopy --help
+./swarmcopy distribute --help
+./swarmcopy jobs --help
+./swarmcopy help cleanup
+```
+
+`prepare`、`peer` 和 `hashbench` 是高级或开发入口，日常分发不必手动启动节点 peer。异构集群部署、来源网络要求及字段语义分别见[README](../README.md)、[来源方式](SOURCE-MODES.zh-CN.md)、[进度指南](PROGRESS.zh-CN.md)和[开发指南](DEVELOPMENT.zh-CN.md)。

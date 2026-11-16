@@ -1,14 +1,12 @@
 # QUIC integration audit and tuning
 
-> These features are now integrated in main and the same executable; separate UDP/adaptive branches are no longer maintained. This document retains implementation background. Use the current [README](../README.en.md) and [examples](EXAMPLES.en.md).
+[中文](QUIC-TUNING.zh-CN.md) · [Initial comparison](QUIC-RESULTS.en.md) · [Documentation](README.en.md)
 
-[中文](QUIC-TUNING.zh-CN.md) · [Initial comparison](QUIC-RESULTS.en.md)
+Defaults are TCP, chunks/BLAKE3 and fixed concurrency, with adaptive off. UDP requires explicit --transport quic; whole-file pipelining/window controls apply only to full. This guide describes current integration and patch maintenance; historical diagnostics/ablations are not new current-release benchmarks.
 
-Stable v0.2.0 continues to default to TCP with pipelined full-file verification and a 256-chunk window; adaptive concurrency stays off. This candidate preserves those choices. UDP requires explicit `--transport quic`.
+## Design rationale and historical diagnostics
 
-## Findings
-
-The original http3.Transport shares one client UDP socket/receive loop across destinations. The candidate assigns sources consistently to a bounded set of transports, preserving connection affinity. `--quic-sockets` accepts 1..32 and defaults to 4 for new jobs. These are static receive-path shards, not additional/adaptive download workers. Unused shards initialize lazily; the metric is configuration, not observed open sockets.
+The original http3.Transport shares one client UDP socket/receive loop across destinations. The implementation assigns sources consistently to a bounded set of transports, preserving connection affinity. `--quic-sockets` accepts 1..32 and defaults to 4 for new jobs. These are static receive-path shards, not additional/adaptive download workers. Unused shards initialize lazily; the metric is configuration, not observed open sockets.
 
 Five-node 8 GiB CPU profiles are diagnostics, not formal timings. One receiver showed about 23% syscall and 4% AES-decrypt samples, plus significant scheduler/receive work. Cumulative stack percentages must not be added. A separate 45-node cold-cache one/four-socket ablation retains both orders.
 
@@ -24,7 +22,7 @@ Ordinary rmem_max256 KiB is not effective socket allocation: an identical short 
   --transport quic
 ~~~
 
-Candidate QUIC defaults are `--quic-sockets 4 --quic-max-payload 8952 --quic-gso-kib 64`; default transport remains TCP. The1452..8952 ceiling refers to UDP payload bytes, not NIC MTU.8952 leaves48 bytes for IPv6/UDP within a9000-byte path. The actual size also respects peer limits and PMTU discovery.
+New-job QUIC defaults are `--quic-sockets 4 --quic-max-payload 8952 --quic-gso-kib 64`; default transport remains TCP. The1452..8952 ceiling refers to UDP payload bytes, not NIC MTU.8952 leaves48 bytes for IPv6/UDP within a9000-byte path. The actual size also respects peer limits and PMTU discovery.
 
 For a new diagnostic job, `--quic-sockets 1 --quic-max-payload 1452` restores the initial configured limits. Job parameters persist through resume. Missing old fields explicitly mean1/1452 rather than inheriting newer defaults. Performance.QUICSockets/QUICMaxPayload are configured limits, not observed socket count/path MTU.
 
@@ -34,7 +32,7 @@ Real UDP proxy tests observe8937-byte payloads on a wide path. Silently dropping
 
 Real five-node8 GiB default deployment passes full SHA-256 and observes roughly8 KiB ingress UDP payloads on an actual receiver. Public evidence contains decoded lengths, not raw captures or media. BPF greater matches captured packet length including headers, which differs from UDP payload length.
 
-Tests cover connection establishment on a narrow path. Recovery from a route/MTU reduction during an established transfer is unverified; this is not a universal dynamic-network claim. Full SHA-256, fsync, atomic publication, and resume remain mandatory.
+Tests cover connection establishment on a narrow path. Recovery from a route/MTU reduction during an established transfer is unverified; this is not a universal dynamic-network claim. Manifest-bound chunk checks, selected chunks/full gates, fsync, publication and resume validation remain required.
 
 ## Dependency maintenance
 

@@ -1,5 +1,7 @@
 # UDP/QUIC: 45-node comparison
 
+> Historical study/validation record: versions, parameters and results describe that measurement, not current defaults. For current use, see [project home](../README.en.md) and [documentation](README.en.md).
+
 [中文](QUIC-RESULTS.zh-CN.md) · [Implementation](QUIC.en.md)
 
 A 40,188,444,672-byte file (37.43 GiB), one prepared seed and 44 fresh receivers on 45 distinct nodes.
@@ -31,10 +33,10 @@ This compares HTTP/3+QUIC+TLS to plaintext HTTP/TCP, not UDP alone or IBM FASP. 
 
 TCP stays the default. Pipeline/window are regular v0.2.0 defaults and adaptive remains off. UDP is an independent optional transport. ARM64 is cross-built only.
 
-Evidence: [summary/artifact hashes](quic-results.json), [anonymous nodes](quic-nodes.json), [cache barriers](quic-barriers.json), [driver](../scripts/benchmark-quic.py). Private records use --state-dir ./run/quic45 and individual <case-id>-job paths. Host identities, tokens, and complete logs remain private.
+Evidence: [summary/artifact hashes](data/quic-results.json), [anonymous nodes](data/quic-nodes.json), [cache barriers](data/quic-barriers.json), [driver](../scripts/benchmark-quic.py). Private records use --state-dir ./run/quic45 and individual <case-id>-job paths. Host identities, tokens, and complete logs remain private.
 
 ## Post-timing implementation audit
 
 Ordinary rmem_max is256 KiB, but an identical 8-second seed probe reports14 MiB read/write buffers (Linux accounting): quic-go attempts privileged per-socket enlargement. The sysctl maximum is not the effective socket allocation. Whole-node receive-buffer errors rise by2,712,406 across44 nodes, potentially including other traffic. Default http3.Transport shares one receive UDP socket across destinations; this is a design bottleneck hypothesis to test, not an established sole cause.
 
-[Kernel counters](quic-kernel-counters.json), [log summary](quic-log-diagnostics.json), [socket probe](quic-socket-probe.json).
+[Kernel counters](data/quic-kernel-counters.json), [log summary](data/quic-log-diagnostics.json), [socket probe](data/quic-socket-probe.json).

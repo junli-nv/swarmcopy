@@ -1,6 +1,6 @@
-# 统一元数据目录与自动清理（v0.8.0）
+# 统一元数据目录与自动清理
 
-[English](CLEANUP.en.md) · [示例](EXAMPLES.zh-CN.md) · [开发指南](DEVELOPMENT.zh-CN.md)
+[English](CLEANUP.en.md) · [示例](EXAMPLES.zh-CN.md) · [开发指南](DEVELOPMENT.zh-CN.md) · [文档索引](README.md)
 
 目标目录下统一使用一个 `.swarmcopy`，不把介质或节点暂存搬到用户目录。所有目标通过所选校验并完成发布后，默认停止本作业 peer，自动删除本作业部署文件和已用完的暂存，再保存完成摘要。源文件和成品保持原位，控制器的 jobs/status/watch 记录继续可查。
 

@@ -1,5 +1,7 @@
 # Large-scale cold-OS-cache comparison protocol
 
+> Historical study/validation record: versions, parameters and results describe that measurement, not current defaults. For current use, see [project home](../README.en.md) and [documentation](README.en.md).
+
 [中文](COLD-STUDY.zh-CN.md) · [Preliminary measurements](BENCHMARK.en.md)
 
 The plan is saved before timed transfers, fixing executable/driver hashes, membership, ordering, and unique case IDs.

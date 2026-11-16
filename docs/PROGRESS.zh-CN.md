@@ -1,8 +1,8 @@
 # 准备进度、预计时间与停止
 
-[English](PROGRESS.en.md) · [示例手册](EXAMPLES.zh-CN.md)
+[English](PROGRESS.en.md) · [示例手册](EXAMPLES.zh-CN.md) · [文档索引](README.md)
 
-v0.4.1 修复了大文件建立清单时没有持续提示、watch 提前查询未开放端口、源哈希不及时响应 Ctrl+C 的问题。命令无需增加参数。
+distribute 自动报告来源哈希、盘点、初始复制和节点传输阶段，无需额外开关。hashing-source 的末尾路径是当前文件，总字节覆盖全部选中来源，不代表只选择该文件。
 
 ## 会看到什么
 
@@ -11,12 +11,12 @@ PREPARING hashing-source  32.3% | 156.40 / 483.84 GiB | 1126.4 MiB/s | ETA ~4m58
 PREPARING deploying | nodes 3/9 | elapsed 4s | deploying executables and job configuration over SSH
 PREPARING checking-existing | nodes 5/9 | elapsed 20s | verifying existing files on each node
 PREPARING importing  40.0% | 193.54 / 483.84 GiB | 980.0 MiB/s | ETA ~5m3s | elapsed 3m22s | /shared/local-ai.tar
-PREPARING waiting-peers | nodes 8/9 | elapsed 12s | waiting for peer listeners
+PREPARING starting-peers | nodes 8/9 | elapsed 12s | starting peers
 ~~~
 
 数值只是显示格式示例，不是性能承诺。源哈希与初始种子流传输每约 2 秒显示已处理字节、总字节、百分比、速度、预计剩余时间和当前文件；短阶段也显示开始与结束。目录任务按所有普通文件的总字节聚合，导入不把 tar 元数据计成介质内容。
 
-部署、已有文件检查、启动 peer 和等待监听显示当前动作、节点计数与已耗时；这些操作没有足够的字节样本时不编造 ETA。未命中验证缓存的已有大文件仍需读取，其检查可能较久。
+部署、已有文件检查及启动 peer 显示当前动作、节点计数与已耗时；这些操作没有足够的字节样本时不编造 ETA。未命中验证缓存的已有大文件仍需读取，其检查可能较久。
 
 前几秒显示 calculating。ETA 根据当前阶段已观测平均速度计算，是估计值；不包含后续部署、校验、fsync 或传输阶段。字节达到 100% 但阶段收尾尚未完成时，显示 finalizing (time unknown)，不会将其当成整个任务完成。
 
@@ -49,10 +49,12 @@ status 在准备阶段返回 Stage、Preparation 和 Complete=false，而不是�
 
 Ctrl+C 停止控制器，已经部署的独立 peer 可能继续运行；要明确停止这些 peer，使用 stop --job。退出 watch 只退出监控。不要为了停止某个任务使用全局 pkill -9 swarmcopy，它会连监控和其他任务一同杀死，也来不及保存正常退出状态。
 
-## 本次验证与实现
+## 实现与历史验证
 
 独立 64GiB 稀疏测试文件的原生进程验证：哈希中有百分比／速度／ETA，watch/status 不查询 peer，SIGINT 约 0.007s 退出，stop 命令约 0.35s 退出，且没有部署节点。另一个 64GiB 检查进程在控制输入关闭后约 0.005s 退出。时间只是该测试环境的观测值，不是时延上限，也不是介质吞吐基准。
 
 两节点、139,460,641 字节、5 个文件的真实 TCP 分发通过全部准备阶段、SSH 输入心跳、监听就绪、完整 SHA256 校验和保存结果显示。没有重启用户原本的 local-ai 任务。x86_64 实机验证，aarch64 交叉构建。
 
 progress.go 保存进度并处理心跳、ETA、取消及阶段视图；progress.json 原子替换但不为每个心跳强制 fsync，避免进度元数据拖慢大文件。任务配置和可信清单仍按原来的持久化规则写入，进度写入失败只提示，不将未验证数据当成有效内容。新增单元／race 测试覆盖 ETA、取消、stop、旧 attempt 隔离、进程身份、无端口查询和载荷计数。
+
+节点启动后独立传输，没有等待全部监听的门槛。旧日志中的 waiting-peers 不能据此判定节点挂掉；应看具体进程、日志和节点诊断。完成后的耗时/速率与清理规则见[操作示例](EXAMPLES.zh-CN.md)和[清理说明](CLEANUP.zh-CN.md)。

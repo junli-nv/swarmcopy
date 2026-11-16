@@ -1,6 +1,8 @@
 # 157-node cold-OS-cache results
 
-[中文](COLD-RESULTS.zh-CN.md) · [Preregistered protocol](COLD-STUDY.en.md) · [Numeric summary](cold-results.json)
+> Historical study/validation record: versions, parameters and results describe that measurement, not current defaults. For current use, see [project home](../README.en.md) and [documentation](README.en.md).
+
+[中文](COLD-RESULTS.zh-CN.md) · [Preregistered protocol](COLD-STUDY.en.md) · [Numeric summary](data/cold-results.json)
 
 157 compute nodes: one prepared seed and 156 fresh receivers. Each file is 40,188,444,672 bytes (37.43 GiB); each case delivers 6,269,397,368,832 bytes (5.70 TiB) to receivers. All three pairs completed.
 
@@ -33,9 +35,9 @@ This compares complete solutions: encrypted rsync-over-SSH versus plaintext SCDP
 
 ## Evidence
 
-- [Anonymous per-node transfer/verification records](cold-node-results.json)
-- [All 942 anonymous cache barriers](cold-cache-barriers.json)
-- [Conditions, hashes, and summary](cold-results.json)
+- [Anonymous per-node transfer/verification records](data/cold-node-results.json)
+- [All 942 anonymous cache barriers](data/cold-cache-barriers.json)
+- [Conditions, hashes, and summary](data/cold-results.json)
 - [Reproducible driver](../scripts/benchmark-cold.py)
 
 For actual local study jobs, use ./swarmcopy jobs --state-dir ./run/cold157 and watch/inspect --job ./run/cold157/<case-id>-job. Default jobs does not search these custom locations. The rsync baseline is in results.json/summary.json, not in swarmcopy jobs.

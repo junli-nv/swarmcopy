@@ -1,6 +1,8 @@
 # 自适应调度：45 节点对照结果
 
-[English](ADAPTIVE-INITIAL-RESULTS.en.md) · [实现与指标说明](ADAPTIVE.zh-CN.md) · [机器可读结果](adaptive-initial-results.json)
+> 历史研究/验证记录：保留当时版本、参数与结果，不代表当前默认行为。当前使用方式见[项目首页](../README.md)和[文档索引](README.md)。
+
+[English](ADAPTIVE-INITIAL-RESULTS.en.md) · [实现与指标说明](ADAPTIVE.zh-CN.md) · [机器可读结果](data/adaptive-initial-results.json)
 
 本组对照没有测得自适应模式比已发布版本更快，不能把本原型宣传为性能提升；保持优化开关默认关闭。
 
@@ -23,7 +25,7 @@
 | 2 / adaptive | 61.00 | 4.68 | 42.20 | 4167 | 0 | 277 |
 | 2 / fixed | 35.00 | 5.77 | 40.68 | 3448 | 0 | 0 |
 
-各阶段最大值可能来自不同节点，且阶段在节点之间重叠，不能相加当作整批时间。transfer 包括 peer 发现、调度与等待；控制端部署和停止另计入整批时间。工作累计时间、HTTP 应用读取字节及逐节点数据见 [匿名记录](adaptive-initial-node-results.json)。ReceivedBytes 不等于网卡计数；尾块请求可增加流量，不能靠重复记账制造吞吐提升。
+各阶段最大值可能来自不同节点，且阶段在节点之间重叠，不能相加当作整批时间。transfer 包括 peer 发现、调度与等待；控制端部署和停止另计入整批时间。工作累计时间、HTTP 应用读取字节及逐节点数据见 [匿名记录](data/adaptive-initial-node-results.json)。ReceivedBytes 不等于网卡计数；尾块请求可增加流量，不能靠重复记账制造吞吐提升。
 
 ## 复核与边界
 
@@ -33,8 +35,8 @@
 
 只有两个样本，不能据此宣称稳定的通用性能增益。OS 页缓存已清，设备缓存和后台负载未隔离。本表没有测商业 Aspera，也没有 UDP，更不能与之前 rsync 对照的倍数直接相乘。ARM64 只有交叉构建。
 
-- [匿名节点数据](adaptive-initial-node-results.json)
-- [全部缓存屏障](adaptive-initial-cache-barriers.json)
+- [匿名节点数据](data/adaptive-initial-node-results.json)
+- [全部缓存屏障](data/adaptive-initial-cache-barriers.json)
 - [可复测驱动](../scripts/benchmark-adaptive.py)
 
 在本次控制端查询任务：./swarmcopy jobs --state-dir ./run/compare45-initial；单项 --job ./run/compare45-initial/<case-id>-job。默认 jobs 不会自动搜索自定义目录。

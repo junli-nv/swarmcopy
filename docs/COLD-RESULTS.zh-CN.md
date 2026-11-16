@@ -1,6 +1,8 @@
 # 157 节点冷页缓存对照结果
 
-[English](COLD-RESULTS.en.md) · [预先固定的方案](COLD-STUDY.zh-CN.md) · [数值汇总](cold-results.json)
+> 历史研究/验证记录：保留当时版本、参数与结果，不代表当前默认行为。当前使用方式见[项目首页](../README.md)和[文档索引](README.md)。
+
+[English](COLD-RESULTS.en.md) · [预先固定的方案](COLD-STUDY.zh-CN.md) · [数值汇总](data/cold-results.json)
 
 同一组 157 个计算节点：1 个已准备种子、156 个新接收节点。每节点文件大小 40,188,444,672 字节（37.43 GiB），每次向接收端实际分发 6,269,397,368,832 字节（5.70 TiB）。三轮全部成功。
 
@@ -33,9 +35,9 @@ rsync 校验完成范围 406.45–410.87 秒；SCDP 范围 153.15–153.47 秒�
 
 ## 复查材料
 
-- [全部逐节点匿名传输/校验数据](cold-node-results.json)
-- [942 次匿名缓存屏障数据](cold-cache-barriers.json)
-- [方法、顺序、摘要与汇总](cold-results.json)
+- [全部逐节点匿名传输/校验数据](data/cold-node-results.json)
+- [942 次匿名缓存屏障数据](data/cold-cache-barriers.json)
+- [方法、顺序、摘要与汇总](data/cold-results.json)
 - [可重新运行的驱动](../scripts/benchmark-cold.py)
 
 实际作业查询入口：./swarmcopy jobs --state-dir ./run/cold157；单项 watch/inspect 需 --job ./run/cold157/<case-id>-job。默认 jobs 不会搜索这些自定义目录。rsync 对照在 results.json 和 summary.json 中，不创建 swarmcopy 作业。

@@ -1,123 +1,92 @@
 # Development guide
 
-[中文（主文档）](DEVELOPMENT.zh-CN.md) · [Usage](../README.en.md) · [Examples](EXAMPLES.en.md)
+[中文（主文档）](DEVELOPMENT.zh-CN.md) · [Documentation](README.en.md) · [Examples](EXAMPLES.en.md)
 
-This describes unified main v0.8.0. Maintain one long-lived branch, main. TCP, optional UDP, adaptive scheduling, pipelined integrity and trees belong to one executable. Retain historical tags; do not maintain parallel feature releases.
+This guide describes current architecture, compatibility contracts and validation. Maintain main only and ship all options in one executable. Release history belongs in [CHANGELOG](../CHANGELOG.md); historical measurements have separate indexed reports.
 
-## Source map
+## Build and local validation
 
-| File | Responsibility |
-| --- | --- |
-| main.go | Manifest dispatch, v1 prepare, peer, HTTP service and CLI |
-| cluster.go / parallel.go | Host expansion, persisted jobs, SSH controller, bounded deployment/stop |
-| cli_sources.go / tree_source.go | Interspersed operands, glob/tree snapshots and SSH stream writer |
-| tree_plan.go / tree_import.go | Trusted source manifest cache and independently verified seed import |
-| tree_manifest.go | v2 validation, tree digest, streaming per-file hashes, contentFile |
-| tree_store.go / tree_detach.go | Virtual offsets, staging, publication and hardlink-crash recovery |
-| tree_existing.go | Final inventory, per-file fingerprint cache and conflict prompt |
-| adaptive.go / transfer.go | Scheduler, adaptive downloads, hedge deduplication, transfer phases |
-| verify.go / verified_linux.go | Ordered verifier and v1 final-file cache |
-| quic.go / patches / vendor | Optional reliable UDP, job identity, sharding/PMTU/GSO integration |
-| agent.go / auth_linux.go | PID/start-time ownership, hidden password and in-memory askpass |
-| statefiles.go / watch.go / help.go | Atomic records, global progress and English help |
-| *_test.go / scripts | Unit/race, CLI, process-chain, build and benchmark tools |
+Use Go 1.26+ and vendored dependencies. Go/Python are development tools, not distribution runtime requirements.
 
-Runtime requires OpenSSH/basic Linux utilities; Go/Python are development-only. Static Linux amd64/arm64 builds do not depend on target glibc. quic-go v0.65.0 requires Go 1.26+.
-
-## Contracts
-
-- Preserve SCDP/1 chunk APIs and v1 manifest JSON/IDs. New source jobs use v2; new optional fields must not change old JSON output.
-- v1 Manifest.SHA256 hashes raw file content; v2 hashes Entries JSON, with raw file hashes inside Entries. See [tree design](TREES.en.md).
-- Verify chunks with the manifest-bound algorithm before writing or advertising Have. Full mode adds whole-file verification; chunks mode requires all verified blocks and durable publication before Complete. Pipeline completion alone is insufficient.
-- v2 is one logical concatenation with cross-file chunks; empty files/directories require explicit publication.
-- Retries, hedges and source changes must not rewrite completed chunks or declare canceled/unverified content complete.
-- Rehash retained partials on resume. Cache acceptance binds the trusted manifest and every data file's fingerprint, never just root directory stat.
-- Default conflicts prompt; resume/replace preserve old finals until verification. Atomicity is per file, not dataset-wide.
-- os.Root plus ancestor checks reject tree symlinks. New types require security, crash and recovery tests together.
-- Keep external writers excluded for the whole job. Detected-race rejection is not a substitute for application-level write coordination.
-
-## Planes, state and monitoring
-
-SSH uploads the same executable, token, trusted manifest and configuration; agent launches an owned detached peer. Data defaults to HTTP/TCP, optionally QUIC. Control/status remain TCP. No tracker or NFS fallback.
-
-Jobs roughly traverse created → starting → hashing-source/importing when needed → running → complete; failures record interrupted. Stop writes a request and terminates owned processes. Recorded state is not live cluster consensus; watch/status use live data or explicitly recorded completed results.
-
-v2 inventories all nodes and skips controller media upload when a complete replica exists. Otherwise the initial tar is only an SSH stream, directly materialized and matched to the trusted manifest. Source hashing reads and network staging are separate costs.
-
-Workers/uploads default to 4/4. Fixed/adaptive modes share a worker pool; adaptive changes download targets only, minimum defaults to initial workers and maximum to 16, off by default. Settings persist at creation; there is no live tuning API. Explicit old false/zero values must not inherit new defaults.
-
-Monitor bytes count verified chunks across all files. Complete still waits for final verification/publication. Zero-byte datasets must use actual completion without division by zero. Saved results include phase and source traffic diagnostics.
-
-## Build and verification
-
-~~~bash
+```bash
 go test -mod=vendor -race ./...
 go vet -mod=vendor ./...
 bash scripts/build.sh
 SWARMCOPY_BINARY="$PWD/dist/swarmcopy-linux-x86_64" python3 scripts/cli-smoke.py
 SWARMCOPY_BINARY="$PWD/dist/swarmcopy-linux-x86_64" python3 scripts/integration.py
-~~~
+```
 
-The last two commands run local temporary-directory regressions; never run destructive test fixtures in production destinations. Cluster tests use isolated directories and stop only owned peers. [Five-node tree validation](TREES.en.md).
+Build output contains both static Linux architectures and SHA256SUMS; SWARMCOPY_GO selects a compiler. The last two commands check CLI behavior and a real process chain in isolated temporary directories. x86_64 has cluster hardware validation; ARM cross-compilation is not hardware validation.
 
-Build output contains both static architectures and SHA256SUMS. CPU SHA acceleration is selected by Go; hashbench profiles memory/file hashing. Existing SHA-NI support is not a new weaker checksum algorithm.
+## Source map
 
-For vendor rebuilding, read [QUIC patch maintenance](QUIC-TUNING.en.md) and THIRD_PARTY_NOTICES. Keep pinned dependencies, vendor diff, patch, defaults and narrow-MTU/limited-peer tests aligned.
+| Module | Responsibility |
+| --- | --- |
+| main.go / help.go | CLI, peer lifecycle, HTTP and help |
+| cluster.go / parallel.go | Host expansion, saved jobs, SSH deployment and controller |
+| cli_sources.go / tree_source.go | Multiple sources, globs, immutable source plans and streams |
+| tree_plan.go / tree_import.go | Trusted source cache, seed import and independent checks |
+| tree_manifest.go / integrity.go | v1/v2/v3, logical streams, algorithms and policy validation |
+| tree_store.go / tree_detach.go / tree_existing.go | Staging, inventory, conflicts, publication and file caches |
+| source_origin.go / resilience.go | Direct original-file serving, isolated failures and diagnosis |
+| adaptive.go / transfer.go | Bounded selection, source ranking, workers, deduplication and metrics |
+| verify.go / verified_linux.go | Ordered full verification and legacy single-file caches |
+| quic.go / patches / vendor | QUIC/HTTP3, receive shards, PMTU/GSO and dependency patch |
+| agent.go / auth_linux.go | PID/start-time ownership, hidden passwords and memory askpass |
+| progress.go / watch.go / completion.go | Preparation telemetry, global monitor and summaries |
+| cleanup.go / remove.go / statefiles.go | Completed cleanup, explicit removal, locks and atomic state |
 
-## Performance and release
+## Manifest and integrity contracts
 
-[Pipeline](PIPELINE.en.md) · [Adaptive background](ADAPTIVE.en.md) · [All UDP studies](QUIC-TUNING-RESULTS.en.md) · [Cold-cache protocol](COLD-STUDY.en.md)
+- Preserve SCDP/1 and legacy v1/v2 JSON identities. Required added fields must not alter old IDs. v1 SHA256 hashes raw content; tree SHA256 hashes Entries metadata.
+- SHA256 trees can use v2. Custom algorithms, including the default BLAKE3 chunks preset, use v3 with explicit chunk/file names and algorithm:digest entries. Manifest version does not describe file count.
+- Resolve defaults only for new distribute jobs. Empty verifyMode remains full for legacy records and low-level peers. Resume must not rewrite algorithms or missing-field semantics.
+- Validate chunks before writes/Have. Full also checks actual file contents; chunks requires every cryptographic block, fsync and publication. XXH3 requires full with a cryptographic file gate.
+- Chunks-only completion cannot mint full verification caches. Cache identity includes the manifest and every file's device/inode/size/mtime/ctime, not merely length or directory stat.
+- A tree is a logical byte stream with cross-file chunks. Full verifies each manifest-bound file digest. Empty files/directories must also publish. See [layout](TREES.en.md) and [integrity](INTEGRITY.en.md).
 
-Distinguish hash, disk, metadata, syscalls, congestion and deployment before changing concurrency or rate control. UDP is not inherently faster; never multiply socket/PMTU/GSO gains across different trials. Fresh benchmarks exclude preexisting/retained data; normal in-transfer retries remain in measured time.
+## Sources, storage and recovery
 
-Synchronize bilingual README, examples, English help, development docs and CHANGELOG. Verify old jobs, source changes, cache invalidation, on-disk corruption, zero-byte sets, conflicts, cancellation, publication interruption, TCP and optional UDP as appropriate; avoid repeating expensive tests without new evidence.
+When the source controller is a target, originals are read-only. Identical paths reuse existing files; different local destinations use the same validated commit path. LocalCopied is distinct from network counters. Preserve source layout/fingerprints and treat source read errors as local, not remote retries.
 
-Publish both architectures, checksums and notices from the same commit. State clearly if ARM hardware was not tested. Exclude credentials, job tokens, media, private logs, reverse-engineering materials and internal absolute paths. Read authorized GitHub tokens in memory, never through arguments/output or commits.
+Staged mode inventories existing copies first. Without a complete source, SSH tar is an in-memory stream independently checked against the trusted manifest, not a full archive artifact. Record source hashing/import costs separately; initial SSH import is not chunk-resumable.
 
-Future priorities: small-file metadata/FD profiling, combined partial replicas and initial staging resume. New control strategies stay in main behind explicit options, retaining the default stable TCP path and complete integrity checks.
+New staging/imports stay in destination .swarmcopy on the final filesystem. Resume legacy .swarmcopy-trees in place without bulk media moves. Skip proven sparse holes, handle empty-file boundaries, and conservatively fall back when SEEK_DATA is unavailable.
 
-## Preparation telemetry
+Conflicting resume/replace uses independent staging and preserves old published files until selected verification passes. Publication is per file, not a dataset transaction. Recover link-before-unlink crashes by detaching retained hardlinks before repair. Metadata/fsync errors cannot report Complete. Use os.Root, validated relative paths and ancestor-type checks; reject symlinks/special files. Coordinate with external writers.
 
-progress.go passes a synchronized reporter through context, emitting and atomically recording progress.json every two seconds. Stage/bytes/files/nodes are separate. Attempt and controller PID/start identity reject stale progress. ETA is a current-phase average-rate estimate, not a whole-job promise. Metadata/listener stages without reliable rates show action and elapsed time. Watch reloads jobs and handles recorded completion. Readers must retain per-buffer cancellation; remote inventory uses stdin heartbeats to detect controller exit. See [progress design and validation](PROGRESS.en.md).
+## Scheduling and accounting
 
-## Integrity implementation v0.5.0
+Fixed downloads/uploads default to 4/4; adaptive and endgame are off. Adaptive changes download admission only, within effective min/max. Live tuning is not exposed. Reducing admission must not cancel normal in-flight work.
 
-`integrity.go` centralizes algorithm factories, manifest algorithm binding and verification-policy validation. Empty legacy fields mean SHA256/full; v1/v2 JSON identities must remain unchanged. v3 requires explicit supported algorithms and tagged per-file digests. `integrity_test.go` covers vectors, valid/invalid combinations, HTTP transfer, weak-chunk/strong-file mismatch, cache isolation, source-stream round trips, and fresh sparse-range inventory. See [integrity semantics](INTEGRITY.en.md).
+Range selection uses a random start/coprime stride, scores at most 255 missing candidates, then permits a sparse-source bitmap fallback. Bitmap traversal can still be linear; the score limit is not a constant bound on all work. Preserve pipeline-window preference, source limits, stale/cooldown filtering and deduplication. Selection approximates rarest-first rather than guaranteeing a global optimum.
 
-Changes must preserve these invariants: XXH3 requires full; chunks must never create a full-read cache; mode changes force peer recheck/restart; incoming staged content must match the trusted source manifest; final publication stays behind the selected verification gate. Existing partials are always content-checked on restart. No size-only completion assumption is allowed.
+Node.manifestID is immutable after construction and reused for status/discovery. Mutable manifests would require a new cache lifecycle. Network/hash/write work seconds are concurrent cumulative work, not serial phases. Never sum per-node phase maxima or count local copies as network throughput.
 
-`Job.SSHOptions` stores explicit repeated `--ssh-opt` values. `mergeSSHOptions` merges defaults, saved options and new overrides case-insensitively without shell splitting. Explicit cipher selection takes priority. SSH login preflight stays before source hashing. Add options to this collection instead of introducing parallel SSH invocation paths.
+Aggregate completion rates divide this invocation's new bytes by total controller elapsed time. Subtract initial counters for the same instance only; restarted peers use new counters. Peers may transfer during resume preparation, so monitor time alone is the wrong denominator. Preserve optional saved Summary on both writing/reading; do not invent timing for older results.
 
-Pinned BLAKE3/XXH3 libraries are vendored with licenses. Run `scripts/vendor-quic.sh` after dependency changes so the existing QUIC bulk patch remains applied. Cross-build with CGO_ENABLED=0 for amd64 and arm64; distinguish cross-build validation from physical ARM tests. Preserve raw benchmark configuration and do not report CPU-only ratios as network speedups.
+## Control and lifecycle
 
-v0.6.0: `resolveNewJobIntegrity` resolves defaults only for new jobs: full→SHA256/SHA256, chunks→BLAKE3/BLAKE3; explicit algorithms win. Never apply new presets to loaded jobs or existing manifests. Prepared seed files retain their manifest algorithms.
+SSH login checks precede large-source reads. mergeSSHOptions merges default/saved/explicit case-insensitive keys without shell splitting values; explicit cipher wins. Passwords do not enter arguments, disk logs or job JSON.
 
-## v0.6.0 source and lifecycle invariants
+Per-node operations have independent bounded contexts and saved records retain all Hosts. Monitoring has no all-listener barrier; healthy peers continue and failed targets remain incomplete. Direct original-file serving belongs to the controller and uses its own dynamic endpoint; controller exit stops it. There is no controller-handoff/tunnel layer.
 
-`source_origin.go` maps trusted source-plan offsets to original read-only files; validate fingerprints/layout and bind the complete manifest before serving. Close HTTP/QUIC and file handles on controller exit. `controllerSourceHost` selects direct mode only when the actual controller hostname matches a target. `SourceAddress` stays outside the receiving target count. Agent reuse compares peer addresses/mode so changed origin ports restart peers without forcing an unrelated final-file cache bypass.
+Agent ownership checks PID, start time, executable and token path. Changed version/parameters/source may require restart without discarding valid caches. Development builds sharing a version must explicitly stop their owned peers rather than expecting a version string to identify every source change.
 
-`resilience.go` isolates node operations with bounded contexts; preserve the complete Hosts list in every saved record, including inventory passes. Monitoring has no all-ready barrier. Diagnostics are bounded and persisted; never mark failed targets complete.
+progress.json binds attempt/controller identity and separates stages, byte and node counters. ETA is phase-local. Source buffers honor cancellation; remote inventory uses input heartbeats to notice controller departure. Signals cannot guarantee immediate interruption of blocked kernel I/O. Completed saved results must not become offline failures merely because peers stopped normally.
 
-`remove.go` holds controller/agent locks, validates process identity and configuration ownership, retains records after partial failure, and only purges a manifest namespace after checking other job references. Preserve sources/final media and reject foreign/symlink job roots. `resilience_test.go` and `remove_test.go` cover these boundaries. Sparse detection must skip zero-length entries and conservatively fall back when SEEK_DATA is unsupported.
+## Completed cleanup and safe removal
 
-## v0.7.0 scheduling, native source and summary contracts
+Only clean owned deployment/empty staging after all targets verify/publish and peers stop. Fixed cache.json retains the latest manifest; last-peer.log is bounded to 8 MiB. Controller statistics remain. Protect incomplete/shared/real data, unknown entries, live locks and unsafe symlinks.
 
-`completion.go` summarizes this invocation. Both saving and loading must preserve optional Summary, without inventing it for old results. Aggregate rates use total invocation time, not just monitor time when peers can transfer during preparation. Resume subtracts initial counters for the same instance only; reset instances use new counters; reused data is not new traffic. `optimization_test.go` covers old/new saved summaries, instance accounting, preparation traffic and zero duration.
+Cleanup checks ownership and controller/agent/destination locks, persisting CleanupIssues independently of verified transfer success. Repeated successful cleanup avoids deployment; stop of a completed cleaned job succeeds. Remove/delete deletes records; purge-partials explicitly discards exclusive recovery data and must not become the default cleanup behavior. See [cleanup contracts](CLEANUP.en.md).
 
-`Node.manifestID` is immutable after construction; any future mutable manifest needs a new cache lifecycle. `selectRangeLocked` scores at most 255 samples and one sparse-source fallback; bitmap scans can still be O(chunks×sources). Do not describe the candidate limit as a bound on all work. Preserve full-range coprime traversal, sparse-source, non-prefix and retry tests.
+## Regression, measurements and releases
 
-Send `Options.LocalInputs/LocalRoots` only to the source-host peer. Internal local-source-config is not a public user flag. Keep source fingerprint/layout validation, common commit locking and hashing, and unchanged full/chunks completion gates. Local source/write errors are not remote retries. Download pacing also covers native copies. Keep local-source bytes separate from wire throughput.
+Choose checks for the change: IDs/legacy manifests, source mutation, bad/short/out-of-order/cross-file blocks, empty datasets, conflicts, cancellation, Sync EIO, partial publication/hardlink recovery, cache isolation, active/shared ownership and TCP/QUIC. Use isolated cluster destinations and clean owned fixtures/processes promptly. Do not inject destructive faults into production data.
 
-Agent started-version checks follow actual releases; upgrades may restart peers without discarding verified data. Development builds sharing a version must explicitly stop their owned test peers, rather than expecting version strings to distinguish every source change. Maintain main only; TCP, optional UDP and optional adaptive mode ship together. [Controlled comparison and reproduction](OPTIMIZATION-0.7.0.en.md).
+Freeze binaries/sources/settings for benchmarks, use fresh destinations and matching cache treatment, preserve every round and in-transfer retries. Distinguish preparation, inventory, transfer, hashing, fsync, publication and stop/cleanup. State timing and independent verification boundaries. Resume is not a fresh benchmark; CPU hash ratios are not network gains. Raw evidence lives in [data](data/README.md), with reports in the [index](README.en.md).
 
-## v0.7.1 defaults and persistence errors
+Update Chinese-primary/English docs, CLI help and change history together. Check links/examples/defaults and maintain topic guides rather than prepending release sections to README. Publish same-commit architecture builds, checksums and licenses. Read [QUIC patch maintenance](QUIC-TUNING.en.md) before vendor changes and keep upstream versions, patch and tests consistent. Do not publish credentials, media, private logs or reverse-analysis artifacts. Preserve upstream third-party documentation.
 
-New distribute CLI/resolveNewJobIntegrity use chunks/BLAKE3. Do not change empty verifyMode from full: it preserves legacy saved records and low-level peer compatibility. Resume without an explicit override keeps saved settings; prepared manifests keep algorithms. XXH3 still requires explicit full. Chunks does not create full verification caches.
-
-durability_test.go injects EIO into each of the two prepublication Sync calls, checks no Complete/publication, retains staging, reopens/rechecks good and damaged chunks, then repairs and syncs/publishes. This is fault injection, not a power-loss or RAID hardware test. Successful fsync relies on correct underlying flush semantics and does not replace content validation.
-
-## v0.8.0 cleanup/layout contracts
-
-`cleanup.go` separates completed cleanup from explicit data discard. New staging/imports live inside destination .swarmcopy; treeNamespace reuses legacy staging in place without bulk copies. Cache records bind ManifestID and full file fingerprints in one replaceable cache.json; this bounds file count at the cost of possible misses when alternating manifests. Chunks completion cannot mint full caches. Retain only the latest 8 MiB peer log; users must separately archive historical logs if needed.
-
-Cleanup follows all-target completion and peer stopping. Hold agent and destination locks; retain real partial data, unknown entries, other-job references and unsafe symlinks. Persist CleanupIssues separately from verified transfer success. Repeated cleanup and stop on already-cleaned completed jobs avoid redeployment. [Design and validation](CLEANUP.en.md).
+Future work should follow profiling: small-file metadata/FD costs, combining dispersed partial replicas, and initial import recovery. Preserve default TCP and selected integrity gates rather than masking bottlenecks with complexity or concurrency.

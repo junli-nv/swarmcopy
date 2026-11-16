@@ -1,190 +1,129 @@
 # swarmcopy
 
-Resumable P2P file and directory distribution for Linux clusters, using **SCDP/1**. Distribute NeMo/SquashFS media from shared storage to node-local RAID while reducing head-node and single-seed pressure.
+Resumable P2P file and directory distribution for Linux clusters, using **SCDP/1**. Nodes forward verified chunks to other nodes, reducing pressure on the BCM/NFS head node and a single seed.
 
-[Unified release](https://github.com/junli-nv/swarmcopy/releases/latest) · [中文（主文档）](README.md) · [Examples](docs/EXAMPLES.en.md) · [Development](docs/DEVELOPMENT.en.md)
+[Download](https://github.com/junli-nv/swarmcopy/releases/latest) · [中文（主文档）](README.md) · [Documentation](docs/README.en.md) · [Examples](docs/EXAMPLES.en.md)
 
-**main is the only long-lived branch.** One binary includes TCP, optional UDP/QUIC, pipelined verification, optional adaptive concurrency, multiple files and directories. No separate UDP or race executable is needed. Historical tags and measurements remain available.
+## Installation and SSH
 
-## v0.8.0 automatic cleanup and one metadata directory
+Runtime requires Linux, an OpenSSH client on the controller, SSH services and basic shell tools on targets. No pdsh, rsync, Python, Go or permanent service is needed. One executable contains all features.
 
-New jobs keep deployment, staging and cache in one destination `.swarmcopy`; media is not moved into home directories. Once every target verifies/publishes, stop peers and remove this job's deployment/empty staging. Reuse one `cache.json` and an at-most-8-MiB `last-peer.log`, without permanent per-job directories. Preserve interrupted/shared/uncertain data. `swarmcopy cleanup --job <ID>` handles old completed jobs or retries cleanup while keeping jobs/watch/status history; --keep-seeding defers cleanup. [Layout, bounds and compatibility](docs/CLEANUP.en.md).
-
-## v0.7.1 defaults to chunks
-
-New distribution jobs omit --verify to use chunks/BLAKE3: every chunk is validated, then fsync and publication, without final whole-file verification. Add `--verify full` for that final check. Saved jobs retain their mode/algorithms on resume; adaptive stays off. Fsync is not content validation and depends on correct underlying storage flush behavior.
-
-## v0.7.0: native copies and completion summaries
-
-Scheduling avoids repeated expensive scoring of every missing chunk. The source-host destination reads and verifies local source data instead of receiving it back over the network. Successful runs print elapsed/preparation/distribution time, network/local/reused bytes and average rates; completed watch shows the saved summary, while status retains JSON. Adaptive stays off; fixed concurrency remains `--workers 4 --uploads 4`, with no rate cap by default.
-
-Nine fresh 32 GiB destinations: mean distribution phase 32.39 → 25.10 seconds (22.50% less time), controller wall 39.68 → 31.61 seconds (20.34% less). Each round used fresh targets, cleared page cache and independent SHA256 checks, without preexisting transfer data. [Method, guarantees and maintenance](docs/OPTIMIZATION-0.7.0.en.md).
-
-## Recommended: seed directly from a compute node
-
-If media already resides on a compute node, run there and include it in `--hosts`. v0.7.0 serves original files directly, skipping initial seed copying; the local destination uses a native copy while remote targets exchange data over the network. A BCM controller outside the target list instead stages a compute seed through SSH. Startup and watch explicitly show the selected mode and endpoints. [Scenarios, network requirements and failures](docs/SOURCE-MODES.en.md).
+Download both architecture binaries and `SHA256SUMS` into `dist/`, then run on the controller:
 
 ```bash
-# Run on HGX167; include this host as a destination
-./swarmcopy distribute --hosts 'HGX[061,066,082,138,169,167]' \
-  --source /raid/local-ai/dist/local-ai.tar --dest /raid/images --verify chunks
+(cd dist && sha256sum -c SHA256SUMS)
+cp dist/swarmcopy-linux-x86_64 ./swarmcopy
+chmod +x ./swarmcopy dist/swarmcopy-linux-*
+./swarmcopy version
 ```
 
-New jobs default to chunks (BLAKE3/BLAKE3); explicitly choose `--verify full` (SHA256/SHA256) for final whole-file verification. Failed targets do not cancel healthy siblings and remain incomplete; resume the same ID after recovery. Resumed sparse holes are skipped without treating unwritten bytes as verified.
+On an ARM controller, copy `swarmcopy-linux-aarch64` instead. Keep both original filenames in `dist/` for automatic deployment by target architecture; a homogeneous cluster can also deploy the controller executable itself. x86_64 has hardware validation; aarch64 is a static cross-build without ARM hardware validation.
 
-Remove a job and exclusive partials with `./swarmcopy remove --job <ID> --purge-partials` (`delete` is an alias). It stops owned controller/peers, then removes records/remote job metadata and exclusive partials. Source files, published media and shared data remain. Failed cleanup keeps the local record for retry. Use `stop` when you only want to pause.
-
-## Two integrity modes (v0.7.1)
-
-For new `--source` jobs, choose `--verify full` or `--verify chunks`. Full defaults to SHA256 chunks/files with final file verification; chunks defaults to BLAKE3 chunks/files and publishes after all chunk checks and fsync, omitting the final full-file reread. From v0.7.1, omitting `--verify` selects chunks; explicitly use `--verify full` for final whole-file verification. No hash flags are needed.
-
-```bash
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify chunks
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify full
-```
-
-`--chunk-hash` / `--file-hash` remain advanced overrides. Resume/prepared seed manifests retain their algorithms; changing mode never rewrites a manifest. An existing SHA256 job still uses SHA256 chunks after switching to chunks mode.
-
-## Integrity algorithms and SSH options
-
-Defaults are chunks + BLAKE3, omitting the final disk reread. Choose `--verify full` for final file verification, or `--verify full --chunk-hash xxh3-128 --file-hash blake3` for fast chunks plus a cryptographic file digest. XXH3 is rejected in chunks mode. Initial source hashing still reads every byte. See [guarantees, combinations and measured hardware results](docs/INTEGRITY.en.md).
-
-SSH defaults include `StrictHostKeyChecking=no`, `UserKnownHostsFile=/dev/null`, `LogLevel=quiet`, `CheckHostIP=no`. Repeat `--ssh-opt KEY=VALUE` to extend/override saved defaults, e.g. `--ssh-opt ConnectTimeout=20 --ssh-opt ServerAliveInterval=15`. Select AES-GCM with `--ssh-cipher aes128-gcm@openssh.com`.
-
-## Large-source progress and Ctrl+C
-
-From v0.4.1, source hashing and initial seed import report bytes, percent, rate and estimated remaining phase time about every two seconds. Deployment, inventory and listener readiness report stage/node counts/elapsed time. Watch no longer labels preparation as all peers offline. Source reads honor Ctrl+C between buffers. Estimates exclude later work. [Examples, cancellation limits and validation](docs/PROGRESS.en.md).
-
-## Installation
-
-Download `swarmcopy-linux-x86_64` or `swarmcopy-linux-aarch64`, verify `SHA256SUMS`, rename to `swarmcopy` and make executable. Keep both original architecture filenames in `dist` and use `--bin-dir ./dist` for mixed architectures; the controller can deploy itself to same-architecture nodes.
-
-Runtime requires Linux, an OpenSSH client on the controller, SSH services and basic shell utilities on targets. No pdsh, rsync, external tar, Python, Go, tracker, database or permanent service is required. Go/Python are development tools.
-
-Preconfigure SSH keys, agent or config. Alternatively use `--ssh-user alice --ask-pass`: one hidden prompt for the SAME password on all hosts, never persisted. SSH defaults to StrictHostKeyChecking=no, UserKnownHostsFile=/dev/null, LogLevel=quiet and CheckHostIP=no; no host-key enrollment is required.
+Ensure the **machine running the command can SSH to every target, including itself when listed**. Use SSH keys, agent or config, or add `--ssh-user root --ask-pass` for one hidden prompt for the same password on every node. The program does not configure SSH trust. Host-key checking is disabled by default; see [SSH examples](docs/EXAMPLES.en.md).
 
 ## Quick start
 
-~~~bash
-./swarmcopy
-./swarmcopy distribute --help
-./swarmcopy distribute --hosts 'node[001-005]' \
-  --source /shared/nemo.sqsh --dest /raid/images --bin-dir ./dist
-./swarmcopy jobs
-./swarmcopy watch
-~~~
+Prefer running on the compute node holding the media and include that node among targets. A common case is running on HGX167 to distribute `/raid/nemo*` into the same `/raid` paths everywhere:
 
-Sources are local to the controller running the command; destinations are local disks on every target. A first trusted manifest requires reading and hashing the source. Later jobs may reuse its local verification cache when source inode/device/size/mtime/ctime and directory membership are unchanged. `--recheck` forces a reread.
+```bash
+./swarmcopy distribute \
+  --hosts 'HGX[061,066,082,138,169,167]' \
+  --source '/raid/nemo*' \
+  --dest /raid
+```
 
-Before transfer, each target is inventoried. Existing complete replicas seed missing nodes, skipping controller-to-seed media transfer. A controller that is also a target directly serves the original files; otherwise one initial seed receives an SSH stream before peer exchange. All peers stop after completion unless `--keep-seeding` is supplied.
+The local originals are checked, reused and served without copying back onto themselves. Other nodes exchange verified chunks. If the local destination differs, its copy uses native source reads, chunk validation and writes. Nodes with complete matching files do not download them again.
 
-## Multiple files, globs and directories
+Sources are on the **machine executing the command**. A BCM controller outside the target list first copies media through SSH to a compute seed when needed, then uses P2P:
 
-~~~bash
-# Directly creates /raid/images/nemo.sqsh and /raid/images/config.json
-./swarmcopy distribute --hosts 'node[001-005]' --dest /raid/images \
+```bash
+./swarmcopy distribute --hosts 'HGX[061,066,082]' \
+  --source /shared/nemo.sqsh --dest /raid/images
+```
+
+`SOURCE MODE: direct/staged` explains the selected path. `hashing-source` builds a trusted manifest and initially reads every source byte; unchanged sources can reuse a cache. `importing` means seed copying, not unpacking or importing a container. Preparation and transfer show progress; an ETA describes the current phase, not the entire remaining job.
+
+## Files, directories and existing data
+
+```bash
+# Files go directly under the destination
+./swarmcopy distribute --hosts @hosts.txt --dest /raid/images \
   --source /shared/nemo.sqsh --source /shared/config.json
 
-# Quoted glob expanded by swarmcopy
-./swarmcopy distribute --hosts 'node[001-005]' --dest /raid/images \
-  --source '/shared/*.sqsh'
+# Keep the directory name: /raid/images/models/...
+./swarmcopy distribute --hosts @hosts.txt \
+  --source /shared/models --dest /raid/images
+```
 
-# Shell-expanded or positional inputs also work
-./swarmcopy distribute --hosts 'node[001-005]' --dest /raid/images /shared/*.sqsh
+Quote globs for program expansion. `'/raid/nemo*'` matches immediate entries under `/raid`, not files under `/raid/images`. Matched directories are copied recursively, including empty files/directories. Inputs must have distinct top-level names and no overlapping parent/child roots. Selections are frozen at job creation; resume does not add newly matching inputs.
 
-# Preserves the input directory name: /raid/images/nemo/...
-./swarmcopy distribute --hosts 'node[001-005]' --dest /raid/images --source /shared/nemo
-~~~
+Matching files are reused; missing data is filled only where needed. Different content at the same filename prompts by default. For scripts, choose explicitly:
 
-Directories recurse, preserving internal layout and empty files/directories. A trailing slash does not change layout. Top-level basenames must be unique; overlapping source roots are rejected and repeated identical inputs are deduplicated. Unmatched globs fail. Globs support `*`, `?` and `[]`; `**` has no special recursive meaning—pass a directory for recursion.
+| Option | Behavior |
+| --- | --- |
+| `--existing resume` | Reuse matching chunks from old files, fill the rest, then replace |
+| `--existing replace` | Receive conflicting files afresh and replace after verification |
+| `--existing keep` | Cancel on content conflicts and retain old files |
 
-Peers write native staged files: no full tar artifact or post-transfer unpacking phase. Only initial SSH import uses an in-memory tar stream. One job and chunk scheduler cover the entire dataset, including chunks spanning file boundaries.
-
-## Existing files and conflicts
-
-Matching SHA256 files are reused and can seed others. Missing nodes fetch data; complete nodes do not download it again. If every node is complete, media download is zero.
-
-For different regular files, default `--existing ask` lists conflicts and prompts once on the controller:
-
-- `resume`: reuse verified matching chunks from an independent staged copy of the old file.
-- `replace`: receive conflicting files afresh, then replace them.
-- `keep`: cancel and preserve existing files.
-
-~~~bash
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images --existing resume
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images --existing replace
-~~~
-
-Use an explicit policy in unattended scripts when conflicts are possible. The choice applies to all detected regular-file conflicts. Same-name directories merge; extra destination files are retained. File/directory type collisions, symbolic links and special files require manual handling.
-
-Old final files remain intact until chunk and per-file SHA256 verification succeeds. Publication/replacement is atomic **per file**, not across the entire dataset. An interrupted publication can leave some completed files; resume reuses them. Allow disk space for independent staged replacement data.
-
-## Download/upload concurrency
-
-~~~bash
-# Fixed per-node concurrency
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images --workers 8 --uploads 8
-
-# Automatic downloads: initial 4, minimum 2, maximum 16; uploads remain capped at 8
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images --adaptive --workers 4 --min-workers 2 --max-workers 16 --uploads 8
-~~~
-
-Defaults: four download workers and four upload requests per node, each within 1..32. Workers are parallel chunk requests, not an exact socket count. Adaptive control changes download concurrency only; minimum defaults to the initial worker count, maximum to 16. It is not always faster and **remains off by default**. Settings are saved at job creation; there is currently no live concurrency-edit command.
-
-No default bandwidth cap. `--download-mib 200 --upload-mib 200` sets aggregate per-node MiB/s; zero means unlimited.
+Publication is atomic per file, not across a dataset. Extra target files are not deleted, so this is not a directory mirror with deletion. Regular files/directories are supported; symlinks and special files are not. See [layout and limits](docs/TREES.en.md). Keep sources and targets unchanged by other writers during a job.
 
 ## Monitor, stop and resume
 
-~~~bash
+Startup prints the job ID. On the same controller:
+
+```bash
 ./swarmcopy jobs
-./swarmcopy jobs --json
 ./swarmcopy inspect --job <ID>
-./swarmcopy watch --job <ID> --interval 2s --plain
+./swarmcopy watch --job <ID>
 ./swarmcopy status --job <ID>
 ./swarmcopy stop --job <ID>
 ./swarmcopy resume --job <ID>
-./swarmcopy resume --job <ID> --existing resume --ask-pass
-~~~
+```
 
-Without a selector, watch/status choose the latest active job, otherwise the latest saved job. Completed jobs show recorded results; `--live` explicitly queries peers. The global monitor shows dataset file counts, per-node progress, aggregate rates, verification phases and completed nodes. 100% bytes still requires verification/publication.
+Watch shows global text progress; status returns JSON. Without an ID, they select the latest active job, otherwise the latest saved job. Successful runs print and save elapsed time and average rates. Network, native-copy and reused bytes are separate; aggregate cluster rate is not one node's network speed.
 
-Jobs live under `~/.local/state/swarmcopy/jobs`, honoring `XDG_STATE_HOME`. Retain job metadata, token, manifest and node `--dest/.swarmcopy-trees/<manifest-id>/data` for resume. Input glob matches are frozen at creation; resume does not add newly matching files.
+A failed node does not cancel healthy nodes, but remains incomplete. Recover it and resume the same ID. Keep controller records in `~/.local/state/swarmcopy/jobs` (honoring `XDG_STATE_HOME`) and node partials. Initial source hashing and unfinished SSH seed import restart their phase; P2P recovery rechecks and retains valid chunks.
 
-Use `stop --job` to stop owned processes by PID/start-time checks. Nodes run the same normal binary, with `.swarmcopy/<job-id>/process.json` and `peer.log` for diagnosis. Avoid a cluster-wide `pkill swarmcopy`. Leaving watch only exits the monitor.
+Leaving watch only stops monitoring. Ctrl+C stops the distribution controller, but independent peers may continue; use stop for that job rather than global `pkill swarmcopy`. See [progress and cancellation](docs/PROGRESS.en.md).
 
-Incomplete initial SSH import restarts that phase; it is not yet chunk-resumable. P2P transfer supports restart, repair and retries. Legacy v1 single-file jobs and the `prepare --seed-file` workflow remain compatible and retain their existing-final no-overwrite rule. New SHA256 source jobs use v2; custom algorithms and the chunks preset use v3, with the conflict policies above.
+## Integrity modes
 
-## Network and integrity
+| Mode | New-job hash preset | Completion |
+| --- | --- | --- |
+| `chunks` (default) | BLAKE3 chunks/files | Validate every chunk, fsync and publish; omit final whole-file verification |
+| `full` | SHA256 chunks/files | Additionally verify final file contents before completing publication; hashing can overlap transfer |
 
-TCP remains default; peers listen on all local addresses at port 19700. Hostname resolution from `--hosts` chooses routing; listening on every interface does not aggregate NIC bandwidth. Resolve names to the intended data network.
+No integrity flags are needed normally; add `--verify full` for the final content check. Resume retains saved mode/algorithms. Fsync relies on correct storage flush behavior and does not validate content; chunks cannot detect damage after a successful chunk write. After resolving storage faults, same-ID recovery rechecks retained data. See [integrity guarantees and advanced algorithms](docs/INTEGRITY.en.md).
 
-~~~bash
-# UDP/QUIC is already included
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
-  --dest /raid/images --transport quic
-~~~
+## Cleanup after completion
 
-QUIC also needs UDP at that port; control/status stay on TCP, with no silent TCP data fallback. Receive-socket sharding, negotiated jumbo ceilings and bounded GSO are included. Existing cluster measurements still favor TCP, so the default stays unchanged.
+After every target verifies and publishes, stop peers and clean owned deployment/empty staging automatically. One destination `.swarmcopy` reuses `cache.json` and an at-most-8-MiB `last-peer.log`; it does not permanently accumulate a directory per job or move media into home directories.
 
-Explicit full mode defaults to pipelined file verification and a 256-chunk window; chunks disables the whole-file reread and that window. `--pipeline-verify=false` disables both; `--verify-window-chunks 0` disables only the window. SHA256 and BLAKE3 are cryptographic digests with CPU acceleration where supported.
+| Operation | Purpose |
+| --- | --- |
+| `stop --job <ID>` | Stop the job and retain recovery data |
+| `cleanup --job <ID>` | Clean an old completed job or retry cleanup, retaining history |
+| `remove --job <ID>` | Delete job records/deployment; alias: delete |
+| `remove --job <ID> --purge-partials` | Additionally discard exclusive partial data and its recovery path |
 
-Target caches bind every verified file's inode/device/size/mtime/ctime to its complete manifest ID; `--recheck` bypasses them. Keep sources and destinations immutable to other writers during a job. HTTP control and TCP data are plaintext; QUIC data uses task-bound TLS. Use a trusted cluster network.
+Interrupted/shared data, active locks and uncertain ownership are protected. `--keep-seeding` retains seeding peers until explicit cleanup. Cleanup failures are reported and remain retryable. See [metadata and cleanup rules](docs/CLEANUP.en.md).
 
-## Scope and maintenance
+## Common options and networking
 
-Supports regular files and directories, at most 100,000 entries. Symbolic links are rejected, not followed; devices, FIFOs and sockets are unsupported. Source hardlinks copy as independent files. UID/GID, ACLs, xattrs, hardlink relationships and sparse layout are not preserved. Newly published files retain ordinary permission bits and mtime, stripping special bits. Matching existing files are unchanged; dataset directory modes/mtime are applied from source. Extra target files are never deleted.
+| Option | Default / meaning |
+| --- | --- |
+| `--hosts` | List, quoted `'node[001-005]'`, or `@hosts.txt` |
+| `--workers` / `--uploads` | Four per-node downloads/uploads; range 1..32 |
+| `--download-mib` / `--upload-mib` | Aggregate per-node MiB/s; default 0 is unlimited |
+| `--port` | Peer port 19700; override with e.g. `--port 19800` |
+| `--adaptive` | Off unless explicitly enabled; adjusts download concurrency |
+| `--transport quic` | Optional UDP/QUIC; TCP remains default |
+| `--ssh-opt KEY=VALUE` | Repeat to extend/override SSH settings, saved with the job |
 
-[Tree design and validation](docs/TREES.en.md) · [Developer guide](docs/DEVELOPMENT.en.md) · [QUIC maintenance](docs/QUIC-TUNING.en.md)
+The controller needs SSH/HTTP access to all targets; peers must reach each other. Peers listen on all local addresses; DNS/routing selects interfaces without automatic NIC aggregation. QUIC additionally uses the same-number UDP port. A direct source uses a separate dynamic endpoint shown by SOURCE READY. If BCM reaches only one compute node, log in there to run distribution. TCP data and HTTP control are plaintext; use a trusted cluster network.
 
-Historical v0.1.0 single-file cold-cache study: 157 nodes, verified SCDP median 153.29s vs rsync-over-SSH copy 362.76s / verified 408.73s, excluding initial import. This compares encrypted SSH and plaintext HTTP solutions, not a new multi-file release benchmark. [All rounds and limitations](docs/COLD-RESULTS.en.md) · [Pipeline comparison](docs/PIPELINE-RESULTS.en.md) · [All UDP ablations](docs/QUIC-TUNING-RESULTS.en.md).
+## Documentation and development
 
-~~~bash
-go test -mod=vendor -race ./...
-bash scripts/build.sh
-~~~
+The [documentation index](docs/README.en.md) covers all topics and historical studies. Start with [examples](docs/EXAMPLES.en.md), [source modes/failures](docs/SOURCE-MODES.en.md) or the [developer guide](docs/DEVELOPMENT.en.md). Studies record their measured versions and limits, not a speed guarantee at every scale. Release changes belong in [CHANGELOG](CHANGELOG.md).
 
-Build with Go 1.26+; dependencies are vendored. See QUIC maintenance for reproducible vendor patches. x86_64 has real-node validation; aarch64 is statically cross-built without an ARM hardware run in this change. Future development enters main; historical release tags remain.
+Only main is maintained; all features ship in the same executable. Builds need Go 1.26+ with vendored dependencies. See the developer guide for build, validation, compatibility and release procedures.

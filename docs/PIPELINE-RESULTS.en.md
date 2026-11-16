@@ -1,6 +1,8 @@
 # Whole-file verification: 45-node comparison
 
-[中文](PIPELINE-RESULTS.zh-CN.md) · [Design](PIPELINE.en.md) · [CPU backend evidence](sha-hardware-results.json)
+> Historical study/validation record: versions, parameters and results describe that measurement, not current defaults. For current use, see [project home](../README.en.md) and [documentation](README.en.md).
+
+[中文](PIPELINE-RESULTS.zh-CN.md) · [Design](PIPELINE.en.md) · [CPU backend evidence](data/sha-hardware-results.json)
 
 A 40,188,444,672-byte file on the same 45 nodes: one prepared seed and 44 fresh receivers. All methods use fixed four download workers/four upload slots and unlimited HTTP/TCP. Adaptive concurrency is disabled.
 
@@ -39,14 +41,14 @@ Maxima can come from different nodes and must not be summed. The overlap sample 
 
 Profiles sampled blockSHANI automatically, blockAVX2 with SHA disabled, and blockGeneric with optional CPU features disabled, producing identical digests. Hardware acceleration was already active in the baseline; microbenchmark ratios are not version speedups.
 
-See [anonymous memory/backend results](sha-hardware-results.json) and [separate file diagnostics](sha-file-results.json). The latter were not paired cold-cache trials and include profiling overhead. Compute timings are call wall times, not hardware cycle counts. ARM64 is cross-built only.
+See [anonymous memory/backend results](data/sha-hardware-results.json) and [separate file diagnostics](data/sha-file-results.json). The latter were not paired cold-cache trials and include profiling overhead. Compute timings are call wall times, not hardware cycle counts. ARM64 is cross-built only.
 
 Both studies together contain 12 fresh full transfers and 540 successful per-node sync/drop_caches barriers, excluding the BCM head. Prepared staging is excluded; retries remain within continuous timing. Every receiver has Origin=false, full Downloaded bytes, and Complete=true. Full SHA-256, fsync, and atomic publication remain mandatory. Post-study audits confirm 45 distinct boot IDs per study and all 540 owned process records stopped.
 
 Device caches and background load were uncontrolled. Timing includes deployment/shutdown and controller polling granularity. Identifying hosts, tokens, and complete logs remain private; public JSON records hashes and anonymized evidence.
 
-- Initial [summary](pipeline-initial-results.json), [nodes](pipeline-initial-nodes.json), [barriers](pipeline-initial-barriers.json)
-- Window [summary](pipeline-window-results.json), [nodes](pipeline-window-nodes.json), [barriers](pipeline-window-barriers.json)
+- Initial [summary](data/pipeline-initial-results.json), [nodes](data/pipeline-initial-nodes.json), [barriers](data/pipeline-initial-barriers.json)
+- Window [summary](data/pipeline-window-results.json), [nodes](data/pipeline-window-nodes.json), [barriers](data/pipeline-window-barriers.json)
 - Drivers: [initial](../scripts/benchmark-verify.py), [window](../scripts/benchmark-verify-window.py)
 
 Actual local job listings use --state-dir ./run/verify45 and --state-dir ./run/verify45-window; individual selectors use the corresponding <case-id>-job path. Default jobs does not search custom locations.
