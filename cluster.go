@@ -25,6 +25,7 @@ import (
 )
 
 type Job struct {
+	Transport                                                                    string
 	VerifyWindowChunks                                                           int
 	PipelineVerify                                                               bool
 	VerifyBufferMiB                                                              int
@@ -359,6 +360,7 @@ func clusterCommand(mode string, args []string) error {
 		fs.BoolVar(&recheck, "recheck", false, "force full existing-file verification")
 	}
 	if mode == "distribute" {
+		fs.StringVar(&j.Transport, "transport", "tcp", "chunk data transport: tcp or quic (UDP); control stays TCP")
 		fs.IntVar(&j.VerifyWindowChunks, "verify-window-chunks", 256, "upcoming hash chunks to prefer (0..4096); requires pipeline-verify")
 		fs.BoolVar(&j.PipelineVerify, "pipeline-verify", true, "overlap ordered whole-file SHA256 with transfer")
 		fs.IntVar(&j.VerifyBufferMiB, "verify-buffer-mib", 4, "whole-file verification read buffer (1..64 MiB)")
@@ -396,6 +398,9 @@ func clusterCommand(mode string, args []string) error {
 		return errors.New("unexpected positional arguments; this release accepts a single source file")
 	}
 	if mode == "distribute" {
+		if !validTransport(j.Transport) {
+			return errors.New("transport must be tcp or quic")
+		}
 		count := 0
 		for _, arg := range args {
 			if arg == "--source" || arg == "-source" || strings.HasPrefix(arg, "--source=") || strings.HasPrefix(arg, "-source=") {

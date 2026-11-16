@@ -61,6 +61,9 @@ with tempfile.TemporaryDirectory(prefix="swarmcopy-test-") as tmp:
                 if "--pipeline-verify" in EXTRA:
                     check(st["Performance"]["PipelineVerify"],"pipeline flag not propagated")
                     check(st["Performance"]["FileHashBytes"]==source.stat().st_size,"whole-file pipeline did not hash every byte")
+                if "--transport" in EXTRA and EXTRA[EXTRA.index("--transport")+1]=="quic":
+                    check(st["Transport"]=="quic","transport not propagated")
+                    check(st["Performance"]["QUICChunkRequests"]>0,"no actual HTTP/3 chunk requests")
                 if "--adaptive" in EXTRA: check(st["Performance"]["Adaptive"],"adaptive flag not propagated")
         check(status(1)["Uploaded"]>0,"middle node did not forward")
         check(status(2)["From"].get(f"127.0.0.1:{ports[1]}",0)==source.stat().st_size,"chain bypassed")

@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.2.0"
+const version = "0.3.0-dev.1"
 const protocol = "SCDP/1"
 
 type Manifest struct {
@@ -221,6 +221,7 @@ func prepare(args []string) error {
 }
 
 type Options struct {
+	Transport                                string
 	VerifyWindowChunks                       int
 	PipelineVerify                           bool
 	VerifyBufferMiB                          int
@@ -235,6 +236,7 @@ type Options struct {
 	Lifetime, Stall                          time.Duration
 }
 type Status struct {
+	Transport            string
 	Performance          *Performance `json:",omitempty"`
 	Protocol             string
 	Size, VerifiedBytes  int64
@@ -282,6 +284,8 @@ type Remote struct {
 	seen time.Time
 }
 type Node struct {
+	dataClient                     *http.Client
+	quicRequests                   atomic.Int64
 	verifier                       *orderedVerifier
 	m                              Manifest
 	o                              Options
@@ -471,11 +475,15 @@ func (n *Node) snapshot() Status {
 	for k, v := range n.from {
 		from[k] = v
 	}
-	return Status{Performance: n.performanceLocked(), Protocol: protocol, Size: n.m.Size, VerifiedBytes: verifiedBytes(n.m, n.have), ID: n.m.id(), Version: version, Have: append([]bool(nil), n.have...), Complete: n.complete,
+	return Status{Transport: transportName(n.o.Transport), Performance: n.performanceLocked(), Protocol: protocol, Size: n.m.Size, VerifiedBytes: verifiedBytes(n.m, n.have), ID: n.m.id(), Version: version, Have: append([]bool(nil), n.have...), Complete: n.complete,
 		Origin: n.origin, Downloaded: n.downloaded.Load(), Uploaded: n.uploaded.Load(), From: from, Error: n.failure}
 }
 func (n *Node) serve(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-SCDP-Version", "1")
+	if transportName(n.o.Transport) == "quic" && r.URL.Path == "/chunk" && r.ProtoMajor != 3 {
+		http.Error(w, "chunk payload requires QUIC/UDP", 400)
+		return
+	}
 	if v := r.Header.Get("X-SCDP-Version"); v != "" && v != "1" {
 		http.Error(w, "unsupported SCDP version", 400)
 		return
@@ -573,6 +581,7 @@ func peer(args []string) error {
 	var o Options
 	fs := flag.NewFlagSet("peer", flag.ContinueOnError)
 	configureUsage(fs, "peer")
+	fs.StringVar(&o.Transport, "transport", "tcp", "chunk data transport: tcp or quic (UDP); control stays TCP")
 	fs.StringVar(&o.File, "file", "", "local destination or existing seed file")
 	fs.IntVar(&o.VerifyWindowChunks, "verify-window-chunks", 256, "prefer this many upcoming hash chunks; 0=global rarity, requires pipeline-verify")
 	fs.BoolVar(&o.PipelineVerify, "pipeline-verify", true, "overlap ordered whole-file SHA256 with chunk transfer")
@@ -603,6 +612,9 @@ func peer(args []string) error {
 	if fs.NArg() != 0 {
 		fs.Usage()
 		return errors.New("unexpected positional arguments; this release accepts a single source file")
+	}
+	if !validTransport(o.Transport) {
+		return errors.New("transport must be tcp or quic")
 	}
 	if o.File == "" || o.Manifest == "" || o.TokenFile == "" || o.Workers < 1 || o.Workers > 32 ||
 		o.Uploads < 1 || o.Uploads > 32 || o.DownloadMiB < 0 || o.UploadMiB < 0 ||
@@ -655,6 +667,12 @@ func peer(args []string) error {
 		peerBusy: map[string]int{}, from: map[string]int64{}, slots: make(chan struct{}, o.Uploads),
 		client: client(), lastProgress: time.Now(), up: pacer{rate: o.UploadMiB << 20}, down: pacer{rate: o.DownloadMiB << 20}}
 	defer n.client.CloseIdleConnections()
+	dataClient, closeData, err := newDataClient(o.Transport, t)
+	if err != nil {
+		return err
+	}
+	n.dataClient = dataClient
+	defer closeData()
 	path := o.File
 	info, err := os.Lstat(path)
 	if err == nil {
@@ -737,7 +755,13 @@ func peer(args []string) error {
 	}
 	srv := &http.Server{Handler: http.HandlerFunc(n.serve), ReadHeaderTimeout: 5 * time.Second,
 		ReadTimeout: 10 * time.Second, WriteTimeout: 2 * time.Minute, IdleTimeout: 30 * time.Second, MaxHeaderBytes: 8192, BaseContext: func(net.Listener) context.Context { return ctx }}
-	serverErr := make(chan error, 1)
+	serverErr := make(chan error, 2)
+	closeQUIC, err := n.startQUIC(ctx, ln.Addr().String(), serverErr)
+	if err != nil {
+		ln.Close()
+		return err
+	}
+	defer closeQUIC()
 	go func() { serverErr <- srv.Serve(ln) }()
 	var wg sync.WaitGroup
 	if o.PipelineVerify && !n.complete {
@@ -755,8 +779,8 @@ func peer(args []string) error {
 		wg.Add(1)
 		go func() { defer wg.Done(); n.worker(ctx) }()
 	}
-	defer func() { cancel(); srv.Close(); wg.Wait() }()
-	log.Printf("READY listen=%s bytes=%d chunks=%d origin=%t", ln.Addr(), m.Size, len(m.Chunks), n.origin)
+	defer func() { cancel(); srv.Close(); closeQUIC(); wg.Wait() }()
+	log.Printf("READY listen=%s transport=%s bytes=%d chunks=%d origin=%t", ln.Addr(), transportName(o.Transport), m.Size, len(m.Chunks), n.origin)
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	ticks := 0

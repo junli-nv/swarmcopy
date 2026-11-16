@@ -1,0 +1,46 @@
+[
+  {
+    "round": 1,
+    "node": "node001",
+    "buffer_warnings": [],
+    "retry_types": {}
+  },
+  {
+    "round": 1,
+    "node": "node002",
+    "buffer_warnings": [],
+    "retry_types": {
+      "HTTP 429": 645
+    }
+  },
+  {
+    "round": 1,
+    "node": "node006",
+    "buffer_warnings": [],
+    "retry_types": {
+      "HTTP 429": 1760
+    }
+  },
+  {
+    "round": 2,
+    "node": "node001",
+    "buffer_warnings": [],
+    "retry_types": {}
+  },
+  {
+    "round": 2,
+    "node": "node002",
+    "buffer_warnings": [],
+    "retry_types": {
+      "HTTP 429": 1522
+    }
+  },
+  {
+    "round": 2,
+    "node": "node006",
+    "buffer_warnings": [],
+    "retry_types": {
+      "HTTP 429": 1753
+    }
+  }
+]

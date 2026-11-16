@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.3.0-dev.1 (optional QUIC transport)
+
+- Add --transport quic for reliable HTTP/3 chunk streams over UDP; TCP remains default.
+- Keep TCP status/control, persisted transport selection, task-bound TLS identity, and explicit no-fallback behavior.
+- Preserve full integrity, pipeline defaults, fixed concurrency, and single-binary deployment.
+- Add real UDP packet-loss/authentication/cancellation checks and cold-cache comparison driver.
+- Pin quic-go v0.65.0 and ship dependency license notices; this branch requires Go 1.26+ to build.
+
 ## 0.2.0
 
 - Promote ordered whole-file verification to a regular release; new jobs enable the pipeline and 256-chunk prefix window by default.

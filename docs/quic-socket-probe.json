@@ -1,0 +1,10 @@
+{
+  "scope": "Post-study 8-second owned seed probe on one representative x86_64 node; same unmodified quic-go settings, not live telemetry from the historical transfer",
+  "linux_reported_receive_buffer_bytes": 14680064,
+  "linux_reported_send_buffer_bytes": 14680064,
+  "ordinary_rmem_max_bytes": 262144,
+  "ordinary_wmem_max_bytes": 212992,
+  "active_bond_mtu": 9000,
+  "quic_library_max_packet_buffer_size": 1452,
+  "notes": "quic-go attempts SO_RCVBUFFORCE/SO_SNDBUFFORCE on Linux; reported buffers double the requested 7 MiB. Do not identify ordinary sysctl maximum with effective socket allocation."
+}

@@ -1,5 +1,9 @@
 # swarmcopy
 
+[UDP build](https://github.com/junli-nv/swarmcopy/releases/tag/v0.3.0-dev.1) · [45-node results](docs/QUIC-RESULTS.en.md)
+
+[UDP/QUIC implementation](docs/QUIC.en.md): select UDP chunk transport with `--transport quic`; TCP remains the default.
+
 [Download v0.2.0](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0) · [Verification design](docs/PIPELINE.en.md) · [45-node comparison](docs/PIPELINE-RESULTS.en.md)
 
 New jobs default to pipelined SHA-256 with a 256-chunk prefix window. Adaptive concurrency remains off. Use `--pipeline-verify=false` to disable both or `--verify-window-chunks 0` to disable only the window. Resumed jobs retain saved settings.
@@ -172,7 +176,7 @@ This release accepts a single file. Directories, multiple inputs, and file globs
 
 ## Development
 
-Go 1.24+; Python is only for development tests.
+Go 1.26+; Python is only for development tests.
 
 ~~~bash
 bash scripts/build.sh

@@ -149,3 +149,7 @@ kill -TERM <confirmed-PID>
 Prefer stop --job for an entire task. Killing the controller does not automatically terminate detached peers. Node PID records/logs are under <dest>/.swarmcopy/<ID>/. Avoid global pkill that could stop unrelated jobs. SIGKILL is a last resort; recovery revalidates retained partials.
 
 This release accepts a single file. Directories, multiple inputs, and file globs are deferred to the next release. Concurrent jobs need different ports and independent destinations; a destination is protected by an exclusive lock.
+
+## QUIC data transport branch
+
+quic.go/quic_test.go implement job-pinned HTTP/3 and real packet-loss checks. This branch builds with Go 1.26+ and pinned modules, without additional runtime dependencies. See [QUIC design](QUIC.en.md) for interfaces, resource bounds, and trust scope.

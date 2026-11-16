@@ -220,7 +220,7 @@ func completedJobRows(j Job) ([]observation, any, error) {
 	summary := map[string]any{}
 	for _, row := range rows {
 		s := row.st
-		summary[row.addr] = map[string]any{"Complete": s.Complete, "Size": s.Size, "VerifiedBytes": s.VerifiedBytes, "Downloaded": s.Downloaded, "Uploaded": s.Uploaded, "From": s.From, "Performance": s.Performance}
+		summary[row.addr] = map[string]any{"Complete": s.Complete, "Size": s.Size, "VerifiedBytes": s.VerifiedBytes, "Downloaded": s.Downloaded, "Uploaded": s.Uploaded, "From": s.From, "Transport": s.Transport, "Performance": s.Performance}
 	}
 	return rows, map[string]any{"Protocol": protocol, "Recorded": true, "JobID": j.ID, "Finished": result.Finished, "Nodes": summary}, nil
 }

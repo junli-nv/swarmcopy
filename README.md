@@ -1,5 +1,9 @@
 # swarmcopy
 
+[UDP 下载与全部实测](https://github.com/junli-nv/swarmcopy/releases/tag/v0.3.0-dev.1) · [45 节点结果](docs/QUIC-RESULTS.zh-CN.md)
+
+[UDP/QUIC 尝试与开发说明](docs/QUIC.zh-CN.md)：本分支用 `--transport quic` 选择 UDP 数据通道；默认仍为 TCP。
+
 [正式版 v0.2.0 下载](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0) · [完整校验优化](docs/PIPELINE.zh-CN.md) · [45 节点对照](docs/PIPELINE-RESULTS.zh-CN.md)
 
 新建任务默认启用流水线 SHA-256 和 256 块前缀窗口，自适应并发仍默认关闭。关闭流水线用 `--pipeline-verify=false`，仅关闭窗口用 `--verify-window-chunks 0`。旧任务续传沿用原配置。
@@ -177,7 +181,7 @@ kill -TERM <确认过的PID>
 
 ## 开发
 
-Go 1.24+；Python 仅用于测试，运行程序不需要。
+Go 1.26+；Python 仅用于测试，运行程序不需要。
 
 ~~~bash
 bash scripts/build.sh

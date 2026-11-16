@@ -1,0 +1,1310 @@
+{
+  "scope": "Whole-node counters, include unrelated traffic; snapshot begins before first QUIC case and ends after entire comparison. Unchanged global kernel settings.",
+  "nodes": [
+    {
+      "node": "node001",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 4813043,
+        "NoPorts": 0,
+        "InErrors": 0,
+        "OutDatagrams": 7102946,
+        "RcvbufErrors": 0,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node002",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61700892,
+        "NoPorts": 0,
+        "InErrors": 40627,
+        "OutDatagrams": 10273216,
+        "RcvbufErrors": 40627,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node003",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61693197,
+        "NoPorts": 0,
+        "InErrors": 41679,
+        "OutDatagrams": 10330753,
+        "RcvbufErrors": 41679,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node004",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61558657,
+        "NoPorts": 0,
+        "InErrors": 46768,
+        "OutDatagrams": 10086450,
+        "RcvbufErrors": 46768,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node005",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61507569,
+        "NoPorts": 0,
+        "InErrors": 51778,
+        "OutDatagrams": 10077293,
+        "RcvbufErrors": 51778,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node006",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60725724,
+        "NoPorts": 0,
+        "InErrors": 47392,
+        "OutDatagrams": 8690114,
+        "RcvbufErrors": 47392,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node007",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61077175,
+        "NoPorts": 0,
+        "InErrors": 68263,
+        "OutDatagrams": 9286197,
+        "RcvbufErrors": 68263,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node008",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60851671,
+        "NoPorts": 0,
+        "InErrors": 56447,
+        "OutDatagrams": 8849572,
+        "RcvbufErrors": 56447,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node009",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60628347,
+        "NoPorts": 0,
+        "InErrors": 78387,
+        "OutDatagrams": 8516788,
+        "RcvbufErrors": 78387,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node010",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60285337,
+        "NoPorts": 0,
+        "InErrors": 45611,
+        "OutDatagrams": 8080755,
+        "RcvbufErrors": 45611,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node011",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60431295,
+        "NoPorts": 0,
+        "InErrors": 43480,
+        "OutDatagrams": 8291186,
+        "RcvbufErrors": 43480,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node012",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60749053,
+        "NoPorts": 0,
+        "InErrors": 64523,
+        "OutDatagrams": 8641597,
+        "RcvbufErrors": 64523,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node013",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61492877,
+        "NoPorts": 0,
+        "InErrors": 61796,
+        "OutDatagrams": 9750519,
+        "RcvbufErrors": 61796,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node014",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60682821,
+        "NoPorts": 0,
+        "InErrors": 58439,
+        "OutDatagrams": 8673727,
+        "RcvbufErrors": 58439,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node015",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61390606,
+        "NoPorts": 0,
+        "InErrors": 73883,
+        "OutDatagrams": 9675563,
+        "RcvbufErrors": 73883,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node016",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60595944,
+        "NoPorts": 0,
+        "InErrors": 53253,
+        "OutDatagrams": 8439601,
+        "RcvbufErrors": 53253,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node017",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61682218,
+        "NoPorts": 0,
+        "InErrors": 71715,
+        "OutDatagrams": 10116097,
+        "RcvbufErrors": 71715,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node018",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60999066,
+        "NoPorts": 0,
+        "InErrors": 74710,
+        "OutDatagrams": 9069280,
+        "RcvbufErrors": 74710,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node019",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60762441,
+        "NoPorts": 0,
+        "InErrors": 64589,
+        "OutDatagrams": 8662005,
+        "RcvbufErrors": 64589,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node020",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60861259,
+        "NoPorts": 0,
+        "InErrors": 59537,
+        "OutDatagrams": 8765630,
+        "RcvbufErrors": 59537,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node021",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60544326,
+        "NoPorts": 0,
+        "InErrors": 65003,
+        "OutDatagrams": 8357952,
+        "RcvbufErrors": 65003,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node022",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60768877,
+        "NoPorts": 0,
+        "InErrors": 75346,
+        "OutDatagrams": 8707185,
+        "RcvbufErrors": 75346,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node023",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61242018,
+        "NoPorts": 0,
+        "InErrors": 44374,
+        "OutDatagrams": 9327926,
+        "RcvbufErrors": 44374,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node024",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61726494,
+        "NoPorts": 0,
+        "InErrors": 78220,
+        "OutDatagrams": 10096925,
+        "RcvbufErrors": 78220,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node025",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60637314,
+        "NoPorts": 0,
+        "InErrors": 56594,
+        "OutDatagrams": 8546345,
+        "RcvbufErrors": 56594,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node026",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61614133,
+        "NoPorts": 0,
+        "InErrors": 64291,
+        "OutDatagrams": 9869687,
+        "RcvbufErrors": 64291,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node027",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61855014,
+        "NoPorts": 1,
+        "InErrors": 75842,
+        "OutDatagrams": 10379985,
+        "RcvbufErrors": 75842,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node028",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61722764,
+        "NoPorts": 0,
+        "InErrors": 71516,
+        "OutDatagrams": 10062351,
+        "RcvbufErrors": 71516,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node029",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61355296,
+        "NoPorts": 0,
+        "InErrors": 74031,
+        "OutDatagrams": 9537790,
+        "RcvbufErrors": 74031,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node030",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61754539,
+        "NoPorts": 0,
+        "InErrors": 52471,
+        "OutDatagrams": 10096502,
+        "RcvbufErrors": 52471,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node031",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61997229,
+        "NoPorts": 0,
+        "InErrors": 72549,
+        "OutDatagrams": 10505810,
+        "RcvbufErrors": 72549,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node032",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61162501,
+        "NoPorts": 0,
+        "InErrors": 77015,
+        "OutDatagrams": 9349372,
+        "RcvbufErrors": 77015,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node033",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61163254,
+        "NoPorts": 0,
+        "InErrors": 54228,
+        "OutDatagrams": 9248020,
+        "RcvbufErrors": 54228,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node034",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 62059555,
+        "NoPorts": 0,
+        "InErrors": 90221,
+        "OutDatagrams": 10625478,
+        "RcvbufErrors": 90221,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node035",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60896449,
+        "NoPorts": 0,
+        "InErrors": 55475,
+        "OutDatagrams": 8881523,
+        "RcvbufErrors": 55475,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node036",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60967062,
+        "NoPorts": 0,
+        "InErrors": 74295,
+        "OutDatagrams": 8968374,
+        "RcvbufErrors": 74295,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node037",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61000934,
+        "NoPorts": 0,
+        "InErrors": 56391,
+        "OutDatagrams": 9045264,
+        "RcvbufErrors": 56391,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node038",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61841091,
+        "NoPorts": 0,
+        "InErrors": 56373,
+        "OutDatagrams": 10319834,
+        "RcvbufErrors": 56373,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node039",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60944696,
+        "NoPorts": 0,
+        "InErrors": 51689,
+        "OutDatagrams": 8961793,
+        "RcvbufErrors": 51689,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node040",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61315862,
+        "NoPorts": 0,
+        "InErrors": 58458,
+        "OutDatagrams": 9535227,
+        "RcvbufErrors": 58458,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node041",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60737228,
+        "NoPorts": 0,
+        "InErrors": 53429,
+        "OutDatagrams": 8627836,
+        "RcvbufErrors": 53429,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node042",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60936029,
+        "NoPorts": 0,
+        "InErrors": 64046,
+        "OutDatagrams": 8880803,
+        "RcvbufErrors": 64046,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node043",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60629683,
+        "NoPorts": 0,
+        "InErrors": 69033,
+        "OutDatagrams": 8492499,
+        "RcvbufErrors": 69033,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node044",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 61237371,
+        "NoPorts": 0,
+        "InErrors": 55839,
+        "OutDatagrams": 9305102,
+        "RcvbufErrors": 55839,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    },
+    {
+      "node": "node045",
+      "rmem_max": 262144,
+      "wmem_max": 212992,
+      "rmem_default": 262144,
+      "wmem_default": 212992,
+      "udp4_delta": {
+        "InDatagrams": 60885299,
+        "NoPorts": 0,
+        "InErrors": 62800,
+        "OutDatagrams": 8814720,
+        "RcvbufErrors": 62800,
+        "SndbufErrors": 0,
+        "InCsumErrors": 0,
+        "IgnoredMulti": 0,
+        "MemErrors": 0
+      },
+      "udp6_delta": {
+        "Udp6InDatagrams": 0,
+        "Udp6NoPorts": 0,
+        "Udp6InErrors": 0,
+        "Udp6OutDatagrams": 0,
+        "Udp6RcvbufErrors": 0,
+        "Udp6SndbufErrors": 0,
+        "Udp6InCsumErrors": 0,
+        "Udp6IgnoredMulti": 0,
+        "Udp6MemErrors": 0
+      }
+    }
+  ]
+}

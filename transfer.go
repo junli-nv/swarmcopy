@@ -39,11 +39,17 @@ func (n *Node) download(ctx context.Context, i int, addr string, buffers ...[]by
 			n.networkWork(addr, time.Since(start), false)
 		}
 	}()
-	resp, err := request(ctx, n.client, n.token, addr, "/chunk?i="+strconv.Itoa(i))
+	resp, err := request(ctx, n.chunkClient(), n.token, addr, "/chunk?i="+strconv.Itoa(i))
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
+	if transportName(n.o.Transport) == "quic" {
+		if resp.ProtoMajor != 3 {
+			return errors.New("QUIC chunk response did not use HTTP/3")
+		}
+		n.quicRequests.Add(1)
+	}
 	if resp.StatusCode != 200 {
 		return transferHTTPError{resp.StatusCode}
 	}

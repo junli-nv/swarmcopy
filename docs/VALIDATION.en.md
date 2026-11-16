@@ -2,6 +2,10 @@
 
 [中文](VALIDATION.zh-CN.md) · [Development](DEVELOPMENT.en.md) · [Preliminary benchmark](BENCHMARK.en.md) · [Cold-cache study protocol](COLD-STUDY.en.md)
 
+## Independent UDP/QUIC checks
+
+Race tests and go vet pass for real lossy UDP recovery, job pinning, bearer auth, cancellation, and no TCP fallback. A real race chain passes QUIC/window/endgame/adaptive interruption/corruption/forwarding. Two real SSH nodes verify TCP/QUIC deployment, full hashed bytes, and actual HTTP/3 response counters. UDP is evaluated separately from regular TCP defaults; see [design](QUIC.en.md).
+
 ## v0.2.0 defaults
 
 Pipeline and 256-chunk window default on; adaptive concurrency stays off. Flag tests and explicit propagation of saved false/zero values protect old job resume behavior. Algorithm measurements retain their original candidate hashes; the release binary is not misidentified as that historical frozen artifact.
@@ -63,3 +67,5 @@ Raw data, complete logs, host identities, and private job records remain under t
 
 See the developer guide for limits: initial staging lacks chunk-level recovery, partial recovery rereads hashes, the data plane is plaintext HTTP in a controlled network, and this release handles one file.
 
+
+All six 45-node/three-mode/two-round cases pass full hashes and 270 cache barriers; audits confirm 45 distinct boot IDs and all 270 owned process records stopped. Independent rebuilds reproduce both frozen architecture hashes. See [results](QUIC-RESULTS.en.md).
