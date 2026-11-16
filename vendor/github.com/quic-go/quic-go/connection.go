@@ -2714,7 +2714,7 @@ func (c *Conn) sendPacketsWithGSO(now monotime.Time) error {
 		// 2. The last packet appended was a full-size packet
 		// 3. The next packet will have the same ECN marking
 		// 4. We still have enough space for another full-size packet in the buffer
-		if !dontSendMore && size == maxSize && nextECN == ecn && buf.Len()+maxSize <= buf.Cap() {
+		if !dontSendMore && size == maxSize && nextECN == ecn && buf.Len()+maxSize <= min(buf.Cap(), protocol.ByteCount(c.config.MaxGSOBatchSize)) {
 			continue
 		}
 

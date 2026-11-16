@@ -104,6 +104,9 @@ type ConnectionIDGenerator interface {
 
 // Config contains all configuration data needed for a QUIC server or client.
 type Config struct {
+	// MaxGSOBatchSize limits one GSO buffer. Zero preserves upstream20KiB.
+	// Congestion/pacing checks remain in force for every appended packet.
+	MaxGSOBatchSize uint32
 	// MaxUDPPayloadSize is the advertised receive and local send ceiling.
 	// Swarmcopy extension: zero defaults to 1452, valid range is 1280..8952.
 	// The initial packet remains 1280; PMTU discovery validates larger packets.

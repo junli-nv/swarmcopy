@@ -113,7 +113,7 @@ func TestQUICPathMTUDiscoveryAndSmallPeerNegotiation(t *testing.T) {
 			if e != nil {
 				t.Fatal(e)
 			}
-			srv := &http3.Server{TLSConfig: conf, QUICConfig: quicConfig(tc.serverMax), Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			srv := &http3.Server{TLSConfig: conf, QUICConfig: quicConfig(tc.serverMax, 64), Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.Header().Set("Content-Length", strconv.Itoa(len(payload)))
 				w.Write(payload)
 			})}
@@ -121,7 +121,7 @@ func TestQUICPathMTUDiscoveryAndSmallPeerNegotiation(t *testing.T) {
 			defer func() { srv.Close(); packet.Close() }()
 			addr, largest, drops, stop := mtuProxy(t, packet.LocalAddr().String(), tc.pathMax)
 			defer stop()
-			c, closeClient, e := newDataClient("quic", token, 1, tc.clientMax)
+			c, closeClient, e := newDataClient("quic", token, 1, tc.clientMax, 64)
 			if e != nil {
 				t.Fatal(e)
 			}

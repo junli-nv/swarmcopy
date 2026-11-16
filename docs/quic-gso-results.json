@@ -1,0 +1,265 @@
+{
+  "nodes": 45,
+  "receivers": 44,
+  "file_bytes": 40188444672,
+  "rounds": 2,
+  "cases": [
+    {
+      "round": 1,
+      "method": "tcp",
+      "seconds": 65.05548244714737,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001405565,
+        "TransferSeconds_max": 38.00220563,
+        "FinalSyncSeconds_max": 4.737299952,
+        "FinalHashSeconds_max": 20.086351204,
+        "PublishSeconds_max": 0.0029482799999999997,
+        "FileHashReadSeconds_max": 11.885526427999963,
+        "FileHashComputeSeconds_max": 33.85378718499995,
+        "FileHashWaitSeconds_max": 11.349291975000018,
+        "FileHashWallSeconds_max": 50.922833522,
+        "Requests_sum": 109024,
+        "Retries_sum": 3600,
+        "BusyResponses_sum": 3600,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0,
+        "FileHashBytes_sum": 1768291565568,
+        "FileHashBytesAtTransferEnd_sum": 1333381824512,
+        "QUICChunkRequests_sum": 0
+      },
+      "seed_valid_bytes": 92667576320,
+      "udp_receive_buffer_error_delta": 0,
+      "udp_in_datagram_delta": 16468
+    },
+    {
+      "round": 1,
+      "method": "gso20",
+      "seconds": 77.05119742080569,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001580002,
+        "TransferSeconds_max": 60.001926527,
+        "FinalSyncSeconds_max": 1.7921662409999999,
+        "FinalHashSeconds_max": 2.57031464,
+        "PublishSeconds_max": 0.0032345250000000002,
+        "FileHashReadSeconds_max": 11.272173324999974,
+        "FileHashComputeSeconds_max": 35.14279450700003,
+        "FileHashWaitSeconds_max": 31.02416273100008,
+        "FileHashWallSeconds_max": 62.3160113,
+        "Requests_sum": 126376,
+        "Retries_sum": 20952,
+        "BusyResponses_sum": 20952,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0,
+        "FileHashBytes_sum": 1768291565568,
+        "FileHashBytesAtTransferEnd_sum": 1693855711232,
+        "QUICChunkRequests_sum": 126376
+      },
+      "seed_valid_bytes": 59952005120,
+      "udp_receive_buffer_error_delta": 5192,
+      "udp_in_datagram_delta": 224700896
+    },
+    {
+      "round": 1,
+      "method": "gso64",
+      "seconds": 71.11657221056521,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001756979,
+        "TransferSeconds_max": 55.002702626,
+        "FinalSyncSeconds_max": 2.0836025599999997,
+        "FinalHashSeconds_max": 1.20240927,
+        "PublishSeconds_max": 0.007927306,
+        "FileHashReadSeconds_max": 11.597490255999984,
+        "FileHashComputeSeconds_max": 34.689390038000035,
+        "FileHashWaitSeconds_max": 25.26885537099998,
+        "FileHashWallSeconds_max": 56.516092359,
+        "Requests_sum": 119153,
+        "Retries_sum": 13729,
+        "BusyResponses_sum": 13729,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0,
+        "FileHashBytes_sum": 1768291565568,
+        "FileHashBytesAtTransferEnd_sum": 1715192135680,
+        "QUICChunkRequests_sum": 119153
+      },
+      "seed_valid_bytes": 76511117312,
+      "udp_receive_buffer_error_delta": 14275,
+      "udp_in_datagram_delta": 221047782
+    },
+    {
+      "round": 2,
+      "method": "gso64",
+      "seconds": 69.2174520874396,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.002054067,
+        "TransferSeconds_max": 53.002387402,
+        "FinalSyncSeconds_max": 2.191455409,
+        "FinalHashSeconds_max": 2.999869292,
+        "PublishSeconds_max": 0.007621768,
+        "FileHashReadSeconds_max": 11.570645991000003,
+        "FileHashComputeSeconds_max": 35.070903807000086,
+        "FileHashWaitSeconds_max": 23.93405345400003,
+        "FileHashWallSeconds_max": 55.3734102,
+        "Requests_sum": 117724,
+        "Retries_sum": 12300,
+        "BusyResponses_sum": 12300,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0,
+        "FileHashBytes_sum": 1768291565568,
+        "FileHashBytesAtTransferEnd_sum": 1675569922048,
+        "QUICChunkRequests_sum": 117724
+      },
+      "seed_valid_bytes": 76293013504,
+      "udp_receive_buffer_error_delta": 9515,
+      "udp_in_datagram_delta": 221089953
+    },
+    {
+      "round": 2,
+      "method": "gso20",
+      "seconds": 74.96348180714995,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.00126643,
+        "TransferSeconds_max": 59.002432013,
+        "FinalSyncSeconds_max": 2.029071778,
+        "FinalHashSeconds_max": 1.375993012,
+        "PublishSeconds_max": 0.002824555,
+        "FileHashReadSeconds_max": 10.726805206999963,
+        "FileHashComputeSeconds_max": 34.887054131999996,
+        "FileHashWaitSeconds_max": 29.050215464999948,
+        "FileHashWallSeconds_max": 60.465183838,
+        "Requests_sum": 132984,
+        "Retries_sum": 27560,
+        "BusyResponses_sum": 27560,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0,
+        "FileHashBytes_sum": 1768291565568,
+        "FileHashBytesAtTransferEnd_sum": 1732407066624,
+        "QUICChunkRequests_sum": 132984
+      },
+      "seed_valid_bytes": 60690202624,
+      "udp_receive_buffer_error_delta": 10032,
+      "udp_in_datagram_delta": 224307537
+    },
+    {
+      "round": 2,
+      "method": "tcp",
+      "seconds": 66.46480877511203,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001198167,
+        "TransferSeconds_max": 36.001747412,
+        "FinalSyncSeconds_max": 5.027039832,
+        "FinalHashSeconds_max": 20.877417196,
+        "PublishSeconds_max": 0.0029200140000000003,
+        "FileHashReadSeconds_max": 11.943479548999953,
+        "FileHashComputeSeconds_max": 34.25603380500003,
+        "FileHashWaitSeconds_max": 10.521257840999995,
+        "FileHashWallSeconds_max": 50.725274625,
+        "Requests_sum": 109062,
+        "Retries_sum": 3638,
+        "BusyResponses_sum": 3638,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0,
+        "FileHashBytes_sum": 1768291565568,
+        "FileHashBytesAtTransferEnd_sum": 1335709663232,
+        "QUICChunkRequests_sum": 0
+      },
+      "seed_valid_bytes": 100526325760,
+      "udp_receive_buffer_error_delta": 0,
+      "udp_in_datagram_delta": 15160
+    }
+  ],
+  "methods": {
+    "tcp": {
+      "seconds": [
+        65.05548244714737,
+        66.46480877511203
+      ],
+      "median": 65.7601456111297,
+      "min": 65.05548244714737,
+      "max": 66.46480877511203
+    },
+    "gso20": {
+      "seconds": [
+        77.05119742080569,
+        74.96348180714995
+      ],
+      "median": 76.00733961397782,
+      "min": 74.96348180714995,
+      "max": 77.05119742080569
+    },
+    "gso64": {
+      "seconds": [
+        71.11657221056521,
+        69.2174520874396
+      ],
+      "median": 70.1670121490024,
+      "min": 69.2174520874396,
+      "max": 71.11657221056521
+    }
+  },
+  "unique_boot_ids": 45,
+  "owned_peers_stopped": 270,
+  "gso64_speedup_vs_gso20": 1.083234660934019,
+  "gso64_speedup_vs_tcp": 0.9371946103602852,
+  "file_sha256": "b4b4781e7392957eb24d45e9f480ea6d8ec2d20f9200a1c48aeeefd64d2e77c1",
+  "artifacts": {
+    "tcp": {
+      "binary": "c1a34e51ad3d4cd2e1078256ca3ab7027ea7f94ec69cc439f391454c6c0fed5a",
+      "dist": {
+        "swarmcopy-linux-x86_64": "c1a34e51ad3d4cd2e1078256ca3ab7027ea7f94ec69cc439f391454c6c0fed5a",
+        "swarmcopy-linux-aarch64": "f3f3c2263485d4e2af67afc5be735af954a74379450b14f22cafd3445cba6b6f"
+      }
+    },
+    "gso20": {
+      "binary": "c1a34e51ad3d4cd2e1078256ca3ab7027ea7f94ec69cc439f391454c6c0fed5a",
+      "dist": {
+        "swarmcopy-linux-x86_64": "c1a34e51ad3d4cd2e1078256ca3ab7027ea7f94ec69cc439f391454c6c0fed5a",
+        "swarmcopy-linux-aarch64": "f3f3c2263485d4e2af67afc5be735af954a74379450b14f22cafd3445cba6b6f"
+      }
+    },
+    "gso64": {
+      "binary": "c1a34e51ad3d4cd2e1078256ca3ab7027ea7f94ec69cc439f391454c6c0fed5a",
+      "dist": {
+        "swarmcopy-linux-x86_64": "c1a34e51ad3d4cd2e1078256ca3ab7027ea7f94ec69cc439f391454c6c0fed5a",
+        "swarmcopy-linux-aarch64": "f3f3c2263485d4e2af67afc5be735af954a74379450b14f22cafd3445cba6b6f"
+      }
+    }
+  },
+  "driver_sha256": "07690afb3b2ffa221249b108549c555a0f15cdb50becd460e3e0c297b61a6ca2",
+  "policy": "Unique absent case directory; sync/drop_caches=3 on every participant before every method; prepared common seed; unlimited bandwidth; full SHA256/fsync; timing through peer shutdown; retries remain in timed case."
+}

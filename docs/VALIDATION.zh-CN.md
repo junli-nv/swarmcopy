@@ -2,6 +2,14 @@
 
 [English](VALIDATION.en.md) · [开发指南](DEVELOPMENT.zh-CN.md) · [粗测对比](BENCHMARK.zh-CN.md) · [冷页缓存测试方案](COLD-STUDY.zh-CN.md)
 
+## UDP调优候选
+
+完成真实UDP丢包/跨任务拒绝/取消/不回退、PMTU大包/窄路径/小包对端、GSO容量边界的race测试与go vet；实际race程序以默认UDP参数通过中断、损坏修复和接力。全部CLI帮助入口通过。
+
+四个独立45节点研究共22次全新完整传输，990个缓存屏障及990进程记录停止审计通过，均保留原始失败性能方向；见 [完整结果](QUIC-TUNING-RESULTS.zh-CN.md)。辅助抓包断言有一次混用长度单位，使用原成功传输的抓包修正，未重跑正式轮次。
+
+两架构静态文件独立重建与最终冻结测速文件摘要一致。vendor可从固定模块加补丁逐字节再生。ARM64仍只有交叉构建；中途MTU下降恢复未验证。
+
 ## UDP/QUIC 独立通道验证
 
 真实 UDP 双向丢包恢复、任务身份绑定、bearer 认证、取消、不回退 TCP 的 race 单元测试与 go vet 通过。真实 race 三进程以 QUIC/window/endgame/adaptive 组合通过中断、坏块恢复及接力。两台实际 SSH 节点分别验证 TCP/QUIC 部署、完整哈希字节与真实 HTTP/3 请求计数。UDP 结果与正式 TCP 默认值更新分开评价；见 [设计](QUIC.zh-CN.md)。

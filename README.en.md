@@ -1,6 +1,10 @@
 # swarmcopy
 
-[UDP build](https://github.com/junli-nv/swarmcopy/releases/tag/v0.3.0-dev.1) · [45-node results](docs/QUIC-RESULTS.en.md)
+[UDP audit and all ablations](docs/QUIC-TUNING-RESULTS.en.md) · [Options and maintenance](docs/QUIC-TUNING.en.md)
+
+The optional UDP candidate uses receive-socket sharding, negotiated payload ceilings and bounded GSO batches. TCP stays default, with four fixed workers and adaptive concurrency disabled. Select v0.3.0-dev.4 above for UDP; the regular stable release is v0.2.0.
+
+[UDP build](https://github.com/junli-nv/swarmcopy/releases/tag/v0.3.0-dev.4) · [45-node results](docs/QUIC-RESULTS.en.md)
 
 [UDP/QUIC implementation](docs/QUIC.en.md): select UDP chunk transport with `--transport quic`; TCP remains the default.
 

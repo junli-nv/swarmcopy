@@ -1,6 +1,10 @@
 # swarmcopy
 
-[UDP 下载与全部实测](https://github.com/junli-nv/swarmcopy/releases/tag/v0.3.0-dev.1) · [45 节点结果](docs/QUIC-RESULTS.zh-CN.md)
+[UDP实现审查与全部消融结果](docs/QUIC-TUNING-RESULTS.zh-CN.md) · [参数与维护](docs/QUIC-TUNING.zh-CN.md)
+
+UDP候选使用静态接收socket分片、路径协商大包和有界GSO批次；仍默认TCP，固定4个下载worker，自适应并发关闭。使用UDP请下载上方v0.3.0-dev.4，而常规稳定版为v0.2.0。
+
+[UDP 下载与全部实测](https://github.com/junli-nv/swarmcopy/releases/tag/v0.3.0-dev.4) · [45 节点结果](docs/QUIC-RESULTS.zh-CN.md)
 
 [UDP/QUIC 尝试与开发说明](docs/QUIC.zh-CN.md)：本分支用 `--transport quic` 选择 UDP 数据通道；默认仍为 TCP。
 

@@ -146,3 +146,5 @@ kill -TERM <确认过的PID>
 ## QUIC 数据通道分支
 
 quic.go / quic_test.go 实现任务身份绑定的 HTTP/3 数据通道及真实丢包测试。开发此分支需要 Go 1.26+ 与固定模块依赖，仍不增加运行时依赖。完整接口、资源和安全边界见 [QUIC 开发说明](QUIC.zh-CN.md)。
+
+UDP新增参数、四文件依赖补丁和后续接收反馈速率控制路线见 [调优维护说明](QUIC-TUNING.zh-CN.md)。quic_mtu_test.go覆盖真实代理的窄路径与协商，scripts/vendor-quic.sh重建固定vendor后应用patches/quic-go-bulk.patch。

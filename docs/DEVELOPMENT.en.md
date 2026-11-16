@@ -153,3 +153,5 @@ This release accepts a single file. Directories, multiple inputs, and file globs
 ## QUIC data transport branch
 
 quic.go/quic_test.go implement job-pinned HTTP/3 and real packet-loss checks. This branch builds with Go 1.26+ and pinned modules, without additional runtime dependencies. See [QUIC design](QUIC.en.md) for interfaces, resource bounds, and trust scope.
+
+See [tuning maintenance](QUIC-TUNING.en.md) for UDP parameters, the four-file dependency patch, and future receiver-feedback work. quic_mtu_test.go covers real narrow-path negotiation; scripts/vendor-quic.sh regenerates fixed vendor code and applies patches/quic-go-bulk.patch.

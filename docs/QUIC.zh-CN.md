@@ -1,5 +1,7 @@
 # UDP / QUIC 数据通道
 
+当前候选增加默认4个客户端socket分片、8952协商负载上限与64KiB GSO上限；依赖包含记录在案的本地补丁。见 [最新设计](QUIC-TUNING.zh-CN.md) 和 [完整消融](QUIC-TUNING-RESULTS.zh-CN.md)。以下保留基础通道说明。
+
 [English](QUIC.en.md) · [TCP 正式版](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0)
 
 本分支增加可选 `--transport quic`，用 HTTP/3 / QUIC 的可靠字节流传输分块，底层使用 UDP。TCP 仍是默认值，SHA-256 流水线和 256 块前缀窗口默认开启，自适应并发默认关闭。不是 IBM FASP 的实现，也不承诺 UDP 一定更快。

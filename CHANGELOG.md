@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.3.0-dev.4 (optional UDP candidate)
+
+- Fix QUIC integration limits with bounded source-affine receive-socket shards, negotiated path-safe UDP ceilings, and configurable congestion/pacing-limited GSO batches.
+- Default optional QUIC parameters to4 sockets/8952 bytes/64KiB; TCP stays default and adaptive concurrency stays off.
+- Preserve saved old-job values as1/1452/20KiB.
+- Vendor pinned dependencies with a reproducible four-file patch and upstream notices.
+- Validate real UDP loss, narrow-path/limited-peer negotiation, cancellation, race recovery, actual receiver ingress packets, and four separate45-node studies.
+- Retain initial slow results, all ablations, anonymous CPU/kernel evidence, and bilingual maintenance documentation.
+
+The dev.1/dev.2/dev.3 source checkpoints were internal and not separately published; their original binary hashes remain in the reports.
+
 ## 0.3.0-dev.1 (optional QUIC transport)
 
 - Add --transport quic for reliable HTTP/3 chunk streams over UDP; TCP remains default.

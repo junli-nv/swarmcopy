@@ -132,7 +132,7 @@ func agentCommand(args []string) error {
 				return errors.New("peer still running; cannot force recheck")
 			}
 		}
-		argv := []string{"peer", "--quic-max-payload", strconv.Itoa(max(1452, o.QUICMaxPayload)), "--quic-sockets", strconv.Itoa(max(1, o.QUICSockets)), "--transport", transportName(o.Transport), "--file", o.File, "--manifest", o.Manifest, "--listen", o.Listen,
+		argv := []string{"peer", "--quic-gso-kib", strconv.Itoa(quicGSOKiB(o.QUICGSOKiB)), "--quic-max-payload", strconv.Itoa(max(1452, o.QUICMaxPayload)), "--quic-sockets", strconv.Itoa(max(1, o.QUICSockets)), "--transport", transportName(o.Transport), "--file", o.File, "--manifest", o.Manifest, "--listen", o.Listen,
 			"--peers", o.Peers, "--token-file", o.TokenFile, "--workers", strconv.Itoa(o.Workers),
 			"--uploads", strconv.Itoa(o.Uploads), "--upload-mib", strconv.FormatInt(o.UploadMiB, 10),
 			"--download-mib", strconv.FormatInt(o.DownloadMiB, 10), "--lifetime", o.Lifetime.String(),

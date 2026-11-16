@@ -22,7 +22,7 @@
   --transport quic
 ~~~
 
-QUIC 候选默认相当于 `--quic-sockets 4 --quic-max-payload 8952`。默认传输仍为 TCP。`--quic-max-payload` 表示 UDP 负载上限，范围 1452..8952；8952 为 9000 减去 IPv6/UDP 的 48 字节，并不是把网卡设置成这个 MTU。实际发送长度还受对端通告与路径探测限制。
+QUIC 候选默认相当于 `--quic-sockets 4 --quic-max-payload 8952 --quic-gso-kib 64`。默认传输仍为 TCP。`--quic-max-payload` 表示 UDP 负载上限，范围 1452..8952；8952 为 9000 减去 IPv6/UDP 的 48 字节，并不是把网卡设置成这个 MTU。实际发送长度还受对端通告与路径探测限制。
 
 ~~~bash
 # 关闭接收分片与大包，仅做消融；新建独立任务/目标
@@ -43,7 +43,7 @@ QUIC 候选默认相当于 `--quic-sockets 4 --quic-max-payload 8952`。默认�
 
 ## 最小依赖补丁与维护
 
-Go 模块固定 quic-go v0.65.0；vendor 目录包含固定的构建依赖及许可证，可离线构建。四个 quic-go 文件的本地修改完整保存在 `patches/quic-go-pmtu.patch`：
+Go 模块固定 quic-go v0.65.0；vendor 目录包含固定的构建依赖及许可证，可离线构建。四个 quic-go 文件的本地修改完整保存在 `patches/quic-go-bulk.patch`：
 
 - interface.go：每连接 MaxUDPPayloadSize 上限。
 - config.go：范围校验、默认 1452、配置复制与初始包裁剪。
@@ -67,3 +67,9 @@ bash scripts/build.sh
 
 当前不叠加第二套时延控制器，不关闭 QUIC 拥塞控制，不更改下载并发默认值。静态样本中的某一速率公式、阈值或 TLV 布局不能直接作为经过动态验证的实现。新控制算法须独立测试，避免混入本轮 socket/包长的消融结果。
 
+
+## GSO 批次与包长配套
+
+--quic-gso-kib 范围16..64，新任务默认64，旧记录缺失时使用20。64KiB 的实际上限保守裁到65,527字节，表示一次 GSO 提交的总容量；每个线上 UDP 包仍受8952与路径上限约束，不是发送64KiB巨型报文，也不依赖 IP 分片。
+
+原20KiB缓存最多容纳两个满8952包；较大批次可以减少容量限制导致的提交。是否能填满还取决于数据、ECN、发送队列、拥塞窗口和 pacing，逐包预算检查全部保留。独立同二进制对照比较20与64，不预设更大一定更快。依赖补丁仍限于上述四文件，额外包含 MaxGSOBatchSize 的配置、归一化、容量上限和发送循环条件。原始容量/模式保留在前序提交。

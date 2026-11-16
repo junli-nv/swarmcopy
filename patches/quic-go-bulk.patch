@@ -1,9 +1,12 @@
 --- a/vendor/github.com/quic-go/quic-go/interface.go
 +++ b/vendor/github.com/quic-go/quic-go/interface.go
-@@ -104,6 +104,10 @@
+@@ -104,6 +104,13 @@
  
  // Config contains all configuration data needed for a QUIC server or client.
  type Config struct {
++	// MaxGSOBatchSize limits one GSO buffer. Zero preserves upstream20KiB.
++	// Congestion/pacing checks remain in force for every appended packet.
++	MaxGSOBatchSize uint32
 +	// MaxUDPPayloadSize is the advertised receive and local send ceiling.
 +	// Swarmcopy extension: zero defaults to 1452, valid range is 1280..8952.
 +	// The initial packet remains 1280; PMTU discovery validates larger packets.
@@ -13,17 +16,20 @@
  	GetConfigForClient func(info *ClientInfo) (*Config, error)
 --- a/vendor/github.com/quic-go/quic-go/config.go
 +++ b/vendor/github.com/quic-go/quic-go/config.go
-@@ -33,6 +33,9 @@
+@@ -33,6 +33,12 @@
  	if config == nil {
  		return nil
  	}
 +	if config.MaxUDPPayloadSize != 0 && (config.MaxUDPPayloadSize < 1280 || config.MaxUDPPayloadSize > protocol.MaxPacketBufferSize) {
 +		return fmt.Errorf("invalid maximum UDP payload size: %d", config.MaxUDPPayloadSize)
 +	}
++	if config.MaxGSOBatchSize != 0 && (config.MaxGSOBatchSize < protocol.MaxPacketBufferSize || config.MaxGSOBatchSize > protocol.MaxLargePacketBufferSize) {
++		return fmt.Errorf("invalid GSO batch size: %d", config.MaxGSOBatchSize)
++	}
  	const maxStreams = 1 << 60
  	if config.MaxIncomingStreams > maxStreams {
  		config.MaxIncomingStreams = maxStreams
-@@ -49,8 +52,12 @@
+@@ -49,8 +55,12 @@
  	if config.InitialPacketSize > 0 && config.InitialPacketSize < protocol.MinInitialPacketSize {
  		config.InitialPacketSize = protocol.MinInitialPacketSize
  	}
@@ -38,10 +44,14 @@
  	}
  	// check that all QUIC versions are actually supported
  	for _, v := range config.Versions {
-@@ -67,6 +74,10 @@
+@@ -67,6 +77,14 @@
  func populateConfig(config *Config) *Config {
  	if config == nil {
  		config = &Config{}
++	}
++	maxGSO := config.MaxGSOBatchSize
++	if maxGSO == 0 {
++		maxGSO = 20 << 10
 +	}
 +	maxPayload := config.MaxUDPPayloadSize
 +	if maxPayload == 0 {
@@ -49,10 +59,11 @@
  	}
  	versions := config.Versions
  	if len(versions) == 0 {
-@@ -109,6 +120,7 @@
+@@ -109,6 +127,8 @@
  		maxIncomingUniStreams = 0
  	}
  	return &Config{
++		MaxGSOBatchSize:                  maxGSO,
 +		MaxUDPPayloadSize:                maxPayload,
  		GetConfigForClient:               config.GetConfigForClient,
  		Versions:                         versions,
@@ -90,9 +101,18 @@
  }
  
  func (c *Conn) triggerSending(now monotime.Time) error {
+@@ -2714,7 +2714,7 @@
+ 		// 2. The last packet appended was a full-size packet
+ 		// 3. The next packet will have the same ECN marking
+ 		// 4. We still have enough space for another full-size packet in the buffer
+-		if !dontSendMore && size == maxSize && nextECN == ecn && buf.Len()+maxSize <= buf.Cap() {
++		if !dontSendMore && size == maxSize && nextECN == ecn && buf.Len()+maxSize <= min(buf.Cap(), protocol.ByteCount(c.config.MaxGSOBatchSize)) {
+ 			continue
+ 		}
+ 
 --- a/vendor/github.com/quic-go/quic-go/internal/protocol/protocol.go
 +++ b/vendor/github.com/quic-go/quic-go/internal/protocol/protocol.go
-@@ -108,7 +108,8 @@
+@@ -108,10 +108,12 @@
  // ethernet's max size, minus the IP and UDP headers. IPv6 has a 40 byte header,
  // UDP adds an additional 8 bytes.  This is a total overhead of 48 bytes.
  // Ethernet's max packet size is 1500 bytes,  1500 - 48 = 1452.
@@ -101,4 +121,9 @@
 +const MaxPacketBufferSize = 8952
  
  // MaxLargePacketBufferSize is used when using GSO
- const MaxLargePacketBufferSize = 20 * 1024
+-const MaxLargePacketBufferSize = 20 * 1024
++// Swarmcopy: bounded capacity; each connection separately limits its GSO batch.
++const MaxLargePacketBufferSize = 65527
+ 
+ // MinInitialPacketSize is the minimum size an Initial packet is required to have.
+ const MinInitialPacketSize = 1200

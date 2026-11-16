@@ -1,5 +1,7 @@
 # UDP / QUIC chunk transport
 
+The current candidate adds four client socket shards, an8952 negotiated ceiling and a64KiB GSO bound, with an explicitly recorded local dependency patch. See [current design](QUIC-TUNING.en.md) and [complete ablations](QUIC-TUNING-RESULTS.en.md). Base transport behavior follows below.
+
 [中文](QUIC.zh-CN.md) · [TCP release](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0)
 
 `--transport quic` selects HTTP/3 reliable streams over QUIC/UDP. TCP stays the default. Pipelined whole-file SHA-256 and the 256-chunk prefix window stay on; adaptive concurrency stays off. This is not IBM FASP and UDP is not assumed to be faster.

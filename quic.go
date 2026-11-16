@@ -71,7 +71,11 @@ func quicConfig(maxPayloads ...int) *quic.Config {
 	if len(maxPayloads) > 0 && maxPayloads[0] != 0 {
 		maxPayload = maxPayloads[0]
 	}
-	return &quic.Config{MaxUDPPayloadSize: uint16(maxPayload), HandshakeIdleTimeout: 3 * time.Second, MaxIdleTimeout: 45 * time.Second, KeepAlivePeriod: 15 * time.Second,
+	gsoKiB := 20
+	if len(maxPayloads) > 1 && maxPayloads[1] != 0 {
+		gsoKiB = maxPayloads[1]
+	}
+	return &quic.Config{MaxGSOBatchSize: uint32(min(gsoKiB<<10, 65527)), MaxUDPPayloadSize: uint16(maxPayload), HandshakeIdleTimeout: 3 * time.Second, MaxIdleTimeout: 45 * time.Second, KeepAlivePeriod: 15 * time.Second,
 		InitialStreamReceiveWindow: 2 << 20, MaxStreamReceiveWindow: 32 << 20,
 		InitialConnectionReceiveWindow: 8 << 20, MaxConnectionReceiveWindow: 128 << 20, MaxIncomingStreams: 64}
 }
@@ -120,9 +124,16 @@ func newDataClient(mode, token string, socketCounts ...int) (*http.Client, func(
 	if maxPayload < 1452 || maxPayload > 8952 {
 		return nil, nil, errors.New("quic-max-payload must be 1452..8952")
 	}
+	gsoKiB := 20
+	if len(socketCounts) > 2 && socketCounts[2] != 0 {
+		gsoKiB = socketCounts[2]
+	}
+	if gsoKiB < 16 || gsoKiB > 64 {
+		return nil, nil, errors.New("quic-gso-kib must be 16..64")
+	}
 	q := &quicRoundTripper{}
 	for range count {
-		q.shards = append(q.shards, &http3.Transport{TLSClientConfig: conf.Clone(), QUICConfig: quicConfig(maxPayload), DisableCompression: true, MaxResponseHeaderBytes: 8192})
+		q.shards = append(q.shards, &http3.Transport{TLSClientConfig: conf.Clone(), QUICConfig: quicConfig(maxPayload, gsoKiB), DisableCompression: true, MaxResponseHeaderBytes: 8192})
 	}
 	c.Transport = q
 	return c, func() {
@@ -152,7 +163,7 @@ func (n *Node) startQUIC(ctx context.Context, addr string, serverErr chan<- erro
 	if err != nil {
 		return nil, err
 	}
-	srv := &http3.Server{Addr: addr, TLSConfig: conf, QUICConfig: quicConfig(n.o.QUICMaxPayload), MaxHeaderBytes: 8192, IdleTimeout: 30 * time.Second,
+	srv := &http3.Server{Addr: addr, TLSConfig: conf, QUICConfig: quicConfig(n.o.QUICMaxPayload, n.o.QUICGSOKiB), MaxHeaderBytes: 8192, IdleTimeout: 30 * time.Second,
 		Handler: http.HandlerFunc(n.serve), ConnContext: func(_ context.Context, _ *quic.Conn) context.Context { return ctx }}
 	go func() { serverErr <- srv.Serve(packet) }()
 	return func() { _ = srv.Close(); _ = packet.Close() }, nil
@@ -174,4 +185,11 @@ func peerCPUProfile() (func(), error) {
 		return nil, err
 	}
 	return func() { pprof.StopCPUProfile(); f.Close() }, nil
+}
+
+func quicGSOKiB(value int) int {
+	if value == 0 {
+		return 20
+	}
+	return value
 }

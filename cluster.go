@@ -25,6 +25,7 @@ import (
 )
 
 type Job struct {
+	QUICGSOKiB                                                                   int
 	QUICMaxPayload                                                               int
 	QUICSockets                                                                  int
 	Transport                                                                    string
@@ -362,6 +363,7 @@ func clusterCommand(mode string, args []string) error {
 		fs.BoolVar(&recheck, "recheck", false, "force full existing-file verification")
 	}
 	if mode == "distribute" {
+		fs.IntVar(&j.QUICGSOKiB, "quic-gso-kib", 64, "maximum QUIC GSO batch KiB (16..64), congestion/pacing limited")
 		fs.IntVar(&j.QUICMaxPayload, "quic-max-payload", 8952, "QUIC UDP payload ceiling (1452..8952), with path MTU discovery")
 		fs.IntVar(&j.QUICSockets, "quic-sockets", 4, "QUIC client UDP socket shards (1..32)")
 		fs.StringVar(&j.Transport, "transport", "tcp", "chunk data transport: tcp or quic (UDP); control stays TCP")
@@ -402,6 +404,9 @@ func clusterCommand(mode string, args []string) error {
 		return errors.New("unexpected positional arguments; this release accepts a single source file")
 	}
 	if mode == "distribute" {
+		if j.QUICGSOKiB < 16 || j.QUICGSOKiB > 64 {
+			return errors.New("quic-gso-kib must be 16..64")
+		}
 		if j.QUICMaxPayload < 1452 || j.QUICMaxPayload > 8952 {
 			return errors.New("quic-max-payload must be 1452..8952")
 		}

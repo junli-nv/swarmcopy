@@ -112,7 +112,8 @@ type StatelessResetToken [16]byte
 const MaxPacketBufferSize = 8952
 
 // MaxLargePacketBufferSize is used when using GSO
-const MaxLargePacketBufferSize = 20 * 1024
+// Swarmcopy: bounded capacity; each connection separately limits its GSO batch.
+const MaxLargePacketBufferSize = 65527
 
 // MinInitialPacketSize is the minimum size an Initial packet is required to have.
 const MinInitialPacketSize = 1200

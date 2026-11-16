@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.3.0-dev.3"
+const version = "0.3.0-dev.4"
 const protocol = "SCDP/1"
 
 type Manifest struct {
@@ -221,6 +221,7 @@ func prepare(args []string) error {
 }
 
 type Options struct {
+	QUICGSOKiB                               int
 	QUICMaxPayload                           int
 	QUICSockets                              int
 	Transport                                string
@@ -583,6 +584,7 @@ func peer(args []string) error {
 	var o Options
 	fs := flag.NewFlagSet("peer", flag.ContinueOnError)
 	configureUsage(fs, "peer")
+	fs.IntVar(&o.QUICGSOKiB, "quic-gso-kib", 64, "maximum QUIC GSO batch KiB (16..64), still congestion/pacing limited")
 	fs.IntVar(&o.QUICMaxPayload, "quic-max-payload", 8952, "QUIC UDP payload ceiling (1452..8952); larger packets require PMTU confirmation")
 	fs.IntVar(&o.QUICSockets, "quic-sockets", 4, "QUIC client UDP socket shards (1..32); distribute sources across receive loops")
 	fs.StringVar(&o.Transport, "transport", "tcp", "chunk data transport: tcp or quic (UDP); control stays TCP")
@@ -616,6 +618,9 @@ func peer(args []string) error {
 	if fs.NArg() != 0 {
 		fs.Usage()
 		return errors.New("unexpected positional arguments; this release accepts a single source file")
+	}
+	if o.QUICGSOKiB < 16 || o.QUICGSOKiB > 64 {
+		return errors.New("quic-gso-kib must be 16..64")
 	}
 	if o.QUICMaxPayload < 1452 || o.QUICMaxPayload > 8952 {
 		return errors.New("quic-max-payload must be 1452..8952")
@@ -682,7 +687,7 @@ func peer(args []string) error {
 		peerBusy: map[string]int{}, from: map[string]int64{}, slots: make(chan struct{}, o.Uploads),
 		client: client(), lastProgress: time.Now(), up: pacer{rate: o.UploadMiB << 20}, down: pacer{rate: o.DownloadMiB << 20}}
 	defer n.client.CloseIdleConnections()
-	dataClient, closeData, err := newDataClient(o.Transport, t, o.QUICSockets, o.QUICMaxPayload)
+	dataClient, closeData, err := newDataClient(o.Transport, t, o.QUICSockets, o.QUICMaxPayload, o.QUICGSOKiB)
 	if err != nil {
 		return err
 	}

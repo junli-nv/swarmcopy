@@ -238,3 +238,16 @@ func TestQUICShardsKeepPeerAffinityAndDistributeHosts(t *testing.T) {
 		t.Fatal("unbounded shard allocation")
 	}
 }
+
+func TestQUICGSOBatchBoundPreservesLegacyAndRejectsInvalid(t *testing.T) {
+	if quicGSOKiB(0) != 20 || quicGSOKiB(16) != 16 {
+		t.Fatal("legacy or explicit setting changed")
+	}
+	conf := quicConfig(8952, 64)
+	if conf.MaxGSOBatchSize != 65527 {
+		t.Fatal("GSO batch exceeds UDP payload bound")
+	}
+	if _, _, e := newDataClient("quic", strings.Repeat("a", 64), 4, 8952, 65); e == nil {
+		t.Fatal("unbounded GSO accepted")
+	}
+}

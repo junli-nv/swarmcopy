@@ -22,7 +22,7 @@ Ordinary rmem_max256 KiB is not effective socket allocation: an identical short 
   --transport quic
 ~~~
 
-Candidate QUIC defaults are `--quic-sockets 4 --quic-max-payload 8952`; default transport remains TCP. The1452..8952 ceiling refers to UDP payload bytes, not NIC MTU.8952 leaves48 bytes for IPv6/UDP within a9000-byte path. The actual size also respects peer limits and PMTU discovery.
+Candidate QUIC defaults are `--quic-sockets 4 --quic-max-payload 8952 --quic-gso-kib 64`; default transport remains TCP. The1452..8952 ceiling refers to UDP payload bytes, not NIC MTU.8952 leaves48 bytes for IPv6/UDP within a9000-byte path. The actual size also respects peer limits and PMTU discovery.
 
 For a new diagnostic job, `--quic-sockets 1 --quic-max-payload 1452` restores the initial configured limits. Job parameters persist through resume. Missing old fields explicitly mean1/1452 rather than inheriting newer defaults. Performance.QUICSockets/QUICMaxPayload are configured limits, not observed socket count/path MTU.
 
@@ -36,7 +36,7 @@ Tests cover connection establishment on a narrow path. Recovery from a route/MTU
 
 ## Dependency maintenance
 
-Pinned quic-go v0.65.0 and build dependencies are vendored with licenses. `patches/quic-go-pmtu.patch` records four modified upstream files:
+Pinned quic-go v0.65.0 and build dependencies are vendored with licenses. `patches/quic-go-bulk.patch` records four modified upstream files:
 
 - interface.go: per-connection maximum UDP payload.
 - config.go: validation,1452 default, copy, initial-size clamp.
@@ -60,3 +60,9 @@ Network queueing, receiver CPU/storage limits, and user caps need separate measu
 
 This version does not layer a second delay controller over QUIC, disable congestion control, or change download-worker defaults. Formulas/constants from static samples are not dynamically validated control algorithms. Keep future rate-controller experiments separate from socket/packet-size ablations.
 
+
+## GSO batches and packet size
+
+--quic-gso-kib accepts16..64, default64 for new jobs and20 for missing old fields. The64KiB setting is conservatively capped at65,527 bytes per GSO submission; individual wire UDP packets still respect8952/path limits. It does not send64KiB wire datagrams or require IP fragmentation.
+
+A20KiB buffer holds at most two full8952-byte packets. A larger bound can reduce capacity-limited submissions, but data availability, ECN, queues, congestion window, and pacing still constrain each packet. The same-binary20/64 comparison does not presume larger is faster. The same four-file patch additionally covers MaxGSOBatchSize validation/copy, bounded capacity, and the existing send-loop capacity condition. Original behavior remains in earlier source checkpoints.

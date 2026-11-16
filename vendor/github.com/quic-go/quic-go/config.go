@@ -36,6 +36,9 @@ func validateConfig(config *Config) error {
 	if config.MaxUDPPayloadSize != 0 && (config.MaxUDPPayloadSize < 1280 || config.MaxUDPPayloadSize > protocol.MaxPacketBufferSize) {
 		return fmt.Errorf("invalid maximum UDP payload size: %d", config.MaxUDPPayloadSize)
 	}
+	if config.MaxGSOBatchSize != 0 && (config.MaxGSOBatchSize < protocol.MaxPacketBufferSize || config.MaxGSOBatchSize > protocol.MaxLargePacketBufferSize) {
+		return fmt.Errorf("invalid GSO batch size: %d", config.MaxGSOBatchSize)
+	}
 	const maxStreams = 1 << 60
 	if config.MaxIncomingStreams > maxStreams {
 		config.MaxIncomingStreams = maxStreams
@@ -74,6 +77,10 @@ func validateConfig(config *Config) error {
 func populateConfig(config *Config) *Config {
 	if config == nil {
 		config = &Config{}
+	}
+	maxGSO := config.MaxGSOBatchSize
+	if maxGSO == 0 {
+		maxGSO = 20 << 10
 	}
 	maxPayload := config.MaxUDPPayloadSize
 	if maxPayload == 0 {
@@ -120,6 +127,7 @@ func populateConfig(config *Config) *Config {
 		maxIncomingUniStreams = 0
 	}
 	return &Config{
+		MaxGSOBatchSize:                  maxGSO,
 		MaxUDPPayloadSize:                maxPayload,
 		GetConfigForClient:               config.GetConfigForClient,
 		Versions:                         versions,

@@ -2,6 +2,14 @@
 
 [中文](VALIDATION.zh-CN.md) · [Development](DEVELOPMENT.en.md) · [Preliminary benchmark](BENCHMARK.en.md) · [Cold-cache study protocol](COLD-STUDY.en.md)
 
+## Tuned optional UDP candidate
+
+Race tests/go vet pass for lossy UDP, identity/auth, cancellation/no fallback, PMTU jumbo/narrow/limited-peer cases, and GSO bounds. An actual race executable passes interruption/corrupt-partial forwarding with default UDP options. CLI help routes pass.
+
+Four separate45-node studies complete22 fresh cases,990 cache barriers and990 owned-process stop records; initial slow results remain visible. See [complete results](QUIC-TUNING-RESULTS.en.md). One auxiliary length-unit assertion was corrected against the original successful capture without rerunning a formal case.
+
+Independent static rebuilds reproduce both final frozen architecture hashes. Vendored code regenerates byte-for-byte from fixed modules plus the patch. ARM64 is cross-built only; mid-transfer MTU reduction remains unverified.
+
 ## Independent UDP/QUIC checks
 
 Race tests and go vet pass for real lossy UDP recovery, job pinning, bearer auth, cancellation, and no TCP fallback. A real race chain passes QUIC/window/endgame/adaptive interruption/corruption/forwarding. Two real SSH nodes verify TCP/QUIC deployment, full hashed bytes, and actual HTTP/3 response counters. UDP is evaluated separately from regular TCP defaults; see [design](QUIC.en.md).
