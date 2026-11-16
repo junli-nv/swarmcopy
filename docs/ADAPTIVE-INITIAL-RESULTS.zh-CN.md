@@ -29,7 +29,7 @@
 
 每个方法每轮均为 UUID 新目录；45 个节点全部通过目录不存在检查，再 sync/drop_caches=3，合计 270 次缓存屏障。两个轮次顺序相反：baseline→fixed→adaptive，以及 adaptive→fixed→baseline。正常传输重试允许，计时不中断、不重置。所有接收端 Origin=false、Downloaded 等于文件大小且 Complete=true，未复用其他轮次的数据。
 
-最后核对 45 个不同内核 boot ID，六个作业共 270 个拥有身份的 peer 进程记录均已停止。原始任务、完整日志和节点身份保存在私有 run/compare45，公开数据经过匿名化。源码和二进制摘要固定，每个方法前检查未改变；正式测试期间只改文档。
+最后核对 45 个不同内核 boot ID，六个作业共 270 个拥有身份的 peer 进程记录均已停止。原始任务、完整日志和节点身份保存在私有 run/compare45-initial，公开数据经过匿名化。源码和二进制摘要固定，每个方法前检查未改变；正式测试期间只改文档。
 
 只有两个样本，不能据此宣称稳定的通用性能增益。OS 页缓存已清，设备缓存和后台负载未隔离。本表没有测商业 Aspera，也没有 UDP，更不能与之前 rsync 对照的倍数直接相乘。ARM64 只有交叉构建。
 
@@ -37,4 +37,6 @@
 - [全部缓存屏障](adaptive-initial-cache-barriers.json)
 - [可复测驱动](../scripts/benchmark-adaptive.py)
 
-在本次控制端查询任务：./swarmcopy jobs --state-dir ./run/compare45；单项 --job ./run/compare45/<case-id>-job。默认 jobs 不会自动搜索自定义目录。
+在本次控制端查询任务：./swarmcopy jobs --state-dir ./run/compare45-initial；单项 --job ./run/compare45-initial/<case-id>-job。默认 jobs 不会自动搜索自定义目录。
+
+[初始原型源码](https://github.com/junli-nv/swarmcopy/commit/82e5707c3ed60f90b5fbc02f8c4938ca4ddd7e6a)

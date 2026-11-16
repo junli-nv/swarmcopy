@@ -1,6 +1,8 @@
 # Adaptive transfer experiment
 
-[45-node two-round measurements](ADAPTIVE-INITIAL-RESULTS.en.md)
+[45-node two-round measurements](ADAPTIVE-RESULTS.en.md)
+
+[Initial regression measurements](ADAPTIVE-INITIAL-RESULTS.en.md)
 
 [中文](ADAPTIVE.zh-CN.md) · [Development](DEVELOPMENT.en.md)
 
@@ -15,13 +17,15 @@ This 0.2.0-dev transport prototype borrows resource-feedback ideas from Aspera w
   --adaptive --workers 4 --max-workers 16 --endgame --hedge-delay 2s
 ~~~
 
---adaptive enables concurrency probing, measured source selection, and source cooldown. --workers is fixed or initial concurrency (default 4); --max-workers is the adaptive cap (default 16, at most 32 and no smaller than the initial value). --endgame independently enables delayed final-chunk hedges; --hedge-delay defaults to 2s, with learned source duration also considered.
+--adaptive enables concurrency probing, measured source selection, and source cooldown. --workers is fixed or initial concurrency (default 4); --min-workers defaults to 0, meaning the initial concurrency, and can explicitly be set to 1..workers; --max-workers is the adaptive cap (default 16, at most 32 and no smaller than the initial value). --endgame independently enables delayed final-chunk hedges; --hedge-delay defaults to 2s, with learned source duration also considered.
 
 Omit --adaptive and --endgame for fixed scheduling. New jobs persist the options and resume reuses them; old jobs leave them disabled. Live tuning of an existing job is not exposed. Default bandwidth remains unlimited; explicit upload/download limits still apply. Ordinary binaries are deployed automatically. No runtime Python, pdsh, or Go dependency is added; race builds remain development-only.
 
 ## Concurrency feedback
 
-Every two seconds the node measures application-read HTTP payload throughput. It probes one additional slot, rolling back if the gain is below roughly 5%, then cooling down for two intervals. A completed-work write-call share above 35% also removes one slot. The target remains between one and the configured cap.
+Every two seconds the node measures application-read HTTP payload throughput. It probes one additional slot, rolling back if the gain is below roughly 5%, then cooling down for two intervals. A completed-work write-call share above 35% also removes one slot. The target stays between the effective --min-workers floor and configured cap. By default it cannot drop below initial concurrency.
+
+The initial prototype collapsed many receivers to a single worker based on write-work share, causing a measured regression. The corrected default preserves initial concurrency; a lower floor requires an explicit --min-workers choice. See the [retained initial evaluation](ADAPTIVE-INITIAL-RESULTS.en.md).
 
 This is a heuristic application scheduler, not FASP packet-level congestion control or a replacement for TCP control. WriteAt may complete into page cache: call latency is not physical RAID throughput and may reveal writeback pressure only when writes block. Final fsync is measured separately. Background I/O and network queue causes are not fully classified.
 
@@ -42,7 +46,7 @@ watch/distribute show active/target workers, sync/hash/publication phases, retry
 | Fields | Meaning |
 |---|---|
 | Stage | transfer, sync, final-hash, publish, complete, error |
-| ActiveDownloads / TargetDownloads / MaxDownloads | Outstanding work, current admission target, configured cap |
+| ActiveDownloads / TargetDownloads / MinDownloads / MaxDownloads | Outstanding work, current admission target, effective floor, configured cap |
 | ActiveUploads / UploadLimit | Local upload use and cap |
 | ScanSeconds | Initial scan or final-file verification-cache acceptance |
 | TransferSeconds | Wall time from post-scan startup to complete chunks, including discovery/waiting |
@@ -75,4 +79,3 @@ The baseline/fixed/adaptive comparison uses fresh directories and sync/drop_cach
 - [IBM FASP deployment conditions](https://www.ibm.com/docs/en/connect-direct/6.2.0?topic=v62-using-fasp)
 - [IBM transfer rate controls](https://www.ibm.com/docs/en/ahts/4.4.x?topic=csfcl-asperaconf-transfer-configuration-2)
 - [Aspera storage feedback](https://download.asperasoft.com/download/docs/csrv/3.2.1/linux/html/fasp/conf-file_system-cmd.html)
-

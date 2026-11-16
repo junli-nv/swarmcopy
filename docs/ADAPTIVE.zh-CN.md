@@ -1,6 +1,8 @@
 # 自适应传输实验
 
-[45 节点两轮实测结果](ADAPTIVE-INITIAL-RESULTS.zh-CN.md)
+[45 节点两轮实测结果](ADAPTIVE-RESULTS.zh-CN.md)
+
+[初始原型退化记录](ADAPTIVE-INITIAL-RESULTS.zh-CN.md)
 
 [English](ADAPTIVE.en.md) · [开发指南](DEVELOPMENT.zh-CN.md)
 
@@ -17,6 +19,7 @@
 
 - --adaptive：启用并发探测、来源速度评分、繁忙/失败来源冷却。
 - --workers：固定模式并发数，或自适应模式初始并发数，默认 4。
+- --min-workers：自适应下限，默认 0 表示等于初始 --workers；可显式设为 1..workers。
 - --max-workers：自适应上限，默认 16，最大 32，不能低于初始值。
 - --endgame：独立开关，允许尾块从第二来源请求，默认关闭。
 - --hedge-delay：尾块第一次请求的最短等待时间，默认 2 秒。实际还会参考已学习来源耗时，避免过早重复下载。
@@ -27,7 +30,9 @@
 
 ## 并发与存储反馈
 
-每 2 秒采样应用读取的 HTTP 数据量，并对增加一个并发槽位后的吞吐进行比较。未达到约 5% 改善则回退一个槽位，冷却两个采样周期后再探测。写入调用耗时占本窗口已完成请求的网络、分块哈希和写入工作时间超过 35% 时，减少一个槽位。范围始终为 1 到 --max-workers。
+每 2 秒采样应用读取的 HTTP 数据量，并对增加一个并发槽位后的吞吐进行比较。未达到约 5% 改善则回退一个槽位，冷却两个采样周期后再探测。写入调用耗时占本窗口已完成请求的网络、分块哈希和写入工作时间超过 35% 时，减少一个槽位。范围为 --min-workers 的有效值到 --max-workers；默认不会低于初始并发。
+
+初始原型曾仅因写入耗时占比就降到 1 个 worker，使真实传输变慢。修正后默认保留初始并发作为下限；如确需更低并发，必须显式设定 --min-workers。首次退化记录见 [初始对照](ADAPTIVE-INITIAL-RESULTS.zh-CN.md)。
 
 这是启发式的应用层并发控制，不是 Aspera/FASP 的包级拥塞算法，也不替代 TCP 的拥塞控制。WriteAt 可能先写页缓存，因此写调用耗时不是物理 RAID 吞吐；内核开始阻塞写入时才可能反映写回压力。最终 fsync 耗时单独统计。没有承诺完全识别网络拥塞、系统后台 I/O 或交换机队列。
 
@@ -54,7 +59,7 @@ watch/distribute 显示动态 workers、SYNC / FINAL-HASH / PUBLISH 阶段及全
 | 字段 | 含义 |
 |---|---|
 | Stage | transfer、sync、final-hash、publish、complete 或 error |
-| ActiveDownloads / TargetDownloads / MaxDownloads | 在途请求、当前目标、配置上限 |
+| ActiveDownloads / TargetDownloads / MinDownloads / MaxDownloads | 在途请求、当前目标、有效下限、配置上限 |
 | ActiveUploads / UploadLimit | 本节点上传占用与上限 |
 | ScanSeconds | 启动时扫描或接受已有文件校验缓存的耗时 |
 | TransferSeconds | peer 扫描后到全部块齐备的墙钟时间，包含发现、等待和调度 |
@@ -87,4 +92,3 @@ python3 scripts/benchmark-adaptive.py --help
 - [IBM：FASP 的链路适用范围](https://www.ibm.com/docs/en/connect-direct/6.2.0?topic=v62-using-fasp)
 - [IBM：传输速率控制配置](https://www.ibm.com/docs/en/ahts/4.4.x?topic=csfcl-asperaconf-transfer-configuration-2)
 - [Aspera：存储速率反馈](https://download.asperasoft.com/download/docs/csrv/3.2.1/linux/html/fasp/conf-file_system-cmd.html)
-

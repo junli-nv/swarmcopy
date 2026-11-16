@@ -28,7 +28,7 @@ func chunkServer(data []byte) *httptest.Server {
 }
 func TestAdaptiveConcurrencyCapAndBackpressure(t *testing.T) {
 	n, _ := fixture(t)
-	n.o = Options{Workers: 4, MaxWorkers: 8, Adaptive: true}
+	n.o = Options{Workers: 4, MinWorkers: 1, MaxWorkers: 8, Adaptive: true}
 	n.have = make([]bool, 32)
 	n.busy = make([]bool, 32)
 	for j := 0; j < 16; j++ {
@@ -300,5 +300,24 @@ func TestFinalizePerformanceAndPublication(t *testing.T) {
 	p := n.snapshot().Performance
 	if p.Stage != "complete" || p.TransferSeconds < 1 || p.FinalHashSeconds <= 0 || p.PublishSeconds < 0 || !n.complete {
 		t.Fatalf("invalid phase metrics: %+v", p)
+	}
+}
+
+func TestDefaultFloorPreventsWriteShareCollapse(t *testing.T) {
+	n, _ := fixture(t)
+	n.o = Options{Workers: 4, MaxWorkers: 16, Adaptive: true}
+	n.initTransfersLocked()
+	for i := 0; i < 100; i++ {
+		n.adjustLocked(100, .9)
+	}
+	if n.target != 4 {
+		t.Fatalf("default write feedback collapsed configured floor to %d", n.target)
+	}
+	n.o.MinWorkers = 2
+	for i := 0; i < 100; i++ {
+		n.adjustLocked(100, .9)
+	}
+	if n.target != 2 {
+		t.Fatalf("explicit floor not respected: %d", n.target)
 	}
 }

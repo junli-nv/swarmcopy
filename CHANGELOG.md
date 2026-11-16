@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0-dev (experimental)
+
+- Opt-in adaptive download concurrency with explicit minimum/maximum bounds, measured source ranking, and persistent busy-source cooldown.
+- Optional delayed endgame requests with per-chunk commit deduplication and cancellation.
+- Per-node phase timings, payload/retry diagnostics, dynamic concurrency display, and local-write error reporting.
+- Retained initial regression measurements and source history; corrected default concurrency floor.
+- Bilingual design and reproducible baseline/fixed/adaptive comparisons.
+- SCDP/1 over TCP remains wire compatible; scheduling changes are disabled by default.
+
 ## 0.1.0
 
 - Initial SCDP/1 single-file P2P distribution with verified chunk forwarding.

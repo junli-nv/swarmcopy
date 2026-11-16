@@ -26,6 +26,7 @@ import (
 
 type Job struct {
 	Adaptive, Endgame                                                            bool
+	MinWorkers                                                                   int
 	MaxWorkers                                                                   int
 	HedgeDelay                                                                   time.Duration
 	Fanout                                                                       int
@@ -365,6 +366,7 @@ func clusterCommand(mode string, args []string) error {
 		fs.IntVar(&j.Port, "port", 19700, "peer TCP port")
 		fs.IntVar(&j.Fanout, "fanout", 8, "maximum concurrent SSH deployment operations")
 		fs.IntVar(&j.Workers, "workers", 4, "fixed or initial concurrent downloads")
+		fs.IntVar(&j.MinWorkers, "min-workers", 0, "adaptive minimum downloads; 0=initial workers")
 		fs.BoolVar(&j.Adaptive, "adaptive", false, "experimental adaptive concurrency and source selection")
 		fs.BoolVar(&j.Endgame, "endgame", false, "hedge delayed final chunks from an alternate source")
 		fs.IntVar(&j.MaxWorkers, "max-workers", 16, "adaptive maximum downloads (workers..32)")
@@ -415,6 +417,12 @@ func clusterCommand(mode string, args []string) error {
 		if j.Port < 1 || j.Port > 65535 || j.Workers < 1 || j.Workers > 32 || j.Uploads < 1 || j.Uploads > 32 ||
 			j.UploadMiB < 0 || j.DownloadMiB < 0 || j.UploadMiB > 100000 || j.DownloadMiB > 100000 || j.Lifetime <= 0 {
 			return errors.New("invalid resource limits")
+		}
+		if j.MinWorkers == 0 {
+			j.MinWorkers = j.Workers
+		}
+		if j.MinWorkers < 1 || j.MinWorkers > j.Workers {
+			return errors.New("min-workers must be 1..workers, or 0 for initial workers")
 		}
 		if j.MaxWorkers < j.Workers && !j.Adaptive {
 			j.MaxWorkers = j.Workers

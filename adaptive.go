@@ -12,14 +12,14 @@ import (
 
 // Performance durations are sums of concurrent request work unless named as a phase.
 type Performance struct {
-	Stage                                                                            string
-	Adaptive                                                                         bool
-	ActiveDownloads, TargetDownloads, MaxDownloads, ActiveUploads, UploadLimit       int
-	Requests, Retries, BusyResponses, HedgeRequests, CanceledRequests, WorkerChanges int64
-	ReceivedBytes, DuplicateBytes                                                    int64
-	ScanSeconds, TransferSeconds, FinalSyncSeconds, FinalHashSeconds, PublishSeconds float64
-	NetworkWorkSeconds, ChunkHashWorkSeconds, WriteWorkSeconds                       float64
-	SourceCount                                                                      int
+	Stage                                                                                    string
+	Adaptive                                                                                 bool
+	ActiveDownloads, TargetDownloads, MaxDownloads, MinDownloads, ActiveUploads, UploadLimit int
+	Requests, Retries, BusyResponses, HedgeRequests, CanceledRequests, WorkerChanges         int64
+	ReceivedBytes, DuplicateBytes                                                            int64
+	ScanSeconds, TransferSeconds, FinalSyncSeconds, FinalHashSeconds, PublishSeconds         float64
+	NetworkWorkSeconds, ChunkHashWorkSeconds, WriteWorkSeconds                               float64
+	SourceCount                                                                              int
 }
 type SourcePerformance struct {
 	Requests, Errors   int64
@@ -55,6 +55,12 @@ func (n *Node) initTransfersLocked() {
 		}
 	}
 }
+func (n *Node) minWorkers() int {
+	if n.o.MinWorkers > 0 {
+		return n.o.MinWorkers
+	}
+	return max(1, n.o.Workers)
+}
 func (n *Node) maxWorkers() int {
 	if n.o.Adaptive && n.o.MaxWorkers > 0 {
 		return n.o.MaxWorkers
@@ -70,6 +76,7 @@ func (n *Node) performanceLocked() *Performance {
 	p.ActiveDownloads = n.active
 	p.TargetDownloads = n.target
 	p.MaxDownloads = n.maxWorkers()
+	p.MinDownloads = n.minWorkers()
 	p.ActiveUploads = len(n.slots)
 	p.UploadLimit = cap(n.slots)
 	p.ReceivedBytes = n.wireReceived.Load()
@@ -313,13 +320,13 @@ func (n *Node) adjustLocked(rate, writeShare float64) {
 	before := n.target
 	switch {
 	case writeShare > 0.35:
-		n.target = max(1, n.target-1)
+		n.target = max(n.minWorkers(), n.target-1)
 		n.probing = false
 		n.cooldownTicks = 2
 	case n.cooldownTicks > 0:
 		n.cooldownTicks--
 	case n.probing && n.previousRate > 0 && rate < n.previousRate*1.05:
-		n.target = max(1, n.target-1)
+		n.target = max(n.minWorkers(), n.target-1)
 		n.probing = false
 		n.cooldownTicks = 2
 	case rate > 0 && n.target < n.maxWorkers():

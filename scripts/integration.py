@@ -3,6 +3,7 @@
 import hashlib, json, os, pathlib, shlex, socket, subprocess, tempfile, time
 EXTRA = shlex.split(os.environ.get("SWARMCOPY_TEST_FLAGS",""))
 BINARY = os.environ.get("SWARMCOPY_BINARY", str(pathlib.Path(__file__).resolve().parents[1] / "swarmcopy"))
+SEED_BINARY = os.environ.get("SWARMCOPY_SEED_BINARY", BINARY)
 def freeport():
     with socket.socket() as s:
         s.bind(("127.0.0.1",0))
@@ -25,9 +26,11 @@ with tempfile.TemporaryDirectory(prefix="swarmcopy-test-") as tmp:
         if i==1: peers=[f"127.0.0.1:{ports[0]}",f"127.0.0.1:{ports[2]}"]
         if i==2: peers=[f"127.0.0.1:{ports[1]}"]
         f=open(root/f"{i}-{len(logs)}.log","w");logs.append(f)
-        p=subprocess.Popen([BINARY,"peer","--file",str(files[i]),"--manifest",str(manifest),
+        executable = SEED_BINARY if i == 0 else BINARY
+        flags = EXTRA if executable == BINARY else []
+        p=subprocess.Popen([executable,"peer","--file",str(files[i]),"--manifest",str(manifest),
           "--token-file",str(token),"--listen",f"127.0.0.1:{ports[i]}","--peers",",".join(peers),
-          "--download-mib","8","--upload-mib","8","--lifetime","60s","--stall-timeout","20s"]+EXTRA,
+          "--download-mib","8","--upload-mib","8","--lifetime","60s","--stall-timeout","20s"]+flags,
           stdout=f,stderr=f)
         procs.append(p);return p
     try:

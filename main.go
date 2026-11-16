@@ -222,6 +222,7 @@ func prepare(args []string) error {
 
 type Options struct {
 	Adaptive, Endgame                        bool
+	MinWorkers                               int
 	MaxWorkers                               int
 	HedgeDelay                               time.Duration
 	Recheck                                  bool
@@ -573,6 +574,7 @@ func peer(args []string) error {
 	fs.StringVar(&o.Peers, "peers", "", "comma-separated host:port list; exclude self")
 	fs.StringVar(&o.TokenFile, "token-file", "", "shared job token file")
 	fs.IntVar(&o.Workers, "workers", 4, "fixed or initial concurrent downloads (1..32)")
+	fs.IntVar(&o.MinWorkers, "min-workers", 0, "adaptive minimum downloads; 0=initial workers")
 	fs.BoolVar(&o.Adaptive, "adaptive", false, "experimental adaptive concurrency and source selection")
 	fs.BoolVar(&o.Endgame, "endgame", false, "hedge delayed final chunks using one alternate source")
 	fs.IntVar(&o.MaxWorkers, "max-workers", 16, "adaptive maximum downloads (workers..32)")
@@ -597,6 +599,12 @@ func peer(args []string) error {
 		o.Uploads < 1 || o.Uploads > 32 || o.DownloadMiB < 0 || o.UploadMiB < 0 ||
 		o.DownloadMiB > 100000 || o.UploadMiB > 100000 || o.Lifetime <= 0 || o.Stall <= 0 {
 		return errors.New("invalid peer arguments")
+	}
+	if o.MinWorkers == 0 {
+		o.MinWorkers = o.Workers
+	}
+	if o.MinWorkers < 1 || o.MinWorkers > o.Workers {
+		return errors.New("min-workers must be 1..workers, or 0 for initial workers")
 	}
 	if o.MaxWorkers < o.Workers && !o.Adaptive {
 		o.MaxWorkers = o.Workers

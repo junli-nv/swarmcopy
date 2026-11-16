@@ -2,6 +2,8 @@
 
 [自适应传输实验说明](docs/ADAPTIVE.zh-CN.md)：0.2.0-dev 分支，新增性能诊断及可选调度；v0.1.0 的既有测速结果见下文。
 
+[下载实验版](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0-dev) · [45-node results](docs/ADAPTIVE-RESULTS.zh-CN.md)
+
 Linux 计算集群的大文件 P2P 分发工具。适用于将 NeMo 等容器的 `.sqsh` 介质从共享存储分发到节点本地 RAID。
 
 [English](README.en.md) · [开发指南（中文）](docs/DEVELOPMENT.zh-CN.md) · [Developer guide](docs/DEVELOPMENT.en.md) · [验证记录](docs/VALIDATION.zh-CN.md)

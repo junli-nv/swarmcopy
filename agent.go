@@ -137,6 +137,9 @@ func agentCommand(args []string) error {
 			"--uploads", strconv.Itoa(o.Uploads), "--upload-mib", strconv.FormatInt(o.UploadMiB, 10),
 			"--download-mib", strconv.FormatInt(o.DownloadMiB, 10), "--lifetime", o.Lifetime.String(),
 			"--stall-timeout", o.Stall.String()}
+		if o.MinWorkers > 0 {
+			argv = append(argv, "--min-workers", strconv.Itoa(o.MinWorkers))
+		}
 		if o.MaxWorkers > 0 {
 			argv = append(argv, "--max-workers", strconv.Itoa(o.MaxWorkers))
 		}

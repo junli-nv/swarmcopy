@@ -29,7 +29,7 @@ Phase maxima can come from different nodes and overlap; do not sum them into bat
 
 Every method/round used a new UUID directory, absent on every host before sync/drop_caches=3: 270 successful node barriers. Round orders were baseline→fixed→adaptive and adaptive→fixed→baseline. Normal in-case retransmission was allowed without resetting clocks. Every receiver had Origin=false, Downloaded equal to the full file, and Complete=true.
 
-Post-study checks confirm 45 distinct kernel boot IDs and all 270 owned peer records stopped. Full identifying evidence remains private in run/compare45; public data is anonymized. Executable/deployment hashes were frozen and checked before each case; only documents changed during timing.
+Post-study checks confirm 45 distinct kernel boot IDs and all 270 owned peer records stopped. Full identifying evidence remains private in run/compare45-initial; public data is anonymized. Executable/deployment hashes were frozen and checked before each case; only documents changed during timing.
 
 Two observations cannot establish a general performance guarantee. Device caches and background load were uncontrolled. This is not a commercial Aspera test or UDP implementation; speedup ratios must not be multiplied by earlier rsync results. ARM64 is cross-built only.
 
@@ -37,4 +37,6 @@ Two observations cannot establish a general performance guarantee. Device caches
 - [Cache barriers](adaptive-initial-cache-barriers.json)
 - [Reproduction driver](../scripts/benchmark-adaptive.py)
 
-Actual local study jobs: ./swarmcopy jobs --state-dir ./run/compare45; select --job ./run/compare45/<case-id>-job. Default jobs does not search custom locations.
+Actual local study jobs: ./swarmcopy jobs --state-dir ./run/compare45-initial; select --job ./run/compare45-initial/<case-id>-job. Default jobs does not search custom locations.
+
+[Initial prototype source](https://github.com/junli-nv/swarmcopy/commit/82e5707c3ed60f90b5fbc02f8c4938ca4ddd7e6a)

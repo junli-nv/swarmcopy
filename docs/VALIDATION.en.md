@@ -2,6 +2,18 @@
 
 [中文](VALIDATION.zh-CN.md) · [Development](DEVELOPMENT.en.md) · [Preliminary benchmark](BENCHMARK.en.md) · [Cold-cache study protocol](COLD-STUDY.en.md)
 
+## Current adaptive experiment
+
+- Race unit tests and go vet pass, including request deduplication/cancellation, corrupt-copy recovery, admission bounds, and write feedback.
+- The actual race executable passes interrupted/corrupt-partial forwarding with adaptive/endgame and a custom minimum concurrency.
+- Fixed-mode recovery and real two-node SSH deployment/option propagation pass.
+- A v0.1.0 seed and new receivers pass mixed-version interruption/recovery/forwarding.
+- The first prototype regressed; [both initial rounds](ADAPTIVE-INITIAL-RESULTS.en.md) and matching source are retained, without crediting a performance improvement.
+
+The corrected 45-node, three-mode/two-round study passes all six complete transfers and 270 cache barriers, with all 270 owned process records stopped; see [results](ADAPTIVE-RESULTS.en.md).
+
+The following are historical v0.1.0 checks, not evidence of a new 157-node benchmark.
+
 ## Completed checks
 
 - The 157-node cold-cache study completes all six fresh cases and 942 cache barriers; post-study audit confirms 157 distinct boot IDs and all 471 owned process records stopped. See [results](COLD-RESULTS.en.md).
