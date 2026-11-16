@@ -152,19 +152,9 @@ func recentPeerLog(path string) string {
 }
 func controllerSourceHost(j Job) string {
 	local, _ := os.Hostname()
-	short := func(s string) string {
-		_, s, _ = strings.Cut("@"+s, "@")
-		if i := strings.LastIndexByte(s, '@'); i >= 0 {
-			s = s[i+1:]
-		}
-		h, _, e := net.SplitHostPort(s)
-		if e == nil {
-			s = h
-		}
-		return strings.ToLower(strings.Split(s, ".")[0])
-	}
+
 	for _, h := range j.Hosts {
-		if short(h) == short(local) {
+		if sourceHostKey(h) == sourceHostKey(local) {
 			if i := strings.LastIndexByte(h, '@'); i >= 0 {
 				h = h[i+1:]
 			}
@@ -172,4 +162,14 @@ func controllerSourceHost(j Job) string {
 		}
 	}
 	return ""
+}
+
+func sourceHostKey(s string) string {
+	if i := strings.LastIndexByte(s, '@'); i >= 0 {
+		s = s[i+1:]
+	}
+	if h, _, e := net.SplitHostPort(s); e == nil {
+		s = h
+	}
+	return strings.ToLower(strings.Split(s, ".")[0])
 }

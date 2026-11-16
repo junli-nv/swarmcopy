@@ -71,6 +71,10 @@ func startRemotePeer(ctx context.Context, r sshRunner, j Job, m Manifest, manife
 	o := Options{Verify: verifyMode(j.Verify), Existing: j.Existing, QUICGSOKiB: j.QUICGSOKiB, QUICMaxPayload: j.QUICMaxPayload, QUICSockets: j.QUICSockets, Transport: j.Transport, VerifyWindowChunks: j.VerifyWindowChunks, PipelineVerify: j.PipelineVerify, VerifyBufferMiB: j.VerifyBufferMiB, MinWorkers: j.MinWorkers, Adaptive: j.Adaptive, Endgame: j.Endgame, MaxWorkers: j.MaxWorkers, HedgeDelay: j.HedgeDelay, Recheck: j.Recheck, File: file, Manifest: filepath.Join(root, "manifest.json"), Listen: ":" + strconv.Itoa(j.Port),
 		Peers: strings.Join(addresses, ","), TokenFile: filepath.Join(root, "job.token"), Workers: j.Workers, Uploads: j.Uploads,
 		UploadMiB: j.UploadMiB, DownloadMiB: j.DownloadMiB, Lifetime: j.Lifetime, Stall: 10 * time.Minute}
+	if j.SourceAddress != "" && sourceHostKey(h) == sourceHostKey(controllerSourceHost(j)) {
+		o.LocalInputs = j.Inputs
+		o.LocalRoots = j.Sources
+	}
 	config, _ := json.Marshal(o)
 	if e := r.write(ctx, h, filepath.Join(root, "peer.json"), bytes.NewReader(config), false); e != nil {
 		return e

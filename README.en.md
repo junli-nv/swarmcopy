@@ -6,9 +6,15 @@ Resumable P2P file and directory distribution for Linux clusters, using **SCDP/1
 
 **main is the only long-lived branch.** One binary includes TCP, optional UDP/QUIC, pipelined verification, optional adaptive concurrency, multiple files and directories. No separate UDP or race executable is needed. Historical tags and measurements remain available.
 
+## v0.7.0: native copies and completion summaries
+
+Scheduling avoids repeated expensive scoring of every missing chunk. The source-host destination reads and verifies local source data instead of receiving it back over the network. Successful runs print elapsed/preparation/distribution time, network/local/reused bytes and average rates; completed watch shows the saved summary, while status retains JSON. Adaptive stays off; fixed concurrency remains `--workers 4 --uploads 4`, with no rate cap by default.
+
+Nine fresh 32 GiB destinations: mean distribution phase 32.39 → 25.10 seconds (22.50% less time), controller wall 39.68 → 31.61 seconds (20.34% less). Each round used fresh targets, cleared page cache and independent SHA256 checks, without preexisting transfer data. [Method, guarantees and maintenance](docs/OPTIMIZATION-0.7.0.en.md).
+
 ## Recommended: seed directly from a compute node
 
-If media already resides on a compute node, run there and include it in `--hosts`. v0.6.0 serves original files directly, skipping initial seed copying; local and remote destinations receive concurrently. A BCM controller outside the target list instead stages a compute seed through SSH. Startup and watch explicitly show the selected mode and endpoints. [Scenarios, network requirements and failures](docs/SOURCE-MODES.en.md).
+If media already resides on a compute node, run there and include it in `--hosts`. v0.7.0 serves original files directly, skipping initial seed copying; the local destination uses a native copy while remote targets exchange data over the network. A BCM controller outside the target list instead stages a compute seed through SSH. Startup and watch explicitly show the selected mode and endpoints. [Scenarios, network requirements and failures](docs/SOURCE-MODES.en.md).
 
 ```bash
 # Run on HGX167; include this host as a destination

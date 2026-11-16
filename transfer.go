@@ -33,30 +33,41 @@ func (n *Node) networkWork(addr string, elapsed time.Duration, success bool) {
 }
 func (n *Node) download(ctx context.Context, i int, addr string, buffers ...[]byte) error {
 	start := time.Now()
+	local := addr == localSourceName && n.localSource != nil
 	networkDone := false
 	defer func() {
-		if !networkDone {
+		if !networkDone && !local {
 			n.networkWork(addr, time.Since(start), false)
 		}
 	}()
-	resp, err := request(ctx, n.chunkClient(), n.token, addr, "/chunk?i="+strconv.Itoa(i))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if transportName(n.o.Transport) == "quic" {
-		if resp.ProtoMajor != 3 {
-			return errors.New("QUIC chunk response did not use HTTP/3")
-		}
-		n.quicRequests.Add(1)
-	}
-	if resp.StatusCode != 200 {
-		return transferHTTPError{resp.StatusCode}
-	}
 	size := n.m.length(i)
-	if resp.ContentLength != size {
-		return errors.New("chunk length mismatch")
+	var body io.ReadCloser
+	var err error
+	if local {
+		body = io.NopCloser(io.NewSectionReader(n.localSource, int64(i)*n.m.ChunkSize, size))
+	} else {
+		resp, x := request(ctx, n.chunkClient(), n.token, addr, "/chunk?i="+strconv.Itoa(i))
+		if x != nil {
+			return x
+		}
+		body = resp.Body
+		if transportName(n.o.Transport) == "quic" {
+			if resp.ProtoMajor != 3 {
+				body.Close()
+				return errors.New("QUIC chunk response did not use HTTP/3")
+			}
+			n.quicRequests.Add(1)
+		}
+		if resp.StatusCode != 200 {
+			body.Close()
+			return transferHTTPError{resp.StatusCode}
+		}
+		if resp.ContentLength != size {
+			body.Close()
+			return errors.New("chunk length mismatch")
+		}
 	}
+	defer body.Close()
 	var buf []byte
 	if len(buffers) > 0 && int64(len(buffers[0])) >= size {
 		buf = buffers[0][:size]
@@ -68,9 +79,14 @@ func (n *Node) download(ctx context.Context, i int, addr string, buffers ...[]by
 		if err = n.down.wait(ctx, int64(end-pos)); err != nil {
 			return err
 		}
-		read, readErr := io.ReadFull(resp.Body, buf[pos:end])
-		n.wireReceived.Add(int64(read))
+		read, readErr := io.ReadFull(body, buf[pos:end])
+		if !local {
+			n.wireReceived.Add(int64(read))
+		}
 		if readErr != nil {
+			if local {
+				return &localSourceError{readErr}
+			}
 			return readErr
 		}
 		pos = end
@@ -85,8 +101,17 @@ func (n *Node) download(ctx context.Context, i int, addr string, buffers ...[]by
 	n.perf.ChunkHashWorkSeconds += hashTime
 	lock := &n.chunkLocks[i]
 	n.mu.Unlock()
-	n.networkWork(addr, elapsed, valid)
+	if local {
+		n.mu.Lock()
+		n.perf.LocalReadWorkSeconds += elapsed.Seconds()
+		n.mu.Unlock()
+	} else {
+		n.networkWork(addr, elapsed, valid)
+	}
 	if !valid {
+		if local {
+			return &localSourceError{errors.New("chunk checksum mismatch")}
+		}
 		return errors.New("chunk checksum mismatch")
 	}
 	// Serialize commits only for the SAME chunk; unrelated writes remain concurrent.
@@ -117,7 +142,11 @@ func (n *Node) download(ctx context.Context, i int, addr string, buffers ...[]by
 	n.have[i] = true
 	n.from[addr] += size
 	n.lastProgress = time.Now()
-	n.downloaded.Add(size)
+	if local {
+		n.localCopied.Add(size)
+	} else {
+		n.downloaded.Add(size)
+	}
 	if n.verifier != nil {
 		n.verifier.signal()
 	}
@@ -233,3 +262,10 @@ func (n *Node) finalizeContext(ctx context.Context) (err error) {
 	log.Printf("COMPLETE digest=%s bytes=%d; continuing to seed", n.m.SHA256, n.m.Size)
 	return nil
 }
+
+const localSourceName = "local-source"
+
+type localSourceError struct{ err error }
+
+func (e *localSourceError) Error() string { return "local source: " + e.err.Error() }
+func (e *localSourceError) Unwrap() error { return e.err }

@@ -116,6 +116,7 @@ func render(observations []observation, previous map[string]observation, clear b
 	}
 	total = expected * int64(len(observations))
 	var down, up float64
+	var localCopied int64
 	complete, online := 0, 0
 	recorded := len(observations) > 0
 	for _, o := range observations {
@@ -145,6 +146,7 @@ func render(observations []observation, previous map[string]observation, clear b
 		}
 		online++
 		s := o.st
+		localCopied += s.LocalCopied
 		d, u := rates(o, previous[o.addr])
 		down += d
 		up += u
@@ -201,6 +203,9 @@ func render(observations []observation, previous map[string]observation, clear b
 		syncTime = math.Max(syncTime, p.FinalSyncSeconds)
 		hashTime = math.Max(hashTime, p.FinalHashSeconds)
 		transferTime = math.Max(transferTime, p.TransferSeconds)
+	}
+	if localCopied > 0 {
+		fmt.Printf("Local source copied: %.2f GiB (excluded from network DL)\n", float64(localCopied)/(1<<30))
 	}
 	if metrics > 0 {
 		fmt.Printf("Diagnostics: adaptive %d/%d | retries %d | hedges %d | canceled %d | received %.2f GiB\n", adaptive, metrics, retry, hedge, canceled, float64(received)/(1<<30))
@@ -272,12 +277,13 @@ func watchCommand(args []string) error {
 			return e
 		}
 		if j.State == "complete" && !*live {
-			rows, _, e := completedJobRows(j)
+			rows, report, e := completedJobRows(j)
 			if e != nil {
 				return e
 			}
 			fmt.Printf("Saved completion result for %s; verified at %s. No live query.\n", j.ID, rows[0].at.Format(time.RFC3339))
 			render(rows, map[string]observation{}, false)
+			printRecordedSummary(report)
 			return nil
 		}
 		*list = strings.Join(j.addresses(), ",")

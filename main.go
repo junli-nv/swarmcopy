@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.6.0"
+const version = "0.7.0"
 const protocol = "SCDP/1"
 
 type Manifest struct {
@@ -233,6 +233,8 @@ func prepare(args []string) error {
 }
 
 type Options struct {
+	LocalInputs                              []SourceEntry `json:",omitempty"`
+	LocalRoots                               []string      `json:",omitempty"`
 	Verify                                   string
 	Existing                                 string
 	QUICGSOKiB                               int
@@ -253,6 +255,7 @@ type Options struct {
 	Lifetime, Stall                          time.Duration
 }
 type Status struct {
+	Instance                    string
 	Verify, ChunkHash, FileHash string
 	Files                       int
 	Entries                     int
@@ -267,6 +270,7 @@ type Status struct {
 	Complete                    bool
 	Origin                      bool
 	Downloaded, Uploaded        int64
+	LocalCopied                 int64
 	From                        map[string]int64
 	Error                       string
 }
@@ -304,6 +308,11 @@ type Remote struct {
 	seen time.Time
 }
 type Node struct {
+	instance                       string
+	manifestID                     string
+	localSource                    *sourceView
+	localNext                      int
+	localCopied                    atomic.Int64
 	dataClient                     *http.Client
 	quicRequests                   atomic.Int64
 	verifier                       *orderedVerifier
@@ -506,8 +515,8 @@ func (n *Node) snapshot() Status {
 	for k, v := range n.from {
 		from[k] = v
 	}
-	return Status{Verify: verifyMode(n.o.Verify), ChunkHash: n.m.chunkAlgorithm(), FileHash: n.m.fileAlgorithm(), Files: n.m.fileCount(), Entries: len(n.m.Entries), Transport: transportName(n.o.Transport), Performance: n.performanceLocked(), Protocol: protocol, Size: n.m.Size, VerifiedBytes: verifiedBytes(n.m, n.have), ID: n.m.id(), Version: version, Have: append([]bool(nil), n.have...), Complete: n.complete,
-		Origin: n.origin, Downloaded: n.downloaded.Load(), Uploaded: n.uploaded.Load(), From: from, Error: n.failure}
+	return Status{Instance: n.instance, Verify: verifyMode(n.o.Verify), ChunkHash: n.m.chunkAlgorithm(), FileHash: n.m.fileAlgorithm(), Files: n.m.fileCount(), Entries: len(n.m.Entries), Transport: transportName(n.o.Transport), Performance: n.performanceLocked(), Protocol: protocol, Size: n.m.Size, VerifiedBytes: verifiedBytes(n.m, n.have), ID: n.protocolID(), Version: version, Have: append([]bool(nil), n.have...), Complete: n.complete,
+		Origin: n.origin, Downloaded: n.downloaded.Load(), Uploaded: n.uploaded.Load(), LocalCopied: n.localCopied.Load(), From: from, Error: n.failure}
 }
 func (n *Node) serve(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-SCDP-Version", "1")
@@ -589,7 +598,7 @@ func (n *Node) discover(ctx context.Context, addresses []string) {
 				c, cancel := context.WithTimeout(ctx, 4*time.Second)
 				defer cancel()
 				st, e := getStatus(c, n.client, n.token, addr)
-				if e == nil && st.ID == n.m.id() && len(st.Have) == len(n.have) && st.Error == "" {
+				if e == nil && st.ID == n.protocolID() && len(st.Have) == len(n.have) && st.Error == "" {
 					mu.Lock()
 					fresh = append(fresh, Remote{addr: addr, st: st, seen: time.Now()})
 					mu.Unlock()
@@ -612,6 +621,7 @@ func peer(args []string) error {
 	var o Options
 	fs := flag.NewFlagSet("peer", flag.ContinueOnError)
 	configureUsage(fs, "peer")
+	localConfig := fs.String("local-source-config", "", "internal trusted local-source configuration")
 	fs.StringVar(&o.Verify, "verify", "full", "verification mode: full (disk reread) or chunks (cryptographic chunk hashes)")
 	fs.IntVar(&o.QUICGSOKiB, "quic-gso-kib", 64, "maximum QUIC GSO batch KiB (16..64), still congestion/pacing limited")
 	fs.IntVar(&o.QUICMaxPayload, "quic-max-payload", 8952, "QUIC UDP payload ceiling (1452..8952); larger packets require PMTU confirmation")
@@ -730,7 +740,7 @@ func peer(args []string) error {
 	if e = syscall.Flock(lockfd, syscall.LOCK_EX|syscall.LOCK_NB); e != nil {
 		return errors.New("destination is locked by another peer")
 	}
-	n := &Node{m: m, o: o, token: t, have: make([]bool, len(m.Chunks)), busy: make([]bool, len(m.Chunks)),
+	n := &Node{instance: randomID(), manifestID: m.id(), m: m, o: o, token: t, have: make([]bool, len(m.Chunks)), busy: make([]bool, len(m.Chunks)),
 		peerBusy: map[string]int{}, from: map[string]int64{}, slots: make(chan struct{}, o.Uploads),
 		client: client(), lastProgress: time.Now(), up: pacer{rate: o.UploadMiB << 20}, down: pacer{rate: o.DownloadMiB << 20}}
 	defer n.client.CloseIdleConnections()
@@ -740,6 +750,26 @@ func peer(args []string) error {
 	}
 	n.dataClient = dataClient
 	defer closeData()
+	if *localConfig != "" {
+		b, x := os.ReadFile(*localConfig)
+		if x != nil {
+			return x
+		}
+		var local Options
+		if x = json.Unmarshal(b, &local); x != nil {
+			return x
+		}
+		if len(local.LocalInputs) == 0 {
+			return errors.New("local source configuration has no inputs")
+		}
+		n.localSource, x = newSourceView(context.Background(), Job{Inputs: local.LocalInputs, Sources: local.LocalRoots}, m)
+		if x != nil {
+			return x
+		}
+		defer n.localSource.Close()
+		log.Printf("LOCAL SOURCE: original files will be read and chunk-verified locally; no network download for this target")
+	}
+
 	log.Printf("STARTUP checking existing/partial files at %s; listener opens after local verification", o.File)
 	scanStart := time.Now()
 	if m.isTree() {
@@ -995,7 +1025,7 @@ func statusCommand(args []string) error {
 				}
 			}
 			result[a] = map[string]any{"Verify": verifyMode(st.Verify), "ChunkHash": hashName(st.ChunkHash), "FileHash": hashName(st.FileHash), "Protocol": st.Protocol, "Size": st.Size, "VerifiedBytes": st.VerifiedBytes, "Complete": st.Complete, "Chunks": count, "TotalChunks": len(st.Have),
-				"Downloaded": st.Downloaded, "Uploaded": st.Uploaded, "From": st.From, "Error": st.Error, "ID": st.ID}
+				"Downloaded": st.Downloaded, "Uploaded": st.Uploaded, "LocalCopied": st.LocalCopied, "From": st.From, "Error": st.Error, "ID": st.ID}
 			if !st.Complete || st.Error != "" {
 				ok = false
 			}
@@ -1008,4 +1038,12 @@ func statusCommand(args []string) error {
 		return errors.New("one or more peers incomplete/unreachable")
 	}
 	return nil
+}
+
+// Production node manifests are immutable. Tests may leave the precomputed ID empty.
+func (n *Node) protocolID() string {
+	if n.manifestID != "" {
+		return n.manifestID
+	}
+	return n.m.id()
 }

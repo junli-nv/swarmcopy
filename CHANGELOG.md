@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.7.0 — bounded scheduling, native copies and completion summaries
+
+- Bound expensive missing-chunk scoring with full-range sampling and sparse-availability fallback; retain fixed 4/4 concurrency and adaptive off. Cache immutable manifest IDs.
+- Read the source-host destination directly through the verified local-copy path; separate network/local/reused bytes without weakening full/chunks checks or publication.
+- Print and persist elapsed/preparation/distribution times and average rates; use instance-aware resume accounting and retain optional summaries in completed watch/status.
+- Validate fresh nine-node 32 GiB comparisons, independent SHA256 outputs, native-copy interruption/resume and QUIC/full; document 22.50% lower mean phase time and 20.34% lower controller wall time with scope/limitations.
+- Publish Chinese-primary bilingual examples, design contracts and measurement provenance; static x86_64 and aarch64 builds (ARM cross-built only).
+
 ## 0.6.0 — direct sources, isolated failures, sparse recovery and job removal
 
 - Prefer original-file direct seeding when the controller is also a target; retain staged compute-seed import for head-node controllers. Print source mode, source host/path and destination explicitly.

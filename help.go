@@ -65,7 +65,8 @@ func usageText(name string) string {
 Source selection is automatic and printed before preparation:
   Controller is a target: serve original local files directly (recommended).
   Controller is not a target: copy once to a compute seed through SSH.
-Direct mode still creates requested destination files on the local target.
+Direct mode creates the local destination by reading/verifying original files
+locally; local copies are excluded from network download statistics.
 The direct source listens on a separate dynamic TCP port (also UDP for QUIC);
 compute nodes must reach it. Keep the source controller running while needed.
 
@@ -130,6 +131,9 @@ Legacy prepared --seed-file workflows remain supported.
 Symbolic links/special files and overlapping roots are rejected.
 Unmatched globs and duplicate top-level basenames are errors.
 Completed peers stop automatically unless --keep-seeding is set.
+Success prints elapsed/preparation/distribution time and average network rate.
+The saved summary separates network, local-copy and reused bytes; aggregate
+cluster throughput is labeled separately from receiving-node averages.
 Use exactly one source group or --seed-file, never both.
 See docs/EXAMPLES.en.md and README.md (Chinese).
 `
@@ -151,6 +155,7 @@ Use --recheck to bypass unchanged final-file verification caches.
 --verify full|chunks changes verification mode and forces a peer restart/recheck.
 Hash algorithms are bound to the saved manifest; changing them needs a new job.
 The new-job BLAKE3 preset does not rewrite existing SHA256 manifests on resume.
+Completion averages count bytes added in this invocation, not old live-peer counters.
 Repeat --ssh-opt KEY=VALUE to extend or override saved SSH options.
 `
 	case "watch":
@@ -283,6 +288,7 @@ func completedJobRows(j Job) ([]observation, any, error) {
 	}
 	var result struct {
 		Finished string
+		Summary  *CompletionSummary
 		Nodes    map[string]Status
 	}
 	if e = json.Unmarshal(b, &result); e != nil {
@@ -304,9 +310,13 @@ func completedJobRows(j Job) ([]observation, any, error) {
 	summary := map[string]any{}
 	for _, row := range rows {
 		s := row.st
-		summary[row.addr] = map[string]any{"Complete": s.Complete, "Size": s.Size, "VerifiedBytes": s.VerifiedBytes, "Downloaded": s.Downloaded, "Uploaded": s.Uploaded, "From": s.From, "Transport": s.Transport, "Performance": s.Performance}
+		summary[row.addr] = map[string]any{"Complete": s.Complete, "Size": s.Size, "VerifiedBytes": s.VerifiedBytes, "Downloaded": s.Downloaded, "Uploaded": s.Uploaded, "LocalCopied": s.LocalCopied, "From": s.From, "Transport": s.Transport, "Performance": s.Performance}
 	}
-	return rows, map[string]any{"Protocol": protocol, "Recorded": true, "JobID": j.ID, "Finished": result.Finished, "Nodes": summary}, nil
+	report := map[string]any{"Protocol": protocol, "Recorded": true, "JobID": j.ID, "Finished": result.Finished, "Nodes": summary}
+	if result.Summary != nil {
+		report["Summary"] = result.Summary
+	}
+	return rows, report, nil
 }
 func commandHelp(name string) error {
 	args := []string{"--help"}

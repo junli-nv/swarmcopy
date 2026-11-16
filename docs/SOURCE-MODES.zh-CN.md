@@ -2,6 +2,10 @@
 
 [English](SOURCE-MODES.en.md) · [中文 README](../README.md) · [示例](EXAMPLES.zh-CN.md)
 
+v0.7.0 起，本机目标通过本地读取、验块和写入填充，不通过 TCP/QUIC 回传；监控的 Local source copied 与网络 DL 分开。
+
+[Optimization report](OPTIMIZATION-0.7.0.zh-CN.md)
+
 ## 优先推荐：计算节点本地介质直接供种
 
 介质已在计算节点本地盘时，推荐就在该节点执行，并将本机放进目标列表。程序自动从原文件供种，跳过先完整复制一个初始种子的步骤，无需增加模式参数。例如在 HGX167 上：

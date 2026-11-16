@@ -1,0 +1,153 @@
+{
+  "schema": 1,
+  "date": "2026-11-16",
+  "baseline": "0.6.0",
+  "candidate": "0.7.0",
+  "nodes": 9,
+  "source_on_target": true,
+  "source_manifest_cache": "validated/reused before every timed round",
+  "source_fixture_bytes": 34359738368,
+  "workers": 4,
+  "uploads": 4,
+  "adaptive": false,
+  "transport": "tcp",
+  "verify": "chunks",
+  "chunk_hash": "blake3",
+  "file_hash": "blake3",
+  "rounds": [
+    {
+      "label": "baseline-1",
+      "bytes": 34359738368,
+      "controller_wall_seconds": 42.57327568810433,
+      "max_node_phase_seconds": 34.963044393000004,
+      "network_bytes": 309237645312,
+      "local_bytes": 0,
+      "retries": 1453,
+      "independent_sha256_checks": 9,
+      "fresh_destinations": true,
+      "dropped_caches_on_all_nodes": true
+    },
+    {
+      "label": "candidate-1",
+      "bytes": 34359738368,
+      "controller_wall_seconds": 32.50787503737956,
+      "max_node_phase_seconds": 25.696846759,
+      "network_bytes": 274877906944,
+      "local_bytes": 34359738368,
+      "retries": 938,
+      "independent_sha256_checks": 9,
+      "fresh_destinations": true,
+      "dropped_caches_on_all_nodes": true
+    },
+    {
+      "label": "candidate-2",
+      "bytes": 34359738368,
+      "controller_wall_seconds": 32.59048381168395,
+      "max_node_phase_seconds": 25.715240045,
+      "network_bytes": 274877906944,
+      "local_bytes": 34359738368,
+      "retries": 989,
+      "independent_sha256_checks": 9,
+      "fresh_destinations": true,
+      "dropped_caches_on_all_nodes": true
+    },
+    {
+      "label": "baseline-2",
+      "bytes": 34359738368,
+      "controller_wall_seconds": 38.73037583939731,
+      "max_node_phase_seconds": 31.865145682999998,
+      "network_bytes": 309237645312,
+      "local_bytes": 0,
+      "retries": 1404,
+      "independent_sha256_checks": 9,
+      "fresh_destinations": true,
+      "dropped_caches_on_all_nodes": true
+    },
+    {
+      "label": "candidate-final-1",
+      "bytes": 34359738368,
+      "controller_wall_seconds": 30.448412343859673,
+      "max_node_phase_seconds": 24.429378584000002,
+      "network_bytes": 274877906944,
+      "local_bytes": 34359738368,
+      "retries": 971,
+      "independent_sha256_checks": 9,
+      "fresh_destinations": true,
+      "dropped_caches_on_all_nodes": true
+    },
+    {
+      "label": "candidate-final-2",
+      "bytes": 34359738368,
+      "controller_wall_seconds": 32.76696792524308,
+      "max_node_phase_seconds": 25.765696996000003,
+      "network_bytes": 274877906944,
+      "local_bytes": 34359738368,
+      "retries": 905,
+      "independent_sha256_checks": 9,
+      "fresh_destinations": true,
+      "dropped_caches_on_all_nodes": true
+    },
+    {
+      "label": "baseline-final-2",
+      "bytes": 34359738368,
+      "controller_wall_seconds": 40.624634224921465,
+      "max_node_phase_seconds": 32.905459291,
+      "network_bytes": 309237645312,
+      "local_bytes": 0,
+      "retries": 1378,
+      "independent_sha256_checks": 9,
+      "fresh_destinations": true,
+      "dropped_caches_on_all_nodes": true
+    },
+    {
+      "label": "candidate-release-1",
+      "bytes": 34359738368,
+      "controller_wall_seconds": 32.722935006953776,
+      "max_node_phase_seconds": 25.222757838,
+      "network_bytes": 274877906944,
+      "local_bytes": 34359738368,
+      "retries": 983,
+      "independent_sha256_checks": 9,
+      "fresh_destinations": true,
+      "dropped_caches_on_all_nodes": true
+    }
+  ],
+  "balanced_final_comparison": {
+    "order": [
+      "baseline-2",
+      "candidate-final-1",
+      "candidate-final-2",
+      "baseline-final-2"
+    ],
+    "means": {
+      "controller_wall_seconds": {
+        "baseline_mean": 39.67750503215939,
+        "candidate_mean": 31.607690134551376,
+        "time_reduction_percent": 20.33851395410894,
+        "speed_ratio": 1.2553117568305519
+      },
+      "max_node_phase_seconds": {
+        "baseline_mean": 32.385302487,
+        "candidate_mean": 25.097537790000004,
+        "time_reduction_percent": 22.503309023979078,
+        "speed_ratio": 1.2903776760086707
+      }
+    }
+  },
+  "measured_transfer_build": {
+    "swarmcopy-linux-x86_64": "a38200305407d708d28ff7619aed32222c5f69ef2bd7132bea7f6dcfef8831a0",
+    "swarmcopy-linux-aarch64": "f10fe59908e9ee19efd1f1af6c7a9908884792ce0197bd9c36da3f98ad770d37"
+  },
+  "release_build": {
+    "swarmcopy-linux-x86_64": "e4dd3431a94a6a2522559a02ce490efef1ee9e106c99f69aad9588396577246d",
+    "swarmcopy-linux-aarch64": "d36702ea6605f6a031f33969ba57f63d4ae978053e960cb3b6592ebe7ddb2c6c"
+  },
+  "release_note": "Only completion accounting/display changed after the balanced transfer build. candidate-release-1 revalidates the exact release binary. Earlier exploratory rounds are retained, not pooled into the final comparison.",
+  "limits": [
+    "Phase is maximum across nodes of TransferSeconds+FinalSyncSeconds+PublishSeconds.",
+    "Controller wall includes SSH/deployment/start/finish; fresh source-fixture creation and post-run independent SHA256 checks are excluded.",
+    "Same nine destination copies in both cases: baseline network includes local loopback; candidate copies the source-host target natively.",
+    "No claim of raw NIC/disk saturation, isolated scheduler contribution, or guaranteed 484GiB scaling.",
+    "aarch64 is cross-built; no ARM hardware runtime validation in this study."
+  ]
+}

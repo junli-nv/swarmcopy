@@ -12,6 +12,10 @@ import (
 
 // Performance durations are sums of concurrent request work unless named as a phase.
 type Performance struct {
+	LocalReadWorkSeconds                                                                     float64
+	LocalCopiedBytes                                                                         int64
+	SchedulerCalls, SchedulerCandidates                                                      int64
+	SchedulerWorkSeconds                                                                     float64
 	Verify, ChunkHash, FileHash                                                              string
 	QUICGSOKiB                                                                               int
 	QUICMaxPayload                                                                           int
@@ -102,6 +106,7 @@ func (n *Node) performanceLocked() *Performance {
 	p.ActiveUploads = len(n.slots)
 	p.UploadLimit = cap(n.slots)
 	p.ReceivedBytes = n.wireReceived.Load()
+	p.LocalCopiedBytes = n.localCopied.Load()
 	if !n.transferStarted.IsZero() && n.transferEnded.IsZero() && !n.complete {
 		p.TransferSeconds = time.Since(n.transferStarted).Seconds()
 	}
@@ -159,6 +164,16 @@ func (n *Node) selectChunkLocked() (int, string) {
 	if len(n.have) == 0 || n.complete || n.failure != "" {
 		return -1, ""
 	}
+	if n.localSource != nil {
+		for step := 0; step < len(n.have); step++ {
+			i := (n.localNext + step) % len(n.have)
+			if !n.have[i] && !n.busy[i] {
+				n.localNext = (i + 1) % len(n.have)
+				return i, localSourceName
+			}
+		}
+		return -1, ""
+	}
 	if n.o.PipelineVerify && n.o.VerifyWindowChunks > 0 && n.m.ChunkSize > 0 {
 		first := int(n.perf.FileHashBytes / n.m.ChunkSize)
 		if i, addr := n.selectRangeLocked(first, min(first+n.o.VerifyWindowChunks, len(n.have))); i >= 0 {
@@ -168,23 +183,67 @@ func (n *Node) selectChunkLocked() (int, string) {
 	return n.selectRangeLocked(0, len(n.have))
 }
 func (n *Node) selectRangeLocked(first, last int) (int, string) {
+	started := time.Now()
+	n.perf.SchedulerCalls++
+	defer func() { n.perf.SchedulerWorkSeconds += time.Since(started).Seconds() }()
 	if first >= last {
 		return -1, ""
 	}
 	chosen := -1
 	best := int(^uint(0) >> 1)
 	addr := ""
-	start := rand.IntN(last - first)
-	for j := 0; j < last-first; j++ {
-		i := first + (start+j)%(last-first)
+	span := last - first
+	start := rand.IntN(span)
+	stride := 1
+	if span > 1 {
+		for {
+			stride = 1 + rand.IntN(span-1)
+			a, b := stride, span
+			for b != 0 {
+				a, b = b, a%b
+			}
+			if a == 1 {
+				break
+			}
+		}
+	}
+	examined := 0
+	// Sample missing candidates, not a fixed prefix; every missing chunk stays eligible.
+	for j := 0; j < last-first && examined < 255; j++ {
+		i := first + (start+j*stride)%(last-first)
 		if n.have[i] || n.busy[i] {
 			continue
 		}
+		examined++
+		n.perf.SchedulerCandidates++
 		count, candidate := n.candidateLocked(i, nil)
 		if count > 0 && candidate != "" && count < best {
 			chosen = i
 			best = count
 			addr = candidate
+			if count == 1 {
+				break
+			}
+		}
+	}
+	if chosen < 0 {
+		// Sparse availability must not leave an idle worker while a source has data.
+		// This fallback checks cheap bitmaps and admits one eligible chunk.
+		for _, p := range n.remotes {
+			if time.Since(p.seen) > 8*time.Second || n.peerBusy[p.addr] >= 2 {
+				continue
+			}
+			if st := n.sourceStats[p.addr]; n.o.Adaptive && st != nil && time.Now().Before(st.cooldown) {
+				continue
+			}
+			for j := 0; j < span; j++ {
+				i := first + (start+j)%span
+				if i >= len(p.st.Have) || !p.st.Have[i] || n.have[i] || n.busy[i] {
+					continue
+				}
+				n.perf.SchedulerCandidates++
+				return i, p.addr
+			}
 		}
 	}
 	return chosen, addr
@@ -291,7 +350,8 @@ func (n *Node) finishRequest(ctx context.Context, i int, f *flight, err error) {
 		return
 	}
 	var disk *localWriteError
-	if errors.As(err, &disk) {
+	var local *localSourceError
+	if errors.As(err, &disk) || errors.As(err, &local) {
 		return
 	}
 	n.perf.Retries++
@@ -331,7 +391,8 @@ func (n *Node) worker(ctx context.Context) {
 		if err != nil && ctx.Err() == nil && !errors.Is(err, context.Canceled) {
 			// Local write errors are terminal, never attributed to a remote source.
 			var disk *localWriteError
-			if errors.As(err, &disk) {
+			var local *localSourceError
+			if errors.As(err, &disk) || errors.As(err, &local) {
 				n.mu.Lock()
 				n.failure = err.Error()
 				n.perf.Stage = "error"

@@ -156,7 +156,7 @@ func startSourceOrigin(ctx context.Context, j *Job, m Manifest, host string) (fu
 		view.Close()
 		return nil, e
 	}
-	n := &Node{m: m, token: t, f: view, have: make([]bool, len(m.Chunks)), origin: true, complete: true, from: map[string]int64{}, slots: make(chan struct{}, max(1, j.Uploads)), up: pacer{rate: j.UploadMiB << 20},
+	n := &Node{instance: randomID(), manifestID: m.id(), m: m, token: t, f: view, have: make([]bool, len(m.Chunks)), origin: true, complete: true, from: map[string]int64{}, slots: make(chan struct{}, max(1, j.Uploads)), up: pacer{rate: j.UploadMiB << 20},
 		o: Options{Verify: verifyMode(j.Verify), Transport: j.Transport, QUICGSOKiB: j.QUICGSOKiB, QUICMaxPayload: j.QUICMaxPayload, QUICSockets: j.QUICSockets}}
 	for i := range n.have {
 		n.have[i] = true

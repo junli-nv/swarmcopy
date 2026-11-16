@@ -2,7 +2,7 @@
 
 [中文（主文档）](DEVELOPMENT.zh-CN.md) · [Usage](../README.en.md) · [Examples](EXAMPLES.en.md)
 
-This describes unified main v0.5.0. Maintain one long-lived branch, main. TCP, optional UDP, adaptive scheduling, pipelined integrity and trees belong to one executable. Retain historical tags; do not maintain parallel feature releases.
+This describes unified main v0.7.0. Maintain one long-lived branch, main. TCP, optional UDP, adaptive scheduling, pipelined integrity and trees belong to one executable. Retain historical tags; do not maintain parallel feature releases.
 
 ## Source map
 
@@ -28,7 +28,7 @@ Runtime requires OpenSSH/basic Linux utilities; Go/Python are development-only. 
 
 - Preserve SCDP/1 chunk APIs and v1 manifest JSON/IDs. New source jobs use v2; new optional fields must not change old JSON output.
 - v1 Manifest.SHA256 hashes raw file content; v2 hashes Entries JSON, with raw file hashes inside Entries. See [tree design](TREES.en.md).
-- Verify chunk SHA256 before writing or advertising Have. Full ordered content verification and durable publication still gate Complete. Pipeline completion alone is insufficient.
+- Verify chunks with the manifest-bound algorithm before writing or advertising Have. Full mode adds whole-file verification; chunks mode requires all verified blocks and durable publication before Complete. Pipeline completion alone is insufficient.
 - v2 is one logical concatenation with cross-file chunks; empty files/directories require explicit publication.
 - Retries, hedges and source changes must not rewrite completed chunks or declare canceled/unverified content complete.
 - Rehash retained partials on resume. Cache acceptance binds the trusted manifest and every data file's fingerprint, never just root directory stat.
@@ -99,3 +99,13 @@ v0.6.0: `resolveNewJobIntegrity` resolves defaults only for new jobs: full→SHA
 `resilience.go` isolates node operations with bounded contexts; preserve the complete Hosts list in every saved record, including inventory passes. Monitoring has no all-ready barrier. Diagnostics are bounded and persisted; never mark failed targets complete.
 
 `remove.go` holds controller/agent locks, validates process identity and configuration ownership, retains records after partial failure, and only purges a manifest namespace after checking other job references. Preserve sources/final media and reject foreign/symlink job roots. `resilience_test.go` and `remove_test.go` cover these boundaries. Sparse detection must skip zero-length entries and conservatively fall back when SEEK_DATA is unsupported.
+
+## v0.7.0 scheduling, native source and summary contracts
+
+`completion.go` summarizes this invocation. Both saving and loading must preserve optional Summary, without inventing it for old results. Aggregate rates use total invocation time, not just monitor time when peers can transfer during preparation. Resume subtracts initial counters for the same instance only; reset instances use new counters; reused data is not new traffic. `optimization_test.go` covers old/new saved summaries, instance accounting, preparation traffic and zero duration.
+
+`Node.manifestID` is immutable after construction; any future mutable manifest needs a new cache lifecycle. `selectRangeLocked` scores at most 255 samples and one sparse-source fallback; bitmap scans can still be O(chunks×sources). Do not describe the candidate limit as a bound on all work. Preserve full-range coprime traversal, sparse-source, non-prefix and retry tests.
+
+Send `Options.LocalInputs/LocalRoots` only to the source-host peer. Internal local-source-config is not a public user flag. Keep source fingerprint/layout validation, common commit locking and hashing, and unchanged full/chunks completion gates. Local source/write errors are not remote retries. Download pacing also covers native copies. Keep local-source bytes separate from wire throughput.
+
+Agent started-version checks follow actual releases; upgrades may restart peers without discarding verified data. Development builds sharing a version must explicitly stop their owned test peers, rather than expecting version strings to distinguish every source change. Maintain main only; TCP, optional UDP and optional adaptive mode ship together. [Controlled comparison and reproduction](OPTIMIZATION-0.7.0.en.md).

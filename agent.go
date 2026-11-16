@@ -145,6 +145,9 @@ func agentCommand(args []string) error {
 			argv = append(argv, "--existing", o.Existing)
 		}
 		argv = append(argv, "--verify", verifyMode(o.Verify))
+		if len(o.LocalInputs) > 0 {
+			argv = append(argv, "--local-source-config", *config)
+		}
 		// Always pass saved values: old jobs and explicit opt-outs must not inherit new CLI defaults.
 		argv = append(argv, "--verify-window-chunks", strconv.Itoa(o.VerifyWindowChunks),
 			"--pipeline-verify="+strconv.FormatBool(o.PipelineVerify))
@@ -175,6 +178,7 @@ func agentCommand(args []string) error {
 		}
 		defer f.Close()
 		cmd := exec.Command(exe, argv...)
+		cmd.Env = append(os.Environ(), "SWARMCOPY_STARTED_VERSION="+version)
 		cmd.Stdout = f
 		cmd.Stderr = f
 		cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
@@ -203,6 +207,10 @@ func agentCommand(args []string) error {
 }
 
 func peerArgumentsMatch(pid int, o Options) bool {
+	env, e := os.ReadFile(fmt.Sprintf("/proc/%d/environ", pid))
+	if e != nil || !bytes.Contains(append([]byte{0}, env...), []byte("\x00SWARMCOPY_STARTED_VERSION="+version+"\x00")) {
+		return false
+	}
 	b, e := os.ReadFile(fmt.Sprintf("/proc/%d/cmdline", pid))
 	if e != nil {
 		return false
@@ -210,13 +218,16 @@ func peerArgumentsMatch(pid int, o Options) bool {
 	args := bytes.Split(b, []byte{0})
 	havePeers := ""
 	haveVerify := "full"
+	localConfig := ""
 	for i := 0; i+1 < len(args); i++ {
 		switch string(args[i]) {
 		case "--peers":
 			havePeers = string(args[i+1])
 		case "--verify":
 			haveVerify = string(args[i+1])
+		case "--local-source-config":
+			localConfig = string(args[i+1])
 		}
 	}
-	return havePeers == o.Peers && haveVerify == verifyMode(o.Verify)
+	return havePeers == o.Peers && haveVerify == verifyMode(o.Verify) && (localConfig != "") == (len(o.LocalInputs) > 0)
 }

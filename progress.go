@@ -332,15 +332,18 @@ func renderSavedJob(j Job, live, clear bool) (bool, bool, error) {
 		return true, false, nil
 	}
 	if j.State == "complete" && !live {
-		rows, _, err := completedJobRows(j)
+		rows, report, err := completedJobRows(j)
 		if err != nil {
 			return true, false, err
 		}
 		fmt.Printf("Saved completion result for %s. No live query.\n", j.ID)
-		return true, render(rows, map[string]observation{}, clear), nil
+		all := render(rows, map[string]observation{}, clear)
+		printRecordedSummary(report)
+		return true, all, nil
 	}
 	return false, false, nil
 }
+
 // A bounded heartbeat keeps SSH stdin open until cancellation. It also lets
 // os/exec finish its stdin copier promptly when the remote command exits.
 type keepaliveReader struct{ ctx context.Context }

@@ -646,6 +646,9 @@ func clusterCommand(mode string, args []string) error {
 func stopPeers(ctx context.Context, r sshRunner, j Job) error { return stopRemotePeers(ctx, r, j) }
 
 func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
+	attemptStarted := time.Now()
+	previouslyStarted := j.State != "created" && j.State != ""
+	initialCounters := map[string]Status{}
 	fd, e := syscall.Open(filepath.Join(j.Dir, "controller.lock"), syscall.O_CREAT|syscall.O_RDWR|syscall.O_NOFOLLOW|syscall.O_CLOEXEC, 0600)
 	if e != nil {
 		return e
@@ -653,6 +656,17 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	defer syscall.Close(fd)
 	if e = syscall.Flock(fd, syscall.LOCK_EX|syscall.LOCK_NB); e != nil {
 		return errors.New("another controller is active for this job")
+	}
+	if previouslyStarted {
+		if t, x := token(filepath.Join(j.Dir, "job.token")); x == nil {
+			c := client()
+			for _, r := range observe(ctx, c, t, j.addresses()) {
+				if r.err == nil {
+					initialCounters[r.addr] = r.st
+				}
+			}
+			c.CloseIdleConnections()
+		}
 	}
 	j.Attempt = randomID()
 	j.ControllerPID = os.Getpid()
@@ -863,6 +877,7 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	}
 	fmt.Println("MONITORING: each ready peer transfers independently; unavailable targets remain pending and do not block healthy targets")
 
+	distributionStarted := time.Now()
 	reporter(ctx).phase("running", "P2P data transfer and final verification", 0, 0, 0)
 	j.State = "running"
 	if e = j.save(); e != nil {
@@ -927,6 +942,15 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 					return e
 				}
 			}
+			finished := time.Now()
+			summary := completionSummary(attemptStarted, distributionStarted, finished, rows, initialCounters)
+			report["Finished"] = finished.UTC().Format(time.RFC3339Nano)
+			report["Summary"] = summary
+			b, _ = json.MarshalIndent(report, "", "  ")
+			if e = atomicWrite(filepath.Join(j.Dir, "result.json"), b, 0600); e != nil {
+				return e
+			}
+			printCompletionSummary(summary)
 			j.State = "complete"
 			j.LastError = ""
 			if e = j.save(); e != nil {

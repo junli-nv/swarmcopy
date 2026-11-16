@@ -2,6 +2,10 @@
 
 [中文（主文档）](SOURCE-MODES.zh-CN.md) · [README](../README.en.md)
 
+From v0.7.0, the local target uses native source reads, chunk checks and writes rather than TCP/QUIC reception; watch separates Local source copied from network DL.
+
+[Optimization report](OPTIMIZATION-0.7.0.en.md)
+
 ## Recommended: seed directly from a compute node
 
 When media already resides on a compute node, run there and include that host among the targets. The program automatically serves the original files without first copying a complete seed. On HGX167:
