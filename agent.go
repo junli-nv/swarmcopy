@@ -137,6 +137,9 @@ func agentCommand(args []string) error {
 			"--uploads", strconv.Itoa(o.Uploads), "--upload-mib", strconv.FormatInt(o.UploadMiB, 10),
 			"--download-mib", strconv.FormatInt(o.DownloadMiB, 10), "--lifetime", o.Lifetime.String(),
 			"--stall-timeout", o.Stall.String()}
+		if o.Existing != "" {
+			argv = append(argv, "--existing", o.Existing)
+		}
 		// Always pass saved values: old jobs and explicit opt-outs must not inherit new CLI defaults.
 		argv = append(argv, "--verify-window-chunks", strconv.Itoa(o.VerifyWindowChunks),
 			"--pipeline-verify="+strconv.FormatBool(o.PipelineVerify))

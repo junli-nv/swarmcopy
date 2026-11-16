@@ -1,5 +1,7 @@
 # QUIC 接入审查与调优
 
+> 当前统一版已合入 main，同一二进制通过参数选择功能，不再维护独立 UDP／自适应分支。本文保留原实现背景；当前用法以 [README](../README.md) 和 [示例](EXAMPLES.zh-CN.md) 为准。
+
 [English](QUIC-TUNING.en.md) · [原始试验](QUIC-RESULTS.zh-CN.md) · [UDP 基础说明](QUIC.zh-CN.md)
 
 正式稳定版仍为 v0.2.0：默认 TCP，流水线完整校验与 256 块窗口开启，自适应并发关闭。本候选继续保持这些选择。只有明确选择 `--transport quic` 才启用 UDP。

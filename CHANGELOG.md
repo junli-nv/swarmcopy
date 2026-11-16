@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.4.0 — unified main release
+
+- Ship TCP, optional QUIC/UDP tuning, pipeline verification and opt-in adaptive scheduling in one binary and one maintained main branch. TCP stays default, pipeline/window stay on, adaptive stays off.
+- Add repeatable sources, positional operands, quoted/shell-expanded globs and recursive directories, directly under dest.
+- Preserve v1 manifest identity and prepared-seed/old-job compatibility; use native virtual-file trees with v2 manifests for new source jobs.
+- Inventory existing replicas, skip unnecessary head-node media upload and fill only missing data; all-complete targets download zero new media.
+- Prompt for conflicting regular files, with explicit ask/resume/replace/keep policies and independent staging until verified per-file atomic replacement.
+- Support per-file SHA256, cross-file chunks, empty files/directories, persistent chunk resume, validated source/file caches and hardlink-crash-safe repair.
+- Add Chinese-primary bilingual examples, updated English help, source/developer documentation and five-node TCP/QUIC/repair/resume evidence.
+- Publish static Linux x86_64 and aarch64 builds; x86_64 tested on real nodes, ARM cross-built only.
+
+
 ## 0.3.0-dev.4 (optional UDP candidate)
 
 - Fix QUIC integration limits with bounded source-affine receive-socket shards, negotiated path-safe UDP ceilings, and configurable congestion/pacing-limited GSO batches.
@@ -58,4 +70,3 @@ The dev.1/dev.2/dev.3 source checkpoints were internal and not separately publis
 - Chinese-first bilingual usage/development/validation documents and reproducible benchmark drivers.
 
 Directories, multiple files, and file-glob distribution are deferred to the next release.
-

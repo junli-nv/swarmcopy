@@ -1,5 +1,7 @@
 # QUIC integration audit and tuning
 
+> These features are now integrated in main and the same executable; separate UDP/adaptive branches are no longer maintained. This document retains implementation background. Use the current [README](../README.en.md) and [examples](EXAMPLES.en.md).
+
 [中文](QUIC-TUNING.zh-CN.md) · [Initial comparison](QUIC-RESULTS.en.md)
 
 Stable v0.2.0 continues to default to TCP with pipelined full-file verification and a 256-chunk window; adaptive concurrency stays off. This candidate preserves those choices. UDP requires explicit `--transport quic`.

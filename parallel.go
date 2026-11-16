@@ -56,13 +56,16 @@ func startRemotePeer(ctx context.Context, r sshRunner, j Job, m Manifest, manife
 	if h == j.Seed {
 		file = j.SeedFile
 	}
+	if m.Version == 2 {
+		file = j.Dest
+	}
 	addresses := []string{}
 	for i, v := range j.addresses() {
 		if j.Hosts[i] != h {
 			addresses = append(addresses, v)
 		}
 	}
-	o := Options{QUICGSOKiB: j.QUICGSOKiB, QUICMaxPayload: j.QUICMaxPayload, QUICSockets: j.QUICSockets, Transport: j.Transport, VerifyWindowChunks: j.VerifyWindowChunks, PipelineVerify: j.PipelineVerify, VerifyBufferMiB: j.VerifyBufferMiB, MinWorkers: j.MinWorkers, Adaptive: j.Adaptive, Endgame: j.Endgame, MaxWorkers: j.MaxWorkers, HedgeDelay: j.HedgeDelay, Recheck: j.Recheck, File: file, Manifest: filepath.Join(root, "manifest.json"), Listen: ":" + strconv.Itoa(j.Port),
+	o := Options{Existing: j.Existing, QUICGSOKiB: j.QUICGSOKiB, QUICMaxPayload: j.QUICMaxPayload, QUICSockets: j.QUICSockets, Transport: j.Transport, VerifyWindowChunks: j.VerifyWindowChunks, PipelineVerify: j.PipelineVerify, VerifyBufferMiB: j.VerifyBufferMiB, MinWorkers: j.MinWorkers, Adaptive: j.Adaptive, Endgame: j.Endgame, MaxWorkers: j.MaxWorkers, HedgeDelay: j.HedgeDelay, Recheck: j.Recheck, File: file, Manifest: filepath.Join(root, "manifest.json"), Listen: ":" + strconv.Itoa(j.Port),
 		Peers: strings.Join(addresses, ","), TokenFile: filepath.Join(root, "job.token"), Workers: j.Workers, Uploads: j.Uploads,
 		UploadMiB: j.UploadMiB, DownloadMiB: j.DownloadMiB, Lifetime: j.Lifetime, Stall: 10 * time.Minute}
 	config, _ := json.Marshal(o)

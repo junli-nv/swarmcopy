@@ -1,5 +1,7 @@
 # Adaptive transfer experiment
 
+> These features are now integrated in main and the same executable; separate UDP/adaptive branches are no longer maintained. This document retains implementation background. Use the current [README](../README.en.md) and [examples](EXAMPLES.en.md).
+
 [45-node two-round measurements](ADAPTIVE-RESULTS.en.md)
 
 [Initial regression measurements](ADAPTIVE-INITIAL-RESULTS.en.md)

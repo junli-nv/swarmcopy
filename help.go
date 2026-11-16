@@ -13,14 +13,16 @@ import (
 )
 
 func rootHelp() {
-	fmt.Print(`swarmcopy - resumable P2P file distribution for Linux clusters
+	fmt.Print(`swarmcopy - resumable P2P file and directory distribution for Linux clusters
 Protocol: SCDP/1 (SwarmCopy Distribution Protocol)
 
 QUICK START
   swarmcopy distribute --hosts 'node[001-005]' --source /shared/nemo.sqsh --dest /raid/images
+  swarmcopy distribute --hosts @hosts.txt --dest /raid/images --source /shared/nemo --source /shared/config.json
   swarmcopy jobs
   swarmcopy watch
-  swarmcopy distribute --hosts 'node[001-005]' --source /shared/media.sqsh --dest /raid/images --adaptive --max-workers 16 --endgame
+  swarmcopy distribute --hosts @hosts.txt --source /shared/media.sqsh --dest /raid/images --workers 8 --uploads 8
+  swarmcopy distribute --hosts @hosts.txt --source /shared/media.sqsh --dest /raid/images --adaptive --workers 4 --min-workers 2 --max-workers 16 --uploads 8
   swarmcopy resume --job <ID>
 
 COMMANDS
@@ -58,21 +60,42 @@ func usageText(name string) string {
 	case "hashbench":
 		return "Measure SHA256 without changing input files. CPU profiles require a NEW path.\n\nExamples:\n  swarmcopy hashbench --bytes-mib 2048\n  swarmcopy hashbench --file /raid/images/media.sqsh --cpu-profile /tmp/new-sha.pprof\n"
 	case "distribute":
-		return `Create a saved job, bootstrap peers over SSH, and distribute one file.
-The controller prints a job ID and monitors until all files pass SHA256.
-Completed peers stop automatically unless --keep-seeding is set.
-Ordered SHA256 verification and a 256-chunk prefix window are enabled by default.
-Use --pipeline-verify=false to disable both, or --verify-window-chunks 0 for global rarity.
-Adaptive concurrency stays disabled unless --adaptive is specified.
+		return `Create a saved job and distribute files or directory trees through SSH/P2P.
+Multiple files go directly under --dest; directories retain their basename.
+Repeat --source, use a quoted glob, or pass source operands.
+Matching existing files are reused and can seed missing nodes. If a complete
+replica already exists, controller-to-seed media transfer is skipped.
+Conflicting regular files prompt once with --existing ask (default).
+Use --existing resume to reuse matching chunks, replace to receive conflicting
+files afresh, or keep to cancel safely. Old files stay intact until verification.
+Publication is atomic per file, not across the whole dataset.
 
 Examples:
   swarmcopy distribute --hosts 'node[001-005]' --source /shared/nemo.sqsh --dest /raid/images
-  swarmcopy distribute --hosts 'node[001,006,009-012]' --ssh-user alice --ask-pass --source /shared/nemo.sqsh
-  swarmcopy distribute --hosts @hosts.txt --seed node001 --seed-file /raid/images/nemo.sqsh --bin-dir ./dist
+  swarmcopy distribute --hosts @hosts.txt --dest /raid/images --source /shared/nemo --source /shared/config.json
+  swarmcopy distribute --hosts @hosts.txt --dest /raid/images --source '/shared/*.sqsh'
+  swarmcopy distribute --hosts @hosts.txt --dest /raid/images /shared/*.sqsh
+  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --existing resume
+  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --workers 8 --uploads 8
+  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --adaptive --workers 4 --min-workers 2 --max-workers 16 --uploads 8
+  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --transport quic
+  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --ssh-user alice --ask-pass --bin-dir ./dist
+  swarmcopy distribute --hosts @hosts.txt --seed node001 --seed-file /raid/images/nemo.sqsh
 
-Use exactly one of --source (controller-local file) or --seed-file
-(prepared file on --seed, plus its .manifest.json sidecar).
-New source imports never overwrite existing destination files.
+Workers/uploads are per-node chunk-request concurrency, each 1..32; defaults 4/4.
+Adaptive changes downloads only and stays OFF unless requested.
+Minimum defaults to initial workers; maximum defaults to 16.
+Concurrency is saved at startup; no live-edit command is provided.
+Bandwidth defaults to unlimited; upload-mib/download-mib set per-node MiB/s.
+TCP stays default; optional QUIC needs UDP as well as TCP on the chosen port.
+Pipelined SHA256 and a 256-chunk window default ON.
+--pipeline-verify=false disables both; --verify-window-chunks 0 disables the window.
+New jobs use v2 manifests. Legacy prepared --seed-file workflows remain supported.
+Symbolic links/special files and overlapping roots are rejected.
+Unmatched globs and duplicate top-level basenames are errors.
+Completed peers stop automatically unless --keep-seeding is set.
+Use exactly one source group or --seed-file, never both.
+See docs/EXAMPLES.en.md and README.md (Chinese).
 `
 	case "resume":
 		return `Resume a saved job; valid partial chunks are rehashed and retained.
@@ -82,8 +105,11 @@ Examples:
   swarmcopy jobs
   swarmcopy resume --job <ID>
   swarmcopy resume --job /absolute/job-directory --ask-pass
+  swarmcopy resume --job <ID> --existing resume
 
-Keep the job directory, token, manifest, and node .part files.
+Keep the job directory, token, manifest, and node .part files or
+--dest/.swarmcopy-trees/<manifest-id>/data for v2 datasets.
+Saved input selections do not expand again during resume.
 Initial controller-to-seed import is not yet chunk-resumable.
 Use --recheck to bypass unchanged final-file verification caches.
 `
@@ -153,7 +179,11 @@ For automated SSH deployment, prefer "distribute" instead.
 func configureUsage(fs *flag.FlagSet, name string) {
 	fs.Usage = func() {
 		fmt.Fprintln(fs.Output(), usageText(name))
-		fmt.Fprintf(fs.Output(), "Usage: swarmcopy %s [flags]\n\nFlags:\n", name)
+		suffix := ""
+		if name == "distribute" {
+			suffix = " [sources...]"
+		}
+		fmt.Fprintf(fs.Output(), "Usage: swarmcopy %s [flags]%s\n\nFlags:\n", name, suffix)
 		fs.PrintDefaults()
 	}
 }

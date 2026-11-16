@@ -2,13 +2,11 @@ package main
 
 import (
 	"context"
-	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"flag"
 	"hash"
 	"io"
-	"os"
 	"time"
 )
 
@@ -18,7 +16,7 @@ type hashWork struct {
 }
 
 // hashRange reads only the requested range; callers decide when that range is immutable.
-func hashRange(ctx context.Context, f *os.File, h hash.Hash, offset, end int64, buf []byte, progress func(hashWork)) (hashWork, error) {
+func hashRange(ctx context.Context, f io.ReaderAt, h hash.Hash, offset, end int64, buf []byte, progress func(hashWork)) (hashWork, error) {
 	var total hashWork
 	if len(buf) == 0 || offset < 0 || end < offset {
 		return total, errors.New("invalid hash range or empty buffer")
@@ -72,9 +70,12 @@ func (n *Node) addHashWork(work hashWork) {
 	n.perf.FileHashComputeSeconds += work.ComputeSeconds
 }
 func (n *Node) serialDigest(ctx context.Context) (string, error) {
-	h := sha256.New()
+	h := newContentHash(n.m)
 	_, err := hashRange(ctx, n.f, h, 0, n.m.Size, n.verifyBuffer(), n.addHashWork)
 	if err != nil {
+		return "", err
+	}
+	if err = contentHashError(h); err != nil {
 		return "", err
 	}
 	return hex.EncodeToString(h.Sum(nil)), nil
@@ -121,7 +122,7 @@ func (v *orderedVerifier) run(ctx context.Context) {
 		n.mu.Unlock()
 		close(v.done)
 	}()
-	h := sha256.New()
+	h := newContentHash(n.m)
 	buf := n.verifyBuffer()
 	var offset int64
 	next := 0
@@ -155,6 +156,9 @@ func (v *orderedVerifier) run(ctx context.Context) {
 			v.err = err
 			return
 		}
+	}
+	if v.err = contentHashError(h); v.err != nil {
+		return
 	}
 	v.sum = hex.EncodeToString(h.Sum(nil))
 	if v.sum != n.m.SHA256 {

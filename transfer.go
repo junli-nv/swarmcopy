@@ -198,10 +198,15 @@ func (n *Node) finalizeContext(ctx context.Context) (err error) {
 	if err = ctx.Err(); err != nil {
 		return err
 	}
-	if err = publish(n.f.Name(), n.o.File); err != nil {
+	if tree, ok := n.f.(*treeStore); ok {
+		err = tree.Publish(ctx)
+	} else {
+		err = publish(n.f.Name(), n.o.File)
+	}
+	if err != nil {
 		return err
 	}
-	if info, e := n.f.Stat(); e == nil {
+	if info, e := n.f.Stat(); e == nil && n.m.Version == 1 {
 		rememberVerified(n.o.File, n.m, info)
 	}
 	n.mu.Lock()

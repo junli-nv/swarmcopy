@@ -1,5 +1,7 @@
 # 自适应传输实验
 
+> 当前统一版已合入 main，同一二进制通过参数选择功能，不再维护独立 UDP／自适应分支。本文保留原实现背景；当前用法以 [README](../README.md) 和 [示例](EXAMPLES.zh-CN.md) 为准。
+
 [45 节点两轮实测结果](ADAPTIVE-RESULTS.zh-CN.md)
 
 [初始原型退化记录](ADAPTIVE-INITIAL-RESULTS.zh-CN.md)

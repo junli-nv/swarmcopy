@@ -1,5 +1,7 @@
 # UDP / QUIC 数据通道
 
+> 当前统一版已合入 main，同一二进制通过参数选择功能，不再维护独立 UDP／自适应分支。本文保留原实现背景；当前用法以 [README](../README.md) 和 [示例](EXAMPLES.zh-CN.md) 为准。
+
 当前候选增加默认4个客户端socket分片、8952协商负载上限与64KiB GSO上限；依赖包含记录在案的本地补丁。见 [最新设计](QUIC-TUNING.zh-CN.md) 和 [完整消融](QUIC-TUNING-RESULTS.zh-CN.md)。以下保留基础通道说明。
 
 [English](QUIC.en.md) · [TCP 正式版](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0)

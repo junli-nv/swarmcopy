@@ -25,6 +25,9 @@ import (
 )
 
 type Job struct {
+	Inputs                                                                       []SourceEntry `json:",omitempty"`
+	Sources                                                                      []string      `json:",omitempty"`
+	Existing                                                                     string
 	QUICGSOKiB                                                                   int
 	QUICMaxPayload                                                               int
 	QUICSockets                                                                  int
@@ -319,7 +322,7 @@ func jobsCommand(args []string) error {
 	}
 	fmt.Printf("%-33s %-20s %-6s %s\n", "JOB ID", "RECORDED STATE", "NODES", "MEDIA")
 	for _, j := range jobs {
-		fmt.Printf("%-33s %-20s %-6d %s\n", j.ID, j.State, len(j.Hosts), filepath.Base(j.SeedFile))
+		fmt.Printf("%-33s %-20s %-6d %s\n", j.ID, j.State, len(j.Hosts), jobMedia(j))
 	}
 	fmt.Println("Recorded state may be stale after a controller crash; watch/status query live nodes; inspect shows the record.")
 	return nil
@@ -358,8 +361,11 @@ func clusterCommand(mode string, args []string) error {
 	user := fs.String("ssh-user", "", "SSH username; otherwise use user@host or SSH config")
 	var j Job
 	var hosts string
+	var sources sourceFlags
+	var existing string
 	var recheck bool
 	if mode == "resume" {
+		fs.StringVar(&existing, "existing", "", "conflicts: ask, resume, replace or keep; overrides saved policy")
 		fs.BoolVar(&recheck, "recheck", false, "force full existing-file verification")
 	}
 	if mode == "distribute" {
@@ -371,12 +377,13 @@ func clusterCommand(mode string, args []string) error {
 		fs.BoolVar(&j.PipelineVerify, "pipeline-verify", true, "overlap ordered whole-file SHA256 with transfer")
 		fs.IntVar(&j.VerifyBufferMiB, "verify-buffer-mib", 4, "whole-file verification read buffer (1..64 MiB)")
 		fs.StringVar(&hosts, "hosts", "", "host list, bracket ranges, or @host-file")
-		fs.StringVar(&j.Source, "source", "", "controller-local immutable source file")
+		fs.Var(&sources, "source", "controller-local file, directory or quoted glob; repeatable")
+		fs.StringVar(&j.Existing, "existing", "ask", "different existing files: ask, resume, replace or keep")
 		fs.StringVar(&j.Seed, "seed", "", "initial seed host; default first host")
 		fs.StringVar(&j.SeedFile, "seed-file", "", "already prepared seed file with .manifest.json sidecar")
 		fs.StringVar(&j.Dest, "dest", "/raid/images", "absolute local directory on target nodes")
 		exe, _ := os.Executable()
-		fs.StringVar(&j.BinDir, "bin-dir", filepath.Dir(exe), "directory of both architecture binaries")
+		fs.StringVar(&j.BinDir, "bin-dir", defaultBinaryDir(exe), "directory of both architecture binaries")
 		fs.IntVar(&j.Port, "port", 19700, "peer TCP port")
 		fs.IntVar(&j.Fanout, "fanout", 8, "maximum concurrent SSH deployment operations")
 		fs.IntVar(&j.Workers, "workers", 4, "fixed or initial concurrent downloads")
@@ -396,13 +403,16 @@ func clusterCommand(mode string, args []string) error {
 		fs.Usage()
 		return errors.New("missing arguments; see examples above")
 	}
+	if mode == "distribute" {
+		args = sourceArguments(fs, args)
+	}
 	if e := fs.Parse(args); e != nil {
 		return e
 	}
-	if fs.NArg() != 0 {
-		fs.Usage()
-		return errors.New("unexpected positional arguments; this release accepts a single source file")
+	if mode != "distribute" && fs.NArg() != 0 {
+		return errors.New("unexpected positional arguments")
 	}
+	sources = append(sources, fs.Args()...)
 	if mode == "distribute" {
 		if j.QUICGSOKiB < 16 || j.QUICGSOKiB > 64 {
 			return errors.New("quic-gso-kib must be 16..64")
@@ -416,21 +426,12 @@ func clusterCommand(mode string, args []string) error {
 		if !validTransport(j.Transport) {
 			return errors.New("transport must be tcp or quic")
 		}
-		count := 0
-		for _, arg := range args {
-			if arg == "--source" || arg == "-source" || strings.HasPrefix(arg, "--source=") || strings.HasPrefix(arg, "-source=") {
-				count++
-			}
-		}
-		if count > 1 {
-			return errors.New("multiple --source inputs are not supported in this release")
-		}
 		var e error
 		j.Hosts, e = hostList(hosts)
 		if e != nil {
 			return e
 		}
-		if (j.Source == "") == (j.SeedFile == "") {
+		if (len(sources) == 0) == (j.SeedFile == "") {
 			return errors.New("specify exactly one of --source or --seed-file")
 		}
 		if !filepath.IsAbs(j.Dest) || strings.ContainsAny(j.Dest, "\r\n") {
@@ -475,28 +476,28 @@ func clusterCommand(mode string, args []string) error {
 		if !found {
 			return errors.New("--seed must appear in --hosts")
 		}
-		if j.Source != "" {
-			j.Source, e = filepath.Abs(j.Source)
+		if len(sources) > 0 {
+			j.Inputs, j.Sources, e = buildSourcePlan(sources)
 			if e != nil {
 				return e
 			}
-			st, e := os.Stat(j.Source)
-			if e != nil {
-				return e
-			}
-			if !st.Mode().IsRegular() || st.Size() == 0 {
-				return errors.New("source must be a nonempty regular file")
-			}
-			j.SeedFile = filepath.Join(j.Dest, filepath.Base(j.Source))
+			j.Source = j.Sources[0]
 		} else if !filepath.IsAbs(j.SeedFile) {
 			return errors.New("--seed-file must be absolute")
 		}
+		if j.Existing != "ask" && j.Existing != "resume" && j.Existing != "replace" && j.Existing != "keep" {
+			return errors.New("existing must be ask, resume, replace or keep")
+		}
+
 		j.BinDir, e = filepath.Abs(j.BinDir)
 		if e != nil {
 			return e
 		}
 		j.ID = time.Now().UTC().Format("20060102T150405") + "-" + randomID()[:8]
 		j.Created = time.Now().UTC().Format(time.RFC3339)
+		if len(j.Inputs) > 0 {
+			j.SeedFile = filepath.Join(j.remoteDir(), "dataset")
+		}
 		j.SSHUser = *user
 		j.State = "created"
 		if *id == "" {
@@ -525,6 +526,12 @@ func clusterCommand(mode string, args []string) error {
 		if *user != "" {
 			j.SSHUser = *user
 		}
+	}
+	if mode == "resume" && existing != "" {
+		if existing != "ask" && existing != "resume" && existing != "replace" && existing != "keep" {
+			return errors.New("invalid existing policy")
+		}
+		j.Existing = existing
 	}
 	if mode == "resume" && hasFlag(args, "recheck") {
 		j.Recheck = recheck
@@ -581,12 +588,28 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 		}
 	}()
 	os.Remove(filepath.Join(j.Dir, "stop.request"))
+	if len(j.Inputs) > 0 {
+		mp := filepath.Join(j.Dir, "manifest.json")
+		if _, x := os.Stat(mp); os.IsNotExist(x) {
+			j.State = "hashing-source"
+			j.save()
+			m, x := sourceManifest(ctx, *j)
+			if x != nil {
+				return x
+			}
+			if x = saveManifest(mp, m); x != nil {
+				return x
+			}
+		} else if x != nil {
+			return x
+		}
+	}
 	if e = forHosts(ctx, j.Hosts, j.Fanout, func(c context.Context, h string) error { return r.bootstrap(c, *j, h) }); e != nil {
 		return e
 	}
 	root := j.remoteDir()
 	binary := shellQuote(filepath.Join(root, "swarmcopy"))
-	if j.Source != "" && !j.Imported {
+	if len(j.Inputs) == 0 && j.Source != "" && !j.Imported {
 		f, e := os.Open(j.Source)
 		if e != nil {
 			return e
@@ -635,6 +658,30 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	manifest, e := os.ReadFile(manifestPath)
 	if e != nil {
 		return e
+	}
+	if m.Version == 2 {
+		ready, x := preflightTree(ctx, r, j, m, manifest)
+		if x != nil {
+			return x
+		}
+		if !j.Imported {
+			if !ready {
+				j.State = "importing"
+				j.save()
+				if x = importTreeJob(ctx, r, j, binary); x != nil {
+					return x
+				}
+			} else {
+				fmt.Println("EXISTING complete replica found; skipping controller-to-seed data transfer")
+			}
+			j.Imported = true
+			if x = j.save(); x != nil {
+				return x
+			}
+		}
+		if j.Existing == "" || j.Existing == "ask" {
+			j.Existing = "keep"
+		}
 	}
 	if e = forHosts(ctx, j.Hosts, j.Fanout, func(c context.Context, h string) error { return startRemotePeer(c, r, *j, m, manifest, h) }); e != nil {
 		return e
@@ -701,4 +748,28 @@ func rowsToStatus(rows []observation) map[string]Status {
 		}
 	}
 	return out
+}
+
+func jobMedia(j Job) string {
+	if len(j.Inputs) > 0 {
+		return fmt.Sprintf("%d files / %d entries", treePlanFiles(j.Inputs), len(j.Inputs))
+	}
+	return filepath.Base(j.SeedFile)
+}
+func treePlanFiles(p []SourceEntry) int {
+	n := 0
+	for _, s := range p {
+		if s.Entry.Kind == "file" {
+			n++
+		}
+	}
+	return n
+}
+
+func defaultBinaryDir(exe string) string {
+	d := filepath.Dir(exe)
+	if st, e := os.Stat(filepath.Join(d, "dist")); e == nil && st.IsDir() {
+		return filepath.Join(d, "dist")
+	}
+	return d
 }

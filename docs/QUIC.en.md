@@ -1,5 +1,7 @@
 # UDP / QUIC chunk transport
 
+> These features are now integrated in main and the same executable; separate UDP/adaptive branches are no longer maintained. This document retains implementation background. Use the current [README](../README.en.md) and [examples](EXAMPLES.en.md).
+
 The current candidate adds four client socket shards, an8952 negotiated ceiling and a64KiB GSO bound, with an explicitly recorded local dependency patch. See [current design](QUIC-TUNING.en.md) and [complete ablations](QUIC-TUNING-RESULTS.en.md). Base transport behavior follows below.
 
 [中文](QUIC.zh-CN.md) · [TCP release](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0)

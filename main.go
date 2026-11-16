@@ -24,10 +24,11 @@ import (
 	"time"
 )
 
-const version = "0.3.0-dev.4"
+const version = "0.4.0"
 const protocol = "SCDP/1"
 
 type Manifest struct {
+	Entries   []TreeEntry `json:",omitempty"`
 	Version   int
 	Name      string
 	Size      int64
@@ -46,6 +47,12 @@ func (m Manifest) length(i int) int64 {
 	return n
 }
 func (m Manifest) validate() error {
+	if m.Version == 2 {
+		return m.validateTree()
+	}
+	if len(m.Entries) != 0 {
+		return errors.New("v1 manifest contains tree entries")
+	}
 	if m.Version != 1 || m.Size <= 0 || m.ChunkSize < 65536 || m.ChunkSize > 64<<20 ||
 		m.Size > 1<<50 || m.Name == "" || filepath.Base(m.Name) != m.Name ||
 		m.Name == "." || m.Name == ".." || int64(len(m.Chunks)) != (m.Size-1)/m.ChunkSize+1 ||
@@ -221,6 +228,7 @@ func prepare(args []string) error {
 }
 
 type Options struct {
+	Existing                                 string
 	QUICGSOKiB                               int
 	QUICMaxPayload                           int
 	QUICSockets                              int
@@ -239,6 +247,8 @@ type Options struct {
 	Lifetime, Stall                          time.Duration
 }
 type Status struct {
+	Files                int
+	Entries              int
 	Transport            string
 	Performance          *Performance `json:",omitempty"`
 	Protocol             string
@@ -293,7 +303,7 @@ type Node struct {
 	m                              Manifest
 	o                              Options
 	token                          string
-	f                              *os.File
+	f                              contentFile
 	mu                             sync.Mutex
 	have, busy                     []bool
 	remotes                        []Remote
@@ -402,6 +412,10 @@ func main() {
 	}
 	if e == nil {
 		switch os.Args[1] {
+		case "prepare-tree":
+			e = prepareTreeCommand(os.Args[2:])
+		case "tree-check":
+			e = treeCheckCommand(os.Args[2:])
 		case "hashbench":
 			e = hashbenchCommand(os.Args[2:])
 		case "prepare":
@@ -450,7 +464,7 @@ func main() {
 
 func (n *Node) scan() error {
 	buf := make([]byte, int(n.m.ChunkSize))
-	whole := sha256.New()
+	whole := newContentHash(n.m)
 	count := 0
 	for i, h := range n.m.Chunks {
 		b := buf[:n.m.length(i)]
@@ -461,7 +475,7 @@ func (n *Node) scan() error {
 			whole.Write(b)
 		}
 	}
-	if count == len(n.have) && hex.EncodeToString(whole.Sum(nil)) != n.m.SHA256 {
+	if count == len(n.have) && (contentHashError(whole) != nil || hex.EncodeToString(whole.Sum(nil)) != n.m.SHA256) {
 		return errors.New("whole-file hash contradicts manifest")
 	}
 	if n.origin && count != len(n.have) {
@@ -478,7 +492,7 @@ func (n *Node) snapshot() Status {
 	for k, v := range n.from {
 		from[k] = v
 	}
-	return Status{Transport: transportName(n.o.Transport), Performance: n.performanceLocked(), Protocol: protocol, Size: n.m.Size, VerifiedBytes: verifiedBytes(n.m, n.have), ID: n.m.id(), Version: version, Have: append([]bool(nil), n.have...), Complete: n.complete,
+	return Status{Files: n.m.fileCount(), Entries: len(n.m.Entries), Transport: transportName(n.o.Transport), Performance: n.performanceLocked(), Protocol: protocol, Size: n.m.Size, VerifiedBytes: verifiedBytes(n.m, n.have), ID: n.m.id(), Version: version, Have: append([]bool(nil), n.have...), Complete: n.complete,
 		Origin: n.origin, Downloaded: n.downloaded.Load(), Uploaded: n.uploaded.Load(), From: from, Error: n.failure}
 }
 func (n *Node) serve(w http.ResponseWriter, r *http.Request) {
@@ -588,7 +602,8 @@ func peer(args []string) error {
 	fs.IntVar(&o.QUICMaxPayload, "quic-max-payload", 8952, "QUIC UDP payload ceiling (1452..8952); larger packets require PMTU confirmation")
 	fs.IntVar(&o.QUICSockets, "quic-sockets", 4, "QUIC client UDP socket shards (1..32); distribute sources across receive loops")
 	fs.StringVar(&o.Transport, "transport", "tcp", "chunk data transport: tcp or quic (UDP); control stays TCP")
-	fs.StringVar(&o.File, "file", "", "local destination or existing seed file")
+	fs.StringVar(&o.File, "file", "", "local destination file; destination directory for v2 tree manifests")
+	fs.StringVar(&o.Existing, "existing", "keep", "tree conflicts: keep, resume or replace (controller can prompt)")
 	fs.IntVar(&o.VerifyWindowChunks, "verify-window-chunks", 256, "prefer this many upcoming hash chunks; 0=global rarity, requires pipeline-verify")
 	fs.BoolVar(&o.PipelineVerify, "pipeline-verify", true, "overlap ordered whole-file SHA256 with chunk transfer")
 	fs.IntVar(&o.VerifyBufferMiB, "verify-buffer-mib", 4, "whole-file verification read buffer (1..64 MiB)")
@@ -664,6 +679,12 @@ func peer(args []string) error {
 	if e != nil {
 		return e
 	}
+	if m.Version == 2 {
+		o.File, e = filepath.Abs(o.File)
+		if e != nil {
+			return e
+		}
+	}
 	t, e := token(o.TokenFile)
 	if e != nil {
 		return e
@@ -693,70 +714,95 @@ func peer(args []string) error {
 	}
 	n.dataClient = dataClient
 	defer closeData()
-	path := o.File
-	info, err := os.Lstat(path)
-	if err == nil {
-		if !info.Mode().IsRegular() || info.Size() != m.Size {
-			return errors.New("existing destination has wrong type or size")
-		}
-		n.origin = true
-	} else if os.IsNotExist(err) {
-		path = o.File + "." + m.id()[:16] + ".part"
-	} else {
-		return err
-	}
-	flags := syscall.O_RDWR | syscall.O_NOFOLLOW
-	if !n.origin {
-		flags |= syscall.O_CREAT
-	}
-	fresh := false
-	var fd int
-	if n.origin {
-		fd, e = syscall.Open(path, flags, 0600)
-	} else {
-		fd, e = syscall.Open(path, flags|syscall.O_EXCL, 0600)
-		if e == syscall.EEXIST {
-			fd, e = syscall.Open(path, flags, 0600)
-		} else if e == nil {
-			fresh = true
-		}
-	}
-	if e != nil {
-		return e
-	}
-	n.f = os.NewFile(uintptr(fd), path)
-	defer n.f.Close()
-	st, e := n.f.Stat()
-	if e != nil {
-		return e
-	}
-	if !st.Mode().IsRegular() {
-		return errors.New("not a regular file")
-	}
-	if !n.origin {
-		if e = n.f.Truncate(m.Size); e != nil {
-			return e
-		}
-	}
 	scanStart := time.Now()
-	if fresh {
-		log.Printf("NEW partial file: no existing chunks to scan")
-	} else if n.origin && !o.Recheck && cacheMatches(o.File, m, st) {
-		for i := range n.have {
-			n.have[i] = true
+	if m.Version == 2 {
+		if o.Existing != "" && o.Existing != "keep" && o.Existing != "resume" && o.Existing != "replace" {
+			return errors.New("invalid existing-file policy")
 		}
-		n.complete = true
-		log.Printf("VERIFIED cache accepted (unchanged inode/size/mtime/ctime); use --recheck to rescan")
+		store, err := openTreeStore(o.File, m, o.Existing, o.Recheck)
+		if err != nil {
+			return err
+		}
+		n.f = store
+		n.origin = store.complete
+		if n.origin {
+			for i := range n.have {
+				n.have[i] = true
+			}
+			n.complete = true
+			log.Printf("VERIFIED tree files=%d; all existing content matches", m.fileCount())
+		} else if err = n.scan(); err != nil {
+			store.Close()
+			return err
+		}
 	} else {
-		if e = n.scan(); e != nil {
+		path := o.File
+		info, err := os.Lstat(path)
+		if err == nil {
+			if !info.Mode().IsRegular() || info.Size() != m.Size {
+				return errors.New("existing destination has wrong type or size")
+			}
+			n.origin = true
+		} else if os.IsNotExist(err) {
+			path = o.File + "." + m.id()[:16] + ".part"
+		} else {
+			return err
+		}
+		flags := syscall.O_RDWR | syscall.O_NOFOLLOW
+		if !n.origin {
+			flags |= syscall.O_CREAT
+		}
+		fresh := false
+		var fd int
+		if n.origin {
+			fd, e = syscall.Open(path, flags, 0600)
+		} else {
+			fd, e = syscall.Open(path, flags|syscall.O_EXCL, 0600)
+			if e == syscall.EEXIST {
+				fd, e = syscall.Open(path, flags, 0600)
+			} else if e == nil {
+				fresh = true
+			}
+		}
+		if e != nil {
 			return e
 		}
-		if n.origin {
-			if info, err := n.f.Stat(); err == nil {
-				rememberVerified(o.File, m, info)
+		n.f = os.NewFile(uintptr(fd), path)
+
+		st, e := n.f.Stat()
+		if e != nil {
+			return e
+		}
+		if !st.Mode().IsRegular() {
+			return errors.New("not a regular file")
+		}
+		if !n.origin {
+			if e = n.f.Truncate(m.Size); e != nil {
+				return e
+			}
+		}
+
+		if fresh {
+			log.Printf("NEW partial file: no existing chunks to scan")
+		} else if n.origin && !o.Recheck && cacheMatches(o.File, m, st) {
+			for i := range n.have {
+				n.have[i] = true
+			}
+			n.complete = true
+			log.Printf("VERIFIED cache accepted (unchanged inode/size/mtime/ctime); use --recheck to rescan")
+		} else {
+			if e = n.scan(); e != nil {
+				return e
+			}
+			if n.origin {
+				if info, err := n.f.Stat(); err == nil {
+					rememberVerified(o.File, m, info)
+				}
 			}
 		}
 	}
+	defer n.f.Close()
+
 	n.perf.ScanSeconds = time.Since(scanStart).Seconds()
 	n.initTransfersLocked()
 	n.perf.Stage = "transfer"

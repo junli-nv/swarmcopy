@@ -64,7 +64,7 @@ func observe(ctx context.Context, c *http.Client, t string, addresses []string) 
 	}
 	for i := range out {
 		s := out[i].st
-		if out[i].err == nil && (s.ID != id || s.Size <= 0 || s.VerifiedBytes < 0 || s.VerifiedBytes > s.Size) {
+		if out[i].err == nil && (s.ID != id || s.Size < 0 || s.Size == 0 && s.Entries <= 0 || s.VerifiedBytes < 0 || s.VerifiedBytes > s.Size) {
 			out[i].err = errors.New("manifest mismatch or invalid status")
 		}
 	}
@@ -90,6 +90,12 @@ func render(observations []observation, previous map[string]observation, clear b
 		fmt.Print("\033[H\033[2J")
 	}
 	fmt.Printf("swarmcopy %s | %s\n", version+" / "+protocol, time.Now().Format("2006-01-02 15:04:05"))
+	for _, o := range observations {
+		if o.err == nil && o.st.Entries > 0 {
+			fmt.Printf("Dataset: %d files / %d entries per node; bytes aggregate across all files\n", o.st.Files, o.st.Entries)
+			break
+		}
+	}
 	fmt.Printf("%-25s %7s %20s %11s %11s  %s\n", "NODE", "DONE", "VERIFIED GiB / TOTAL", "DL MiB/s", "UL MiB/s", "STATE")
 	var verified, total int64
 	var expected int64
@@ -159,14 +165,14 @@ func render(observations []observation, previous map[string]observation, clear b
 				state = strings.ToUpper(p.Stage)
 			}
 			if p.PipelineVerify && !s.Origin {
-				state += fmt.Sprintf(" hash=%.1f%%", 100*float64(p.FileHashBytes)/float64(s.Size))
+				state += fmt.Sprintf(" hash=%.1f%%", progressPercent(p.FileHashBytes, s.Size, s.Complete))
 			}
 			if p.Adaptive {
 				state += fmt.Sprintf(" workers=%d/%d", p.ActiveDownloads, p.TargetDownloads)
 			}
 		}
 		fmt.Printf("%-25s %6.1f%% %8.2f / %8.2f %11.2f %11.2f  %s\n", o.addr,
-			100*float64(s.VerifiedBytes)/float64(s.Size), float64(s.VerifiedBytes)/(1<<30),
+			progressPercent(s.VerifiedBytes, s.Size, s.Complete), float64(s.VerifiedBytes)/(1<<30),
 			float64(s.Size)/(1<<30), d/(1<<20), u/(1<<20), state)
 	}
 	var metrics, adaptive int
@@ -196,6 +202,9 @@ func render(observations []observation, previous map[string]observation, clear b
 	ratio := 0.0
 	if total > 0 {
 		ratio = float64(verified) / float64(total)
+	}
+	if total == 0 && all {
+		ratio = 1
 	}
 	eta := "--"
 	if total > verified && down > 0 {
@@ -320,4 +329,14 @@ func watchCommand(args []string) error {
 		case <-ticker.C:
 		}
 	}
+}
+
+func progressPercent(done, total int64, complete bool) float64 {
+	if total > 0 {
+		return 100 * float64(done) / float64(total)
+	}
+	if complete {
+		return 100
+	}
+	return 0
 }
