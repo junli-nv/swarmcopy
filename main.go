@@ -221,6 +221,7 @@ func prepare(args []string) error {
 }
 
 type Options struct {
+	VerifyWindowChunks                       int
 	PipelineVerify                           bool
 	VerifyBufferMiB                          int
 	Adaptive, Endgame                        bool
@@ -573,6 +574,7 @@ func peer(args []string) error {
 	fs := flag.NewFlagSet("peer", flag.ContinueOnError)
 	configureUsage(fs, "peer")
 	fs.StringVar(&o.File, "file", "", "local destination or existing seed file")
+	fs.IntVar(&o.VerifyWindowChunks, "verify-window-chunks", 0, "prefer this many upcoming hash chunks; 0=global rarity, requires pipeline-verify")
 	fs.BoolVar(&o.PipelineVerify, "pipeline-verify", false, "overlap ordered whole-file SHA256 with chunk transfer")
 	fs.IntVar(&o.VerifyBufferMiB, "verify-buffer-mib", 4, "whole-file verification read buffer (1..64 MiB)")
 	fs.BoolVar(&o.Recheck, "recheck", false, "ignore final-file verification cache; rehash all existing data")
@@ -618,6 +620,9 @@ func peer(args []string) error {
 	}
 	if o.MaxWorkers < o.Workers || o.MaxWorkers > 32 || o.HedgeDelay <= 0 {
 		return errors.New("invalid max-workers or hedge-delay")
+	}
+	if o.VerifyWindowChunks < 0 || o.VerifyWindowChunks > 4096 || o.VerifyWindowChunks > 0 && !o.PipelineVerify {
+		return errors.New("verify-window-chunks must be 0..4096 and requires pipeline-verify")
 	}
 	if o.VerifyBufferMiB < 1 || o.VerifyBufferMiB > 64 {
 		return errors.New("verify-buffer-mib must be 1..64")

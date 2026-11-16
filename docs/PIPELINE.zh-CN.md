@@ -10,7 +10,7 @@
 ./swarmcopy distribute \
   --hosts 'node[001-005]' --source /shared/nemo.sqsh \
   --dest /raid/images --bin-dir ./dist \
-  --pipeline-verify --verify-buffer-mib 4
+  --pipeline-verify --verify-buffer-mib 4 --verify-window-chunks 256
 ~~~
 
 --pipeline-verify 默认关闭，开启后接收数据和整文件哈希可以重叠。--verify-buffer-mib 默认 4，范围 1..64，控制串行或流水线校验的读取缓冲。未开启时仍在接收全部完成后校验。新任务保存参数，resume 沿用保存值；旧任务默认关闭流水线。目录和多文件仍是后续工作。
@@ -29,7 +29,11 @@
 
 校验器只需要一个读取缓冲，不把整份镜像缓存到 Go 堆中。读取已就绪数据后更新 SHA 状态，等候缺失前缀时通过合并通知唤醒。已发布文件作为种子时，仍沿用原来的完整验证缓存或 --recheck，不额外启动重复校验线程。
 
-默认继续使用稀缺块优先调度。如果很靠前的块晚到，顺序 SHA 会等待；因此“使用流水线”不自动等于隐藏全部校验时间。它也可能与传输争抢 CPU、内存和存储，必须看整批完成时间。当前实现没有改变下载顺序来强迫某个结果。
+--verify-window-chunks 默认 0，此时继续使用全局稀缺块优先调度。如果很靠前的块晚到，顺序 SHA 会等待；因此“使用流水线”不自动等于隐藏全部校验时间。它也可能与传输争抢 CPU、内存和存储，必须看整批完成时间。
+
+可选 --verify-window-chunks 256 优先选择当前哈希位置起的 256 个块（默认分块下约 4 GiB），在窗口内部仍按稀缺性选择；窗口中没有可用块时回退到全局调度，不把窗口作为硬边界。范围 0..4096，非零必须配合 --pipeline-verify。
+
+这会改变数据调度顺序，也缩小调度器常见的搜索范围；收益不能全部归因于后台哈希线程。先保存无窗口版本的两轮试验，再对同一新二进制的无窗口/有窗口模式做独立新目录对照，以隔离效果。
 
 ## 指标
 
@@ -37,6 +41,7 @@ watch 在接收节点显示 hash 百分比；status 和 result.json 的 Performa
 
 | 字段 | 定义 |
 |---|---|
+| VerifyWindowChunks | 前缀优先窗口块数，0 为全局稀缺性 |
 | PipelineVerify | 此任务是否配置流水线 |
 | FileHashBytes | 本进程已纳入完整文件 SHA 的字节 |
 | FileHashBytesAtTransferEnd | 主循环确认全块齐备、进入最终化时已经哈希的字节 |
@@ -83,4 +88,3 @@ python3 scripts/benchmark-verify.py --help
 ~~~
 
 对照使用上一发布版 / 当前串行 / 当前流水线，固定下载并发，不混入自适应策略。每次新目录、清 OS 页缓存、全部接收端完整传输并校验，计时包括部署和停止。CPU 后端微测与分发实测分开报告，不以降低完整性换取加速。
-

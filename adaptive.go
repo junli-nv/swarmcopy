@@ -12,6 +12,7 @@ import (
 
 // Performance durations are sums of concurrent request work unless named as a phase.
 type Performance struct {
+	VerifyWindowChunks                                                                       int
 	PipelineVerify                                                                           bool
 	FileHashBytes, FileHashBytesAtTransferEnd                                                int64
 	FileHashReadSeconds, FileHashComputeSeconds, FileHashWaitSeconds, FileHashWallSeconds    float64
@@ -77,6 +78,7 @@ func (n *Node) performanceLocked() *Performance {
 	p := n.perf
 	p.Adaptive = n.o.Adaptive
 	p.PipelineVerify = n.o.PipelineVerify
+	p.VerifyWindowChunks = n.o.VerifyWindowChunks
 	p.ActiveDownloads = n.active
 	p.TargetDownloads = n.target
 	p.MaxDownloads = n.maxWorkers()
@@ -134,16 +136,31 @@ func (n *Node) candidateLocked(i int, exclude map[string]*flight) (int, string) 
 	}
 	return count, addr
 }
+
+// A verification window is a priority, not a hard transfer boundary.
+// If its data is unavailable/in flight, global rarity keeps remaining capacity useful.
 func (n *Node) selectChunkLocked() (int, string) {
-	chosen := -1
-	best := int(^uint(0) >> 1)
-	addr := ""
 	if len(n.have) == 0 || n.complete || n.failure != "" {
 		return -1, ""
 	}
-	start := rand.IntN(len(n.have))
-	for j := 0; j < len(n.have); j++ {
-		i := (start + j) % len(n.have)
+	if n.o.PipelineVerify && n.o.VerifyWindowChunks > 0 && n.m.ChunkSize > 0 {
+		first := int(n.perf.FileHashBytes / n.m.ChunkSize)
+		if i, addr := n.selectRangeLocked(first, min(first+n.o.VerifyWindowChunks, len(n.have))); i >= 0 {
+			return i, addr
+		}
+	}
+	return n.selectRangeLocked(0, len(n.have))
+}
+func (n *Node) selectRangeLocked(first, last int) (int, string) {
+	if first >= last {
+		return -1, ""
+	}
+	chosen := -1
+	best := int(^uint(0) >> 1)
+	addr := ""
+	start := rand.IntN(last - first)
+	for j := 0; j < last-first; j++ {
+		i := first + (start+j)%(last-first)
 		if n.have[i] || n.busy[i] {
 			continue
 		}

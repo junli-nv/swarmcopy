@@ -1,0 +1,247 @@
+{
+  "nodes": 45,
+  "receivers": 44,
+  "file_bytes": 40188444672,
+  "rounds": 2,
+  "cases": [
+    {
+      "round": 1,
+      "method": "baseline",
+      "seconds": 83.22680176049471,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001157756,
+        "TransferSeconds_max": 35.001400567,
+        "FinalSyncSeconds_max": 6.760957914,
+        "FinalHashSeconds_max": 42.121648442,
+        "PublishSeconds_max": 0.005413017,
+        "FileHashReadSeconds_max": null,
+        "FileHashComputeSeconds_max": null,
+        "FileHashWaitSeconds_max": null,
+        "FileHashWallSeconds_max": null,
+        "Requests_sum": 109275,
+        "Retries_sum": 3851,
+        "BusyResponses_sum": 3851,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0,
+        "FileHashBytes_sum": null,
+        "FileHashBytesAtTransferEnd_sum": null
+      },
+      "seed_valid_bytes": 53945761792
+    },
+    {
+      "round": 1,
+      "method": "serial",
+      "seconds": 84.92513071000576,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001581595,
+        "TransferSeconds_max": 33.001680848,
+        "FinalSyncSeconds_max": 6.371098504,
+        "FinalHashSeconds_max": 41.103069031,
+        "PublishSeconds_max": 0.002861924,
+        "FileHashReadSeconds_max": 7.161095975000012,
+        "FileHashComputeSeconds_max": 34.74238240600002,
+        "FileHashWaitSeconds_max": 0,
+        "FileHashWallSeconds_max": 41.103068926,
+        "Requests_sum": 109234,
+        "Retries_sum": 3810,
+        "BusyResponses_sum": 3810,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0,
+        "FileHashBytes_sum": 1768291565568,
+        "FileHashBytesAtTransferEnd_sum": 0
+      },
+      "seed_valid_bytes": 51328516096
+    },
+    {
+      "round": 1,
+      "method": "pipeline",
+      "seconds": 78.98099091276526,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001460666,
+        "TransferSeconds_max": 36.001276,
+        "FinalSyncSeconds_max": 6.432293112,
+        "FinalHashSeconds_max": 38.937696187,
+        "PublishSeconds_max": 0.0027526020000000003,
+        "FileHashReadSeconds_max": 7.181329949999997,
+        "FileHashComputeSeconds_max": 34.67816028700001,
+        "FileHashWaitSeconds_max": 33.62242514499996,
+        "FileHashWallSeconds_max": 63.677578239,
+        "Requests_sum": 109283,
+        "Retries_sum": 3859,
+        "BusyResponses_sum": 3859,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0,
+        "FileHashBytes_sum": 1768291565568,
+        "FileHashBytesAtTransferEnd_sum": 88453677056
+      },
+      "seed_valid_bytes": 54516187136
+    },
+    {
+      "round": 2,
+      "method": "pipeline",
+      "seconds": 80.82844717986882,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001711793,
+        "TransferSeconds_max": 36.002851591,
+        "FinalSyncSeconds_max": 5.6306225020000005,
+        "FinalHashSeconds_max": 33.956569739,
+        "PublishSeconds_max": 0.002752475,
+        "FileHashReadSeconds_max": 7.1168327239999805,
+        "FileHashComputeSeconds_max": 32.765108703999914,
+        "FileHashWaitSeconds_max": 34.72140891400004,
+        "FileHashWallSeconds_max": 64.747310822,
+        "Requests_sum": 108689,
+        "Retries_sum": 3265,
+        "BusyResponses_sum": 3265,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0,
+        "FileHashBytes_sum": 1768291565568,
+        "FileHashBytesAtTransferEnd_sum": 82879447040
+      },
+      "seed_valid_bytes": 51620741120
+    },
+    {
+      "round": 2,
+      "method": "serial",
+      "seconds": 84.97632048558444,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001925322,
+        "TransferSeconds_max": 36.001285504,
+        "FinalSyncSeconds_max": 6.141956695999999,
+        "FinalHashSeconds_max": 41.179266867,
+        "PublishSeconds_max": 0.004777286,
+        "FileHashReadSeconds_max": 7.126109248999996,
+        "FileHashComputeSeconds_max": 34.60779069599996,
+        "FileHashWaitSeconds_max": 0,
+        "FileHashWallSeconds_max": 41.179266774,
+        "Requests_sum": 109415,
+        "Retries_sum": 3991,
+        "BusyResponses_sum": 3991,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0,
+        "FileHashBytes_sum": 1768291565568,
+        "FileHashBytesAtTransferEnd_sum": 0
+      },
+      "seed_valid_bytes": 52184154112
+    },
+    {
+      "round": 2,
+      "method": "baseline",
+      "seconds": 83.02753781806678,
+      "verified": true,
+      "fresh_start": true,
+      "downloaded_bytes": 1768291565568,
+      "metrics": {
+        "ScanSeconds_max": 0.001412873,
+        "TransferSeconds_max": 37.001765971,
+        "FinalSyncSeconds_max": 6.203898358,
+        "FinalHashSeconds_max": 42.208021568,
+        "PublishSeconds_max": 0.002840384,
+        "FileHashReadSeconds_max": null,
+        "FileHashComputeSeconds_max": null,
+        "FileHashWaitSeconds_max": null,
+        "FileHashWallSeconds_max": null,
+        "Requests_sum": 109030,
+        "Retries_sum": 3606,
+        "BusyResponses_sum": 3606,
+        "HedgeRequests_sum": 0,
+        "CanceledRequests_sum": 0,
+        "WorkerChanges_sum": 0,
+        "ReceivedBytes_sum": 1768291565568,
+        "DuplicateBytes_sum": 0,
+        "FileHashBytes_sum": null,
+        "FileHashBytesAtTransferEnd_sum": null
+      },
+      "seed_valid_bytes": 51580174336
+    }
+  ],
+  "methods": {
+    "baseline": {
+      "seconds": [
+        83.22680176049471,
+        83.02753781806678
+      ],
+      "median": 83.12716978928074,
+      "min": 83.02753781806678,
+      "max": 83.22680176049471
+    },
+    "serial": {
+      "seconds": [
+        84.92513071000576,
+        84.97632048558444
+      ],
+      "median": 84.9507255977951,
+      "min": 84.92513071000576,
+      "max": 84.97632048558444
+    },
+    "pipeline": {
+      "seconds": [
+        78.98099091276526,
+        80.82844717986882
+      ],
+      "median": 79.90471904631704,
+      "min": 78.98099091276526,
+      "max": 80.82844717986882
+    }
+  },
+  "unique_boot_ids": 45,
+  "owned_peers_stopped": 270,
+  "pipeline_speedup_vs_baseline": 1.040328666209261,
+  "pipeline_speedup_vs_serial": 1.0631502946472176,
+  "file_sha256": "b4b4781e7392957eb24d45e9f480ea6d8ec2d20f9200a1c48aeeefd64d2e77c1",
+  "driver_sha256": "0714d57ae3aad2863dd2f365078103a726b6e913298cb1f77f530dad93b0de12",
+  "artifacts": {
+    "baseline": {
+      "binary": "73c227cb8936ec6d9d4a50512a7f0f924c35f41547616d7ed013f7e41011b78b",
+      "dist": {
+        "swarmcopy-linux-x86_64": "73c227cb8936ec6d9d4a50512a7f0f924c35f41547616d7ed013f7e41011b78b",
+        "swarmcopy-linux-aarch64": "fee845fcac0fc8a9e99ad17221817ad3cc8a150913485d369defedfa21ab4667"
+      }
+    },
+    "serial": {
+      "binary": "af9eb975eed6f9400ecd3b1b26d095f6053741ed0e5408c8bff8bf14c3e28ec7",
+      "dist": {
+        "swarmcopy-linux-x86_64": "af9eb975eed6f9400ecd3b1b26d095f6053741ed0e5408c8bff8bf14c3e28ec7",
+        "swarmcopy-linux-aarch64": "aed52c5be8899978cf310add69e419f0153ee1b1238cceb99bc78fb6d7e4d085"
+      }
+    },
+    "pipeline": {
+      "binary": "af9eb975eed6f9400ecd3b1b26d095f6053741ed0e5408c8bff8bf14c3e28ec7",
+      "dist": {
+        "swarmcopy-linux-x86_64": "af9eb975eed6f9400ecd3b1b26d095f6053741ed0e5408c8bff8bf14c3e28ec7",
+        "swarmcopy-linux-aarch64": "aed52c5be8899978cf310add69e419f0153ee1b1238cceb99bc78fb6d7e4d085"
+      }
+    }
+  },
+  "policy": "Unique absent case directory; sync/drop_caches=3 on every participant before every method; prepared common seed; unlimited bandwidth; full SHA256/fsync; timing through peer shutdown; retries remain in timed case."
+}

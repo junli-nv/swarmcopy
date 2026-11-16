@@ -1,0 +1,1388 @@
+[
+  {
+    "round": 1,
+    "method": "baseline",
+    "nodes": [
+      {
+        "node": "node001",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4197735468 kB\nCached:         39915396 kB\nSReclaimable:     249224 kB\nAFTER\nMemAvailable:   4202158464 kB\nCached:           580724 kB\nSReclaimable:     186944 kB\nloadavg 0.80 0.83 0.72"
+      },
+      {
+        "node": "node002",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4199099548 kB\nCached:         39855164 kB\nSReclaimable:     162696 kB\nAFTER\nMemAvailable:   4203493756 kB\nCached:           511928 kB\nSReclaimable:     154624 kB\nloadavg 0.03 0.61 0.58"
+      },
+      {
+        "node": "node003",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4195884824 kB\nCached:         39908012 kB\nSReclaimable:     185596 kB\nAFTER\nMemAvailable:   4200242640 kB\nCached:           562548 kB\nSReclaimable:     176828 kB\nloadavg 0.06 0.70 0.75"
+      },
+      {
+        "node": "node004",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4195860252 kB\nCached:         39920544 kB\nSReclaimable:     187000 kB\nAFTER\nMemAvailable:   4200198652 kB\nCached:           574972 kB\nSReclaimable:     178288 kB\nloadavg 0.07 0.64 0.67"
+      },
+      {
+        "node": "node005",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4196854352 kB\nCached:         39911188 kB\nSReclaimable:     183864 kB\nAFTER\nMemAvailable:   4201220296 kB\nCached:           567468 kB\nSReclaimable:     174400 kB\nloadavg 0.09 0.83 0.71"
+      },
+      {
+        "node": "node006",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4186442416 kB\nCached:         47440248 kB\nSReclaimable:    1367868 kB\nAFTER\nMemAvailable:   4191342216 kB\nCached:          8101944 kB\nSReclaimable:     302152 kB\nloadavg 0.12 0.85 0.81"
+      },
+      {
+        "node": "node007",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4186375604 kB\nCached:         47438052 kB\nSReclaimable:    1365760 kB\nAFTER\nMemAvailable:   4191265556 kB\nCached:          8069740 kB\nSReclaimable:     301072 kB\nloadavg 0.20 0.84 0.76"
+      },
+      {
+        "node": "node008",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185018900 kB\nCached:         48511108 kB\nSReclaimable:    1367464 kB\nAFTER\nMemAvailable:   4189957940 kB\nCached:          9128660 kB\nSReclaimable:     304076 kB\nloadavg 0.13 0.98 0.97"
+      },
+      {
+        "node": "node009",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185068956 kB\nCached:         48508024 kB\nSReclaimable:    1369556 kB\nAFTER\nMemAvailable:   4189985888 kB\nCached:          9125288 kB\nSReclaimable:     306300 kB\nloadavg 0.13 0.89 0.80"
+      },
+      {
+        "node": "node010",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184925804 kB\nCached:         48507452 kB\nSReclaimable:    1371816 kB\nAFTER\nMemAvailable:   4189838608 kB\nCached:          9134692 kB\nSReclaimable:     308356 kB\nloadavg 0.15 0.94 0.88"
+      },
+      {
+        "node": "node011",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184989652 kB\nCached:         48508052 kB\nSReclaimable:    1369952 kB\nAFTER\nMemAvailable:   4189875976 kB\nCached:          9135712 kB\nSReclaimable:     305196 kB\nloadavg 0.13 1.12 1.04"
+      },
+      {
+        "node": "node012",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185012888 kB\nCached:         48506732 kB\nSReclaimable:    1369836 kB\nAFTER\nMemAvailable:   4189923612 kB\nCached:          9126100 kB\nSReclaimable:     305696 kB\nloadavg 0.14 0.84 0.79"
+      },
+      {
+        "node": "node013",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185031452 kB\nCached:         48507752 kB\nSReclaimable:    1370080 kB\nAFTER\nMemAvailable:   4189942504 kB\nCached:          9127520 kB\nSReclaimable:     306292 kB\nloadavg 0.13 0.79 0.72"
+      },
+      {
+        "node": "node014",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185077340 kB\nCached:         48508604 kB\nSReclaimable:    1368584 kB\nAFTER\nMemAvailable:   4190013444 kB\nCached:          9170100 kB\nSReclaimable:     306624 kB\nloadavg 0.14 1.03 0.92"
+      },
+      {
+        "node": "node015",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185107196 kB\nCached:         48505820 kB\nSReclaimable:    1371448 kB\nAFTER\nMemAvailable:   4190006096 kB\nCached:          9137528 kB\nSReclaimable:     306500 kB\nloadavg 0.23 0.98 0.88"
+      },
+      {
+        "node": "node016",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185179908 kB\nCached:         48506880 kB\nSReclaimable:    1369680 kB\nAFTER\nMemAvailable:   4190065568 kB\nCached:          9128772 kB\nSReclaimable:     306344 kB\nloadavg 0.31 0.91 0.80"
+      },
+      {
+        "node": "node017",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184909012 kB\nCached:         48509392 kB\nSReclaimable:    1370720 kB\nAFTER\nMemAvailable:   4189801844 kB\nCached:          9129540 kB\nSReclaimable:     309924 kB\nloadavg 0.20 0.76 0.72"
+      },
+      {
+        "node": "node018",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191248020 kB\nCached:         43144900 kB\nSReclaimable:    1336812 kB\nAFTER\nMemAvailable:   4196156492 kB\nCached:          3794104 kB\nSReclaimable:     265672 kB\nloadavg 0.14 1.02 0.97"
+      },
+      {
+        "node": "node019",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191556720 kB\nCached:         43145684 kB\nSReclaimable:    1337692 kB\nAFTER\nMemAvailable:   4196499412 kB\nCached:          3793460 kB\nSReclaimable:     263336 kB\nloadavg 0.08 0.90 0.84"
+      },
+      {
+        "node": "node020",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191521104 kB\nCached:         43138652 kB\nSReclaimable:    1339504 kB\nAFTER\nMemAvailable:   4196446664 kB\nCached:          3787916 kB\nSReclaimable:     264928 kB\nloadavg 0.14 1.02 0.93"
+      },
+      {
+        "node": "node021",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191521520 kB\nCached:         43143800 kB\nSReclaimable:    1336732 kB\nAFTER\nMemAvailable:   4196470676 kB\nCached:          3793296 kB\nSReclaimable:     263828 kB\nloadavg 0.05 0.86 0.80"
+      },
+      {
+        "node": "node022",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191415640 kB\nCached:         43144664 kB\nSReclaimable:    1335308 kB\nAFTER\nMemAvailable:   4196347736 kB\nCached:          3792668 kB\nSReclaimable:     261684 kB\nloadavg 0.12 0.77 0.75"
+      },
+      {
+        "node": "node023",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191223932 kB\nCached:         43135304 kB\nSReclaimable:    1338604 kB\nAFTER\nMemAvailable:   4196146872 kB\nCached:          3784116 kB\nSReclaimable:     264096 kB\nloadavg 0.13 0.88 0.83"
+      },
+      {
+        "node": "node024",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191325536 kB\nCached:         43144320 kB\nSReclaimable:    1337784 kB\nAFTER\nMemAvailable:   4196244396 kB\nCached:          3793084 kB\nSReclaimable:     264276 kB\nloadavg 0.13 0.91 0.84"
+      },
+      {
+        "node": "node025",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191902660 kB\nCached:         43144416 kB\nSReclaimable:    1337876 kB\nAFTER\nMemAvailable:   4196916640 kB\nCached:          3791324 kB\nSReclaimable:     263860 kB\nloadavg 0.27 1.12 1.00"
+      },
+      {
+        "node": "node026",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191927156 kB\nCached:         43142368 kB\nSReclaimable:    1338820 kB\nAFTER\nMemAvailable:   4196850948 kB\nCached:          3791608 kB\nSReclaimable:     264676 kB\nloadavg 0.21 1.23 1.11"
+      },
+      {
+        "node": "node027",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191146464 kB\nCached:         43142080 kB\nSReclaimable:    1339380 kB\nAFTER\nMemAvailable:   4196074584 kB\nCached:          3792828 kB\nSReclaimable:     266352 kB\nloadavg 0.32 1.05 0.98"
+      },
+      {
+        "node": "node028",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191251876 kB\nCached:         43145824 kB\nSReclaimable:    1337508 kB\nAFTER\nMemAvailable:   4196187572 kB\nCached:          3794040 kB\nSReclaimable:     263212 kB\nloadavg 0.21 0.90 0.82"
+      },
+      {
+        "node": "node029",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191528748 kB\nCached:         43135820 kB\nSReclaimable:    1338864 kB\nAFTER\nMemAvailable:   4196460120 kB\nCached:          3783772 kB\nSReclaimable:     262936 kB\nloadavg 0.14 0.85 0.80"
+      },
+      {
+        "node": "node030",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191256072 kB\nCached:         43143308 kB\nSReclaimable:    1337936 kB\nAFTER\nMemAvailable:   4196175896 kB\nCached:          3792528 kB\nSReclaimable:     263752 kB\nloadavg 0.13 0.85 0.80"
+      },
+      {
+        "node": "node031",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191235040 kB\nCached:         43132480 kB\nSReclaimable:    1335984 kB\nAFTER\nMemAvailable:   4196199720 kB\nCached:          3790528 kB\nSReclaimable:     266232 kB\nloadavg 0.13 0.93 0.86"
+      },
+      {
+        "node": "node032",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192330616 kB\nCached:         42331716 kB\nSReclaimable:    1334012 kB\nAFTER\nMemAvailable:   4197284888 kB\nCached:          2990352 kB\nSReclaimable:     259496 kB\nloadavg 0.42 0.94 0.83"
+      },
+      {
+        "node": "node033",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192302936 kB\nCached:         42332168 kB\nSReclaimable:    1332768 kB\nAFTER\nMemAvailable:   4197215856 kB\nCached:          2989844 kB\nSReclaimable:     257340 kB\nloadavg 0.20 1.40 1.15"
+      },
+      {
+        "node": "node034",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192309476 kB\nCached:         42332184 kB\nSReclaimable:    1332416 kB\nAFTER\nMemAvailable:   4197251844 kB\nCached:          2989380 kB\nSReclaimable:     256788 kB\nloadavg 0.17 0.84 0.76"
+      },
+      {
+        "node": "node035",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4194035424 kB\nCached:         40859272 kB\nSReclaimable:    1330276 kB\nAFTER\nMemAvailable:   4198980932 kB\nCached:          1518016 kB\nSReclaimable:     254772 kB\nloadavg 0.13 0.87 0.84"
+      },
+      {
+        "node": "node036",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192591800 kB\nCached:         42063084 kB\nSReclaimable:    1334988 kB\nAFTER\nMemAvailable:   4197521252 kB\nCached:          2721864 kB\nSReclaimable:     258652 kB\nloadavg 0.23 0.92 0.88"
+      },
+      {
+        "node": "node037",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191333628 kB\nCached:         43133204 kB\nSReclaimable:    1337424 kB\nAFTER\nMemAvailable:   4196278908 kB\nCached:          3790612 kB\nSReclaimable:     267152 kB\nloadavg 0.12 0.88 0.84"
+      },
+      {
+        "node": "node038",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191523552 kB\nCached:         43132648 kB\nSReclaimable:    1338636 kB\nAFTER\nMemAvailable:   4196425280 kB\nCached:          3790392 kB\nSReclaimable:     263584 kB\nloadavg 0.44 0.94 0.83"
+      },
+      {
+        "node": "node039",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191478756 kB\nCached:         43133748 kB\nSReclaimable:    1336152 kB\nAFTER\nMemAvailable:   4196426232 kB\nCached:          3791540 kB\nSReclaimable:     263352 kB\nloadavg 0.17 0.90 0.81"
+      },
+      {
+        "node": "node040",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191301972 kB\nCached:         43133940 kB\nSReclaimable:    1337836 kB\nAFTER\nMemAvailable:   4196258416 kB\nCached:          3791236 kB\nSReclaimable:     264172 kB\nloadavg 0.12 0.85 0.81"
+      },
+      {
+        "node": "node041",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191500288 kB\nCached:         43125840 kB\nSReclaimable:    1336936 kB\nAFTER\nMemAvailable:   4196452412 kB\nCached:          3783264 kB\nSReclaimable:     262112 kB\nloadavg 0.12 0.87 0.83"
+      },
+      {
+        "node": "node042",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191671736 kB\nCached:         43134284 kB\nSReclaimable:    1336760 kB\nAFTER\nMemAvailable:   4196611612 kB\nCached:          3792480 kB\nSReclaimable:     263316 kB\nloadavg 0.17 1.33 1.14"
+      },
+      {
+        "node": "node043",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191282756 kB\nCached:         43132768 kB\nSReclaimable:    1334656 kB\nAFTER\nMemAvailable:   4196219616 kB\nCached:          3791420 kB\nSReclaimable:     262536 kB\nloadavg 0.12 0.84 0.82"
+      },
+      {
+        "node": "node044",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191650696 kB\nCached:         43133876 kB\nSReclaimable:    1337528 kB\nAFTER\nMemAvailable:   4196552784 kB\nCached:          3791812 kB\nSReclaimable:     267500 kB\nloadavg 0.48 1.01 0.93"
+      },
+      {
+        "node": "node045",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191292484 kB\nCached:         43133144 kB\nSReclaimable:    1338064 kB\nAFTER\nMemAvailable:   4196209816 kB\nCached:          3791368 kB\nSReclaimable:     263596 kB\nloadavg 0.15 0.87 0.86"
+      }
+    ]
+  },
+  {
+    "round": 1,
+    "method": "plain",
+    "nodes": [
+      {
+        "node": "node001",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4197748556 kB\nCached:         39876164 kB\nSReclaimable:     251408 kB\nAFTER\nMemAvailable:   4202169496 kB\nCached:           591304 kB\nSReclaimable:     188216 kB\nloadavg 0.88 0.91 0.77"
+      },
+      {
+        "node": "node002",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4199164456 kB\nCached:         39815784 kB\nSReclaimable:     163744 kB\nAFTER\nMemAvailable:   4203509960 kB\nCached:           512624 kB\nSReclaimable:     156008 kB\nloadavg 1.09 0.86 0.67"
+      },
+      {
+        "node": "node003",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4196000004 kB\nCached:         39870860 kB\nSReclaimable:     186724 kB\nAFTER\nMemAvailable:   4200343580 kB\nCached:           562680 kB\nSReclaimable:     176492 kB\nloadavg 1.49 1.04 0.87"
+      },
+      {
+        "node": "node004",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4195982820 kB\nCached:         39883356 kB\nSReclaimable:     188560 kB\nAFTER\nMemAvailable:   4200311024 kB\nCached:           575116 kB\nSReclaimable:     177608 kB\nloadavg 1.31 0.95 0.78"
+      },
+      {
+        "node": "node005",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4197031396 kB\nCached:         39871268 kB\nSReclaimable:     185464 kB\nAFTER\nMemAvailable:   4201381004 kB\nCached:           567608 kB\nSReclaimable:     175456 kB\nloadavg 1.14 1.01 0.79"
+      },
+      {
+        "node": "node006",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4186344804 kB\nCached:         47404076 kB\nSReclaimable:    1368472 kB\nAFTER\nMemAvailable:   4191254584 kB\nCached:          8059564 kB\nSReclaimable:     301304 kB\nloadavg 1.35 1.13 0.92"
+      },
+      {
+        "node": "node007",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4186233080 kB\nCached:         47400908 kB\nSReclaimable:    1366608 kB\nAFTER\nMemAvailable:   4191140928 kB\nCached:          8099696 kB\nSReclaimable:     300832 kB\nloadavg 1.66 1.24 0.92"
+      },
+      {
+        "node": "node008",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185186032 kB\nCached:         48473948 kB\nSReclaimable:    1367676 kB\nAFTER\nMemAvailable:   4190091456 kB\nCached:          9128308 kB\nSReclaimable:     302968 kB\nloadavg 1.61 1.32 1.10"
+      },
+      {
+        "node": "node009",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184972052 kB\nCached:         48467516 kB\nSReclaimable:    1369932 kB\nAFTER\nMemAvailable:   4189904888 kB\nCached:          9125052 kB\nSReclaimable:     305452 kB\nloadavg 1.62 1.25 0.95"
+      },
+      {
+        "node": "node010",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185124724 kB\nCached:         48474868 kB\nSReclaimable:    1373272 kB\nAFTER\nMemAvailable:   4190061008 kB\nCached:          9128580 kB\nSReclaimable:     310476 kB\nloadavg 1.40 1.19 0.98"
+      },
+      {
+        "node": "node011",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185083780 kB\nCached:         48471572 kB\nSReclaimable:    1370364 kB\nAFTER\nMemAvailable:   4189958868 kB\nCached:          9156336 kB\nSReclaimable:     304932 kB\nloadavg 1.06 1.21 1.08"
+      },
+      {
+        "node": "node012",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185204900 kB\nCached:         48469876 kB\nSReclaimable:    1371120 kB\nAFTER\nMemAvailable:   4190110036 kB\nCached:          9127160 kB\nSReclaimable:     305948 kB\nloadavg 1.24 1.07 0.89"
+      },
+      {
+        "node": "node013",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185036216 kB\nCached:         48471464 kB\nSReclaimable:    1371000 kB\nAFTER\nMemAvailable:   4189933476 kB\nCached:          9128328 kB\nSReclaimable:     307260 kB\nloadavg 1.58 1.16 0.87"
+      },
+      {
+        "node": "node014",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185160324 kB\nCached:         48472060 kB\nSReclaimable:    1368132 kB\nAFTER\nMemAvailable:   4190082160 kB\nCached:          9128096 kB\nSReclaimable:     306148 kB\nloadavg 1.58 1.33 1.04"
+      },
+      {
+        "node": "node015",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185150100 kB\nCached:         48469440 kB\nSReclaimable:    1371380 kB\nAFTER\nMemAvailable:   4190074436 kB\nCached:          9126808 kB\nSReclaimable:     306460 kB\nloadavg 1.53 1.27 1.00"
+      },
+      {
+        "node": "node016",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185374968 kB\nCached:         48470232 kB\nSReclaimable:    1370432 kB\nAFTER\nMemAvailable:   4190277068 kB\nCached:          9128484 kB\nSReclaimable:     306056 kB\nloadavg 1.49 1.19 0.91"
+      },
+      {
+        "node": "node017",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185122816 kB\nCached:         48472620 kB\nSReclaimable:    1371680 kB\nAFTER\nMemAvailable:   4190016188 kB\nCached:          9128284 kB\nSReclaimable:     309628 kB\nloadavg 1.91 1.23 0.89"
+      },
+      {
+        "node": "node018",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191182724 kB\nCached:         43107912 kB\nSReclaimable:    1338220 kB\nAFTER\nMemAvailable:   4196117508 kB\nCached:          3794184 kB\nSReclaimable:     265096 kB\nloadavg 1.60 1.34 1.09"
+      },
+      {
+        "node": "node019",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191445208 kB\nCached:         43108588 kB\nSReclaimable:    1338620 kB\nAFTER\nMemAvailable:   4196370996 kB\nCached:          3793192 kB\nSReclaimable:     262936 kB\nloadavg 1.57 1.23 0.96"
+      },
+      {
+        "node": "node020",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191577924 kB\nCached:         43102908 kB\nSReclaimable:    1340296 kB\nAFTER\nMemAvailable:   4196528388 kB\nCached:          3788144 kB\nSReclaimable:     266844 kB\nloadavg 1.67 1.36 1.06"
+      },
+      {
+        "node": "node021",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191592740 kB\nCached:         43107840 kB\nSReclaimable:    1337688 kB\nAFTER\nMemAvailable:   4196517420 kB\nCached:          3793408 kB\nSReclaimable:     262600 kB\nloadavg 1.29 1.11 0.90"
+      },
+      {
+        "node": "node022",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191550376 kB\nCached:         43105384 kB\nSReclaimable:    1334788 kB\nAFTER\nMemAvailable:   4196471476 kB\nCached:          3792620 kB\nSReclaimable:     260048 kB\nloadavg 1.41 1.14 0.90"
+      },
+      {
+        "node": "node023",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191370808 kB\nCached:         43098520 kB\nSReclaimable:    1338172 kB\nAFTER\nMemAvailable:   4196280864 kB\nCached:          3783908 kB\nSReclaimable:     263656 kB\nloadavg 1.70 1.29 0.99"
+      },
+      {
+        "node": "node024",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191357320 kB\nCached:         43106232 kB\nSReclaimable:    1337932 kB\nAFTER\nMemAvailable:   4196278332 kB\nCached:          3793200 kB\nSReclaimable:     264916 kB\nloadavg 1.38 1.19 0.95"
+      },
+      {
+        "node": "node025",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191896996 kB\nCached:         43105784 kB\nSReclaimable:    1338708 kB\nAFTER\nMemAvailable:   4196814332 kB\nCached:          3791348 kB\nSReclaimable:     263348 kB\nloadavg 1.51 1.39 1.11"
+      },
+      {
+        "node": "node026",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191881116 kB\nCached:         43104212 kB\nSReclaimable:    1339140 kB\nAFTER\nMemAvailable:   4196804096 kB\nCached:          3792084 kB\nSReclaimable:     264820 kB\nloadavg 1.48 1.47 1.21"
+      },
+      {
+        "node": "node027",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191242692 kB\nCached:         43104844 kB\nSReclaimable:    1339600 kB\nAFTER\nMemAvailable:   4196191584 kB\nCached:          3793000 kB\nSReclaimable:     267296 kB\nloadavg 1.57 1.39 1.11"
+      },
+      {
+        "node": "node028",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191485244 kB\nCached:         43107540 kB\nSReclaimable:    1338088 kB\nAFTER\nMemAvailable:   4196437900 kB\nCached:          3794768 kB\nSReclaimable:     264584 kB\nloadavg 1.39 1.19 0.94"
+      },
+      {
+        "node": "node029",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191572000 kB\nCached:         43098980 kB\nSReclaimable:    1339284 kB\nAFTER\nMemAvailable:   4196534616 kB\nCached:          3784364 kB\nSReclaimable:     264016 kB\nloadavg 1.33 1.11 0.91"
+      },
+      {
+        "node": "node030",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191359860 kB\nCached:         43104880 kB\nSReclaimable:    1337968 kB\nAFTER\nMemAvailable:   4196360900 kB\nCached:          3793312 kB\nSReclaimable:     262028 kB\nloadavg 1.52 1.22 0.94"
+      },
+      {
+        "node": "node031",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191446500 kB\nCached:         43090384 kB\nSReclaimable:    1338556 kB\nAFTER\nMemAvailable:   4196369428 kB\nCached:          3795220 kB\nSReclaimable:     265260 kB\nloadavg 1.22 1.13 0.94"
+      },
+      {
+        "node": "node032",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192330476 kB\nCached:         42294756 kB\nSReclaimable:    1335808 kB\nAFTER\nMemAvailable:   4197289836 kB\nCached:          2989736 kB\nSReclaimable:     260624 kB\nloadavg 1.45 1.23 0.95"
+      },
+      {
+        "node": "node033",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192517584 kB\nCached:         42293600 kB\nSReclaimable:    1333044 kB\nAFTER\nMemAvailable:   4197441424 kB\nCached:          2989696 kB\nSReclaimable:     259528 kB\nloadavg 1.28 1.52 1.22"
+      },
+      {
+        "node": "node034",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192259636 kB\nCached:         42293512 kB\nSReclaimable:    1332160 kB\nAFTER\nMemAvailable:   4197207068 kB\nCached:          2989532 kB\nSReclaimable:     256960 kB\nloadavg 1.41 1.15 0.89"
+      },
+      {
+        "node": "node035",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4194152676 kB\nCached:         40821936 kB\nSReclaimable:    1330592 kB\nAFTER\nMemAvailable:   4199096932 kB\nCached:          1518132 kB\nSReclaimable:     254084 kB\nloadavg 1.37 1.15 0.95"
+      },
+      {
+        "node": "node036",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192497100 kB\nCached:         42025628 kB\nSReclaimable:    1335576 kB\nAFTER\nMemAvailable:   4197400976 kB\nCached:          2722680 kB\nSReclaimable:     259832 kB\nloadavg 1.32 1.18 0.98"
+      },
+      {
+        "node": "node037",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191293344 kB\nCached:         43094496 kB\nSReclaimable:    1337908 kB\nAFTER\nMemAvailable:   4196227716 kB\nCached:          3790772 kB\nSReclaimable:     265620 kB\nloadavg 1.43 1.22 0.98"
+      },
+      {
+        "node": "node038",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191563948 kB\nCached:         43095344 kB\nSReclaimable:    1338736 kB\nAFTER\nMemAvailable:   4196495372 kB\nCached:          3790540 kB\nSReclaimable:     265584 kB\nloadavg 1.23 1.19 0.94"
+      },
+      {
+        "node": "node039",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191660008 kB\nCached:         43096136 kB\nSReclaimable:    1337024 kB\nAFTER\nMemAvailable:   4196577552 kB\nCached:          3791708 kB\nSReclaimable:     261984 kB\nloadavg 1.02 1.06 0.89"
+      },
+      {
+        "node": "node040",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191492084 kB\nCached:         43095460 kB\nSReclaimable:    1338604 kB\nAFTER\nMemAvailable:   4196414972 kB\nCached:          3791712 kB\nSReclaimable:     264188 kB\nloadavg 1.41 1.22 0.96"
+      },
+      {
+        "node": "node041",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191576316 kB\nCached:         43084120 kB\nSReclaimable:    1337216 kB\nAFTER\nMemAvailable:   4196500080 kB\nCached:          3787796 kB\nSReclaimable:     263292 kB\nloadavg 1.55 1.23 0.97"
+      },
+      {
+        "node": "node042",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191711812 kB\nCached:         43097348 kB\nSReclaimable:    1337520 kB\nAFTER\nMemAvailable:   4196643688 kB\nCached:          3792752 kB\nSReclaimable:     264580 kB\nloadavg 1.07 1.41 1.19"
+      },
+      {
+        "node": "node043",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191287356 kB\nCached:         43096720 kB\nSReclaimable:    1335748 kB\nAFTER\nMemAvailable:   4196242488 kB\nCached:          3791468 kB\nSReclaimable:     262920 kB\nloadavg 1.62 1.23 0.97"
+      },
+      {
+        "node": "node044",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191569304 kB\nCached:         43097392 kB\nSReclaimable:    1337164 kB\nAFTER\nMemAvailable:   4196493068 kB\nCached:          3792052 kB\nSReclaimable:     265940 kB\nloadavg 1.90 1.57 1.15"
+      },
+      {
+        "node": "node045",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191522084 kB\nCached:         43092896 kB\nSReclaimable:    1338316 kB\nAFTER\nMemAvailable:   4196450652 kB\nCached:          3791612 kB\nSReclaimable:     263900 kB\nloadavg 1.27 1.16 0.97"
+      }
+    ]
+  },
+  {
+    "round": 1,
+    "method": "windowed",
+    "nodes": [
+      {
+        "node": "node001",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4197725344 kB\nCached:         39878552 kB\nSReclaimable:     246136 kB\nAFTER\nMemAvailable:   4202148112 kB\nCached:           580168 kB\nSReclaimable:     187600 kB\nloadavg 7.19 2.63 1.36"
+      },
+      {
+        "node": "node002",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4199188916 kB\nCached:         39817860 kB\nSReclaimable:     164640 kB\nAFTER\nMemAvailable:   4203560356 kB\nCached:           511892 kB\nSReclaimable:     154240 kB\nloadavg 1.49 1.07 0.76"
+      },
+      {
+        "node": "node003",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4196045696 kB\nCached:         39874136 kB\nSReclaimable:     188620 kB\nAFTER\nMemAvailable:   4200390008 kB\nCached:           562460 kB\nSReclaimable:     176812 kB\nloadavg 1.74 1.30 0.98"
+      },
+      {
+        "node": "node004",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4195907388 kB\nCached:         39883816 kB\nSReclaimable:     189368 kB\nAFTER\nMemAvailable:   4200233784 kB\nCached:           575380 kB\nSReclaimable:     176856 kB\nloadavg 1.80 1.25 0.91"
+      },
+      {
+        "node": "node005",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4197028724 kB\nCached:         39873752 kB\nSReclaimable:     185960 kB\nAFTER\nMemAvailable:   4201364656 kB\nCached:           567396 kB\nSReclaimable:     174696 kB\nloadavg 1.17 1.08 0.84"
+      },
+      {
+        "node": "node006",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4186345292 kB\nCached:         47404332 kB\nSReclaimable:    1368376 kB\nAFTER\nMemAvailable:   4191307984 kB\nCached:          8060000 kB\nSReclaimable:     302968 kB\nloadavg 1.85 1.41 1.04"
+      },
+      {
+        "node": "node007",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4186441848 kB\nCached:         47397760 kB\nSReclaimable:    1366760 kB\nAFTER\nMemAvailable:   4191362336 kB\nCached:          8057804 kB\nSReclaimable:     301600 kB\nloadavg 1.74 1.44 1.02"
+      },
+      {
+        "node": "node008",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185047564 kB\nCached:         48470028 kB\nSReclaimable:    1368080 kB\nAFTER\nMemAvailable:   4189935716 kB\nCached:          9135980 kB\nSReclaimable:     306472 kB\nloadavg 3.24 2.29 1.49"
+      },
+      {
+        "node": "node009",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184900100 kB\nCached:         48467508 kB\nSReclaimable:    1370940 kB\nAFTER\nMemAvailable:   4189793456 kB\nCached:          9165088 kB\nSReclaimable:     307224 kB\nloadavg 1.68 1.42 1.04"
+      },
+      {
+        "node": "node010",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184962304 kB\nCached:         48471076 kB\nSReclaimable:    1373600 kB\nAFTER\nMemAvailable:   4189924780 kB\nCached:          9126968 kB\nSReclaimable:     308088 kB\nloadavg 1.53 1.34 1.06"
+      },
+      {
+        "node": "node011",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185110564 kB\nCached:         48471412 kB\nSReclaimable:    1370612 kB\nAFTER\nMemAvailable:   4189991096 kB\nCached:          9169396 kB\nSReclaimable:     305612 kB\nloadavg 1.57 1.39 1.16"
+      },
+      {
+        "node": "node012",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185172536 kB\nCached:         48469656 kB\nSReclaimable:    1371472 kB\nAFTER\nMemAvailable:   4190092656 kB\nCached:          9126420 kB\nSReclaimable:     306428 kB\nloadavg 1.52 1.24 0.97"
+      },
+      {
+        "node": "node013",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184975832 kB\nCached:         48471536 kB\nSReclaimable:    1371332 kB\nAFTER\nMemAvailable:   4189883552 kB\nCached:          9127236 kB\nSReclaimable:     306016 kB\nloadavg 2.04 1.47 1.01"
+      },
+      {
+        "node": "node014",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184973880 kB\nCached:         48472472 kB\nSReclaimable:    1369952 kB\nAFTER\nMemAvailable:   4189890144 kB\nCached:          9127960 kB\nSReclaimable:     304560 kB\nloadavg 1.57 1.44 1.10"
+      },
+      {
+        "node": "node015",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185235600 kB\nCached:         48465472 kB\nSReclaimable:    1371924 kB\nAFTER\nMemAvailable:   4190191944 kB\nCached:          9127156 kB\nSReclaimable:     305584 kB\nloadavg 2.09 1.63 1.16"
+      },
+      {
+        "node": "node016",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185343692 kB\nCached:         48470488 kB\nSReclaimable:    1371008 kB\nAFTER\nMemAvailable:   4190243868 kB\nCached:          9128184 kB\nSReclaimable:     304652 kB\nloadavg 1.81 1.44 1.03"
+      },
+      {
+        "node": "node017",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184987408 kB\nCached:         48473120 kB\nSReclaimable:    1371604 kB\nAFTER\nMemAvailable:   4189890052 kB\nCached:          9129232 kB\nSReclaimable:     310280 kB\nloadavg 2.25 1.61 1.07"
+      },
+      {
+        "node": "node018",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191119272 kB\nCached:         43108224 kB\nSReclaimable:    1339500 kB\nAFTER\nMemAvailable:   4196069600 kB\nCached:          3794872 kB\nSReclaimable:     263180 kB\nloadavg 2.01 1.58 1.20"
+      },
+      {
+        "node": "node019",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191706484 kB\nCached:         43108888 kB\nSReclaimable:    1339548 kB\nAFTER\nMemAvailable:   4196628068 kB\nCached:          3793408 kB\nSReclaimable:     262356 kB\nloadavg 1.77 1.44 1.07"
+      },
+      {
+        "node": "node020",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191562516 kB\nCached:         43103060 kB\nSReclaimable:    1341596 kB\nAFTER\nMemAvailable:   4196486520 kB\nCached:          3788236 kB\nSReclaimable:     265004 kB\nloadavg 1.73 1.53 1.15"
+      },
+      {
+        "node": "node021",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191470492 kB\nCached:         43107640 kB\nSReclaimable:    1338648 kB\nAFTER\nMemAvailable:   4196402076 kB\nCached:          3804612 kB\nSReclaimable:     266372 kB\nloadavg 2.03 1.45 1.04"
+      },
+      {
+        "node": "node022",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191283432 kB\nCached:         43107464 kB\nSReclaimable:    1336744 kB\nAFTER\nMemAvailable:   4196204288 kB\nCached:          3802900 kB\nSReclaimable:     261916 kB\nloadavg 1.72 1.38 1.01"
+      },
+      {
+        "node": "node023",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191256436 kB\nCached:         43098256 kB\nSReclaimable:    1339504 kB\nAFTER\nMemAvailable:   4196182956 kB\nCached:          3784432 kB\nSReclaimable:     264308 kB\nloadavg 1.53 1.40 1.06"
+      },
+      {
+        "node": "node024",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191081960 kB\nCached:         43104012 kB\nSReclaimable:    1339028 kB\nAFTER\nMemAvailable:   4195990492 kB\nCached:          3793144 kB\nSReclaimable:     265332 kB\nloadavg 1.73 1.43 1.06"
+      },
+      {
+        "node": "node025",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191895304 kB\nCached:         43103080 kB\nSReclaimable:    1338556 kB\nAFTER\nMemAvailable:   4196805484 kB\nCached:          3791548 kB\nSReclaimable:     261464 kB\nloadavg 1.91 1.62 1.22"
+      },
+      {
+        "node": "node026",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191772764 kB\nCached:         43105188 kB\nSReclaimable:    1339652 kB\nAFTER\nMemAvailable:   4196682576 kB\nCached:          3792172 kB\nSReclaimable:     264564 kB\nloadavg 1.65 1.61 1.29"
+      },
+      {
+        "node": "node027",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191290836 kB\nCached:         43105660 kB\nSReclaimable:    1339640 kB\nAFTER\nMemAvailable:   4196222900 kB\nCached:          3792972 kB\nSReclaimable:     265940 kB\nloadavg 2.05 1.68 1.25"
+      },
+      {
+        "node": "node028",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191769308 kB\nCached:         43108548 kB\nSReclaimable:    1338568 kB\nAFTER\nMemAvailable:   4196681940 kB\nCached:          3793860 kB\nSReclaimable:     265788 kB\nloadavg 1.66 1.43 1.05"
+      },
+      {
+        "node": "node029",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191623696 kB\nCached:         43099396 kB\nSReclaimable:    1340436 kB\nAFTER\nMemAvailable:   4196571024 kB\nCached:          3783776 kB\nSReclaimable:     263584 kB\nloadavg 1.60 1.35 1.01"
+      },
+      {
+        "node": "node030",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191495304 kB\nCached:         43106628 kB\nSReclaimable:    1339220 kB\nAFTER\nMemAvailable:   4196429700 kB\nCached:          3792952 kB\nSReclaimable:     262380 kB\nloadavg 1.95 1.53 1.08"
+      },
+      {
+        "node": "node031",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191216700 kB\nCached:         43093308 kB\nSReclaimable:    1339652 kB\nAFTER\nMemAvailable:   4196154484 kB\nCached:          3790792 kB\nSReclaimable:     263564 kB\nloadavg 2.05 1.54 1.11"
+      },
+      {
+        "node": "node032",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192231892 kB\nCached:         42295256 kB\nSReclaimable:    1336728 kB\nAFTER\nMemAvailable:   4197146060 kB\nCached:          2989860 kB\nSReclaimable:     259136 kB\nloadavg 2.22 1.58 1.11"
+      },
+      {
+        "node": "node033",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192550724 kB\nCached:         42294320 kB\nSReclaimable:    1333984 kB\nAFTER\nMemAvailable:   4197462612 kB\nCached:          2989852 kB\nSReclaimable:     257416 kB\nloadavg 1.58 1.63 1.30"
+      },
+      {
+        "node": "node034",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192274432 kB\nCached:         42293820 kB\nSReclaimable:    1333912 kB\nAFTER\nMemAvailable:   4197186188 kB\nCached:          2999588 kB\nSReclaimable:     256192 kB\nloadavg 1.51 1.33 0.98"
+      },
+      {
+        "node": "node035",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4194186296 kB\nCached:         40822872 kB\nSReclaimable:    1331372 kB\nAFTER\nMemAvailable:   4199094852 kB\nCached:          1518400 kB\nSReclaimable:     254048 kB\nloadavg 1.80 1.44 1.07"
+      },
+      {
+        "node": "node036",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192685264 kB\nCached:         42026928 kB\nSReclaimable:    1336820 kB\nAFTER\nMemAvailable:   4197618436 kB\nCached:          2722124 kB\nSReclaimable:     259924 kB\nloadavg 1.80 1.46 1.10"
+      },
+      {
+        "node": "node037",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191283336 kB\nCached:         43096640 kB\nSReclaimable:    1339616 kB\nAFTER\nMemAvailable:   4196246604 kB\nCached:          3790776 kB\nSReclaimable:     265540 kB\nloadavg 1.58 1.40 1.07"
+      },
+      {
+        "node": "node038",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191566188 kB\nCached:         43092212 kB\nSReclaimable:    1339396 kB\nAFTER\nMemAvailable:   4196482368 kB\nCached:          3790632 kB\nSReclaimable:     263516 kB\nloadavg 1.59 1.42 1.05"
+      },
+      {
+        "node": "node039",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191442012 kB\nCached:         43096300 kB\nSReclaimable:    1336584 kB\nAFTER\nMemAvailable:   4196374396 kB\nCached:          3791716 kB\nSReclaimable:     263284 kB\nloadavg 1.50 1.31 1.00"
+      },
+      {
+        "node": "node040",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191464220 kB\nCached:         43095900 kB\nSReclaimable:    1339224 kB\nAFTER\nMemAvailable:   4196386380 kB\nCached:          3791184 kB\nSReclaimable:     262936 kB\nloadavg 1.52 1.42 1.06"
+      },
+      {
+        "node": "node041",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191554824 kB\nCached:         43085808 kB\nSReclaimable:    1337628 kB\nAFTER\nMemAvailable:   4196466364 kB\nCached:          3783536 kB\nSReclaimable:     262020 kB\nloadavg 1.49 1.39 1.06"
+      },
+      {
+        "node": "node042",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191719580 kB\nCached:         43098188 kB\nSReclaimable:    1337756 kB\nAFTER\nMemAvailable:   4196654404 kB\nCached:          3792924 kB\nSReclaimable:     263164 kB\nloadavg 1.55 1.59 1.28"
+      },
+      {
+        "node": "node043",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191436580 kB\nCached:         43093068 kB\nSReclaimable:    1335784 kB\nAFTER\nMemAvailable:   4196352812 kB\nCached:          3796128 kB\nSReclaimable:     260856 kB\nloadavg 1.88 1.55 1.11"
+      },
+      {
+        "node": "node044",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191572636 kB\nCached:         43097696 kB\nSReclaimable:    1337968 kB\nAFTER\nMemAvailable:   4196480836 kB\nCached:          3792392 kB\nSReclaimable:     264120 kB\nloadavg 1.85 1.74 1.25"
+      },
+      {
+        "node": "node045",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191344508 kB\nCached:         43095568 kB\nSReclaimable:    1338684 kB\nAFTER\nMemAvailable:   4196303228 kB\nCached:          3791540 kB\nSReclaimable:     263228 kB\nloadavg 1.65 1.43 1.09"
+      }
+    ]
+  },
+  {
+    "round": 2,
+    "method": "windowed",
+    "nodes": [
+      {
+        "node": "node001",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4197832668 kB\nCached:         39859276 kB\nSReclaimable:     239176 kB\nAFTER\nMemAvailable:   4202232812 kB\nCached:           571788 kB\nSReclaimable:     188728 kB\nloadavg 2.92 2.32 1.35"
+      },
+      {
+        "node": "node002",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4199297320 kB\nCached:         39799424 kB\nSReclaimable:     162512 kB\nAFTER\nMemAvailable:   4203600160 kB\nCached:           512536 kB\nSReclaimable:     156344 kB\nloadavg 1.98 1.31 0.87"
+      },
+      {
+        "node": "node003",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4196229028 kB\nCached:         39834176 kB\nSReclaimable:     175828 kB\nAFTER\nMemAvailable:   4200515944 kB\nCached:           563076 kB\nSReclaimable:     175828 kB\nloadavg 2.14 1.55 1.10"
+      },
+      {
+        "node": "node004",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4196141456 kB\nCached:         39846896 kB\nSReclaimable:     177128 kB\nAFTER\nMemAvailable:   4200448280 kB\nCached:           575004 kB\nSReclaimable:     177128 kB\nloadavg 2.47 1.60 1.06"
+      },
+      {
+        "node": "node005",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4197143076 kB\nCached:         39854704 kB\nSReclaimable:     183272 kB\nAFTER\nMemAvailable:   4201437664 kB\nCached:           567544 kB\nSReclaimable:     174048 kB\nloadavg 1.31 1.15 0.89"
+      },
+      {
+        "node": "node006",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4186487972 kB\nCached:         47362504 kB\nSReclaimable:    1357104 kB\nAFTER\nMemAvailable:   4191378092 kB\nCached:          8102544 kB\nSReclaimable:     301144 kB\nloadavg 2.35 1.69 1.17"
+      },
+      {
+        "node": "node007",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4186465540 kB\nCached:         47378516 kB\nSReclaimable:    1364068 kB\nAFTER\nMemAvailable:   4191408060 kB\nCached:          8057808 kB\nSReclaimable:     300840 kB\nloadavg 1.95 1.59 1.11"
+      },
+      {
+        "node": "node008",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185043632 kB\nCached:         48451264 kB\nSReclaimable:    1357096 kB\nAFTER\nMemAvailable:   4189964436 kB\nCached:          9129348 kB\nSReclaimable:     303520 kB\nloadavg 3.05 2.47 1.61"
+      },
+      {
+        "node": "node009",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185170012 kB\nCached:         48436780 kB\nSReclaimable:    1358528 kB\nAFTER\nMemAvailable:   4190093172 kB\nCached:          9133660 kB\nSReclaimable:     306340 kB\nloadavg 2.27 1.68 1.16"
+      },
+      {
+        "node": "node010",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185032044 kB\nCached:         48448352 kB\nSReclaimable:    1370572 kB\nAFTER\nMemAvailable:   4189961320 kB\nCached:          9127040 kB\nSReclaimable:     306968 kB\nloadavg 2.28 1.65 1.19"
+      },
+      {
+        "node": "node011",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185053936 kB\nCached:         48448820 kB\nSReclaimable:    1367476 kB\nAFTER\nMemAvailable:   4189972968 kB\nCached:          9128264 kB\nSReclaimable:     305452 kB\nloadavg 2.07 1.59 1.24"
+      },
+      {
+        "node": "node012",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185218416 kB\nCached:         48446832 kB\nSReclaimable:    1368564 kB\nAFTER\nMemAvailable:   4190129492 kB\nCached:          9126620 kB\nSReclaimable:     305240 kB\nloadavg 1.91 1.42 1.05"
+      },
+      {
+        "node": "node013",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185044484 kB\nCached:         48430308 kB\nSReclaimable:    1358784 kB\nAFTER\nMemAvailable:   4189962204 kB\nCached:          9128016 kB\nSReclaimable:     307440 kB\nloadavg 2.60 1.81 1.17"
+      },
+      {
+        "node": "node014",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185284780 kB\nCached:         48438464 kB\nSReclaimable:    1367136 kB\nAFTER\nMemAvailable:   4190153320 kB\nCached:          9182172 kB\nSReclaimable:     305424 kB\nloadavg 1.76 1.55 1.17"
+      },
+      {
+        "node": "node015",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185384032 kB\nCached:         48446400 kB\nSReclaimable:    1369024 kB\nAFTER\nMemAvailable:   4190300440 kB\nCached:          9126988 kB\nSReclaimable:     305600 kB\nloadavg 2.64 1.92 1.30"
+      },
+      {
+        "node": "node016",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185219976 kB\nCached:         48428948 kB\nSReclaimable:    1358500 kB\nAFTER\nMemAvailable:   4190104492 kB\nCached:          9128164 kB\nSReclaimable:     304560 kB\nloadavg 2.56 1.77 1.18"
+      },
+      {
+        "node": "node017",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184889180 kB\nCached:         48449792 kB\nSReclaimable:    1369272 kB\nAFTER\nMemAvailable:   4189799844 kB\nCached:          9128760 kB\nSReclaimable:     309600 kB\nloadavg 2.35 1.83 1.19"
+      },
+      {
+        "node": "node018",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191605064 kB\nCached:         43067116 kB\nSReclaimable:    1327280 kB\nAFTER\nMemAvailable:   4196523824 kB\nCached:          3794452 kB\nSReclaimable:     262528 kB\nloadavg 2.05 1.70 1.27"
+      },
+      {
+        "node": "node019",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191892620 kB\nCached:         43068028 kB\nSReclaimable:    1326532 kB\nAFTER\nMemAvailable:   4196790276 kB\nCached:          3803964 kB\nSReclaimable:     261832 kB\nloadavg 2.26 1.72 1.19"
+      },
+      {
+        "node": "node020",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191621684 kB\nCached:         43061864 kB\nSReclaimable:    1329492 kB\nAFTER\nMemAvailable:   4196555260 kB\nCached:          3788332 kB\nSReclaimable:     264380 kB\nloadavg 2.16 1.74 1.26"
+      },
+      {
+        "node": "node021",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191587288 kB\nCached:         43077268 kB\nSReclaimable:    1325632 kB\nAFTER\nMemAvailable:   4196503172 kB\nCached:          3793608 kB\nSReclaimable:     262848 kB\nloadavg 2.25 1.69 1.16"
+      },
+      {
+        "node": "node022",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191198868 kB\nCached:         43084904 kB\nSReclaimable:    1334260 kB\nAFTER\nMemAvailable:   4196118164 kB\nCached:          3792720 kB\nSReclaimable:     260852 kB\nloadavg 2.17 1.63 1.12"
+      },
+      {
+        "node": "node023",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191452868 kB\nCached:         43057804 kB\nSReclaimable:    1328116 kB\nAFTER\nMemAvailable:   4196369568 kB\nCached:          3784140 kB\nSReclaimable:     262892 kB\nloadavg 1.91 1.58 1.15"
+      },
+      {
+        "node": "node024",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191426260 kB\nCached:         43074416 kB\nSReclaimable:    1336308 kB\nAFTER\nMemAvailable:   4196332184 kB\nCached:          3793328 kB\nSReclaimable:     263688 kB\nloadavg 2.12 1.68 1.19"
+      },
+      {
+        "node": "node025",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192137172 kB\nCached:         43083596 kB\nSReclaimable:    1334784 kB\nAFTER\nMemAvailable:   4197054056 kB\nCached:          3792564 kB\nSReclaimable:     263464 kB\nloadavg 1.87 1.72 1.28"
+      },
+      {
+        "node": "node026",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191895624 kB\nCached:         43063600 kB\nSReclaimable:    1327604 kB\nAFTER\nMemAvailable:   4196790220 kB\nCached:          3802780 kB\nSReclaimable:     263836 kB\nloadavg 2.11 1.79 1.37"
+      },
+      {
+        "node": "node027",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191357832 kB\nCached:         43075188 kB\nSReclaimable:    1328340 kB\nAFTER\nMemAvailable:   4196260040 kB\nCached:          3793644 kB\nSReclaimable:     266988 kB\nloadavg 3.37 2.25 1.48"
+      },
+      {
+        "node": "node028",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191511212 kB\nCached:         43066840 kB\nSReclaimable:    1326036 kB\nAFTER\nMemAvailable:   4196417264 kB\nCached:          3794928 kB\nSReclaimable:     263292 kB\nloadavg 1.94 1.61 1.14"
+      },
+      {
+        "node": "node029",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191743548 kB\nCached:         43058608 kB\nSReclaimable:    1328132 kB\nAFTER\nMemAvailable:   4196690460 kB\nCached:          3783868 kB\nSReclaimable:     263812 kB\nloadavg 2.19 1.63 1.14"
+      },
+      {
+        "node": "node030",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191788684 kB\nCached:         43082740 kB\nSReclaimable:    1335940 kB\nAFTER\nMemAvailable:   4196725696 kB\nCached:          3793476 kB\nSReclaimable:     263380 kB\nloadavg 2.53 1.83 1.23"
+      },
+      {
+        "node": "node031",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191397244 kB\nCached:         43073800 kB\nSReclaimable:    1335976 kB\nAFTER\nMemAvailable:   4196327124 kB\nCached:          3791416 kB\nSReclaimable:     264808 kB\nloadavg 2.36 1.77 1.22"
+      },
+      {
+        "node": "node032",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192422172 kB\nCached:         42252808 kB\nSReclaimable:    1324168 kB\nAFTER\nMemAvailable:   4197348708 kB\nCached:          2990392 kB\nSReclaimable:     260496 kB\nloadavg 2.35 1.84 1.24"
+      },
+      {
+        "node": "node033",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192346100 kB\nCached:         42263976 kB\nSReclaimable:    1322392 kB\nAFTER\nMemAvailable:   4197249300 kB\nCached:          2989948 kB\nSReclaimable:     258248 kB\nloadavg 2.17 1.86 1.40"
+      },
+      {
+        "node": "node034",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192276484 kB\nCached:         42263408 kB\nSReclaimable:    1321280 kB\nAFTER\nMemAvailable:   4197189096 kB\nCached:          2989860 kB\nSReclaimable:     256568 kB\nloadavg 2.00 1.57 1.09"
+      },
+      {
+        "node": "node035",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4193702424 kB\nCached:         40799760 kB\nSReclaimable:    1327796 kB\nAFTER\nMemAvailable:   4198654264 kB\nCached:          1518256 kB\nSReclaimable:     253948 kB\nloadavg 2.24 1.70 1.20"
+      },
+      {
+        "node": "node036",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192717084 kB\nCached:         41985024 kB\nSReclaimable:    1325196 kB\nAFTER\nMemAvailable:   4197609140 kB\nCached:          2722656 kB\nSReclaimable:     259644 kB\nloadavg 2.26 1.74 1.23"
+      },
+      {
+        "node": "node037",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191274960 kB\nCached:         43072208 kB\nSReclaimable:    1335812 kB\nAFTER\nMemAvailable:   4196201640 kB\nCached:          3791408 kB\nSReclaimable:     264676 kB\nloadavg 2.43 1.79 1.24"
+      },
+      {
+        "node": "node038",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191414888 kB\nCached:         43061072 kB\nSReclaimable:    1336028 kB\nAFTER\nMemAvailable:   4196316456 kB\nCached:          3791372 kB\nSReclaimable:     263236 kB\nloadavg 2.08 1.69 1.18"
+      },
+      {
+        "node": "node039",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191635704 kB\nCached:         43066984 kB\nSReclaimable:    1325412 kB\nAFTER\nMemAvailable:   4196548128 kB\nCached:          3793348 kB\nSReclaimable:     262732 kB\nloadavg 1.91 1.58 1.13"
+      },
+      {
+        "node": "node040",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191604016 kB\nCached:         43074408 kB\nSReclaimable:    1336032 kB\nAFTER\nMemAvailable:   4196548444 kB\nCached:          3791852 kB\nSReclaimable:     263696 kB\nloadavg 2.00 1.66 1.18"
+      },
+      {
+        "node": "node041",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191930316 kB\nCached:         43066088 kB\nSReclaimable:    1334464 kB\nAFTER\nMemAvailable:   4196852704 kB\nCached:          3784096 kB\nSReclaimable:     263656 kB\nloadavg 2.14 1.70 1.20"
+      },
+      {
+        "node": "node042",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191914768 kB\nCached:         43055684 kB\nSReclaimable:    1326020 kB\nAFTER\nMemAvailable:   4196817300 kB\nCached:          3794888 kB\nSReclaimable:     262764 kB\nloadavg 2.16 1.89 1.42"
+      },
+      {
+        "node": "node043",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191401340 kB\nCached:         43060524 kB\nSReclaimable:    1324400 kB\nAFTER\nMemAvailable:   4196326080 kB\nCached:          3791832 kB\nSReclaimable:     261168 kB\nloadavg 2.27 1.86 1.26"
+      },
+      {
+        "node": "node044",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191770668 kB\nCached:         43055844 kB\nSReclaimable:    1324944 kB\nAFTER\nMemAvailable:   4196661628 kB\nCached:          3798072 kB\nSReclaimable:     265816 kB\nloadavg 2.08 1.93 1.36"
+      },
+      {
+        "node": "node045",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191434552 kB\nCached:         43074328 kB\nSReclaimable:    1336184 kB\nAFTER\nMemAvailable:   4196368800 kB\nCached:          3791572 kB\nSReclaimable:     262920 kB\nloadavg 1.99 1.69 1.21"
+      }
+    ]
+  },
+  {
+    "round": 2,
+    "method": "plain",
+    "nodes": [
+      {
+        "node": "node001",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4197844224 kB\nCached:         39878160 kB\nSReclaimable:     237520 kB\nAFTER\nMemAvailable:   4202213236 kB\nCached:           571600 kB\nSReclaimable:     186960 kB\nloadavg 1.20 1.92 1.30"
+      },
+      {
+        "node": "node002",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4199287388 kB\nCached:         39816180 kB\nSReclaimable:     164272 kB\nAFTER\nMemAvailable:   4203618732 kB\nCached:           512648 kB\nSReclaimable:     155000 kB\nloadavg 1.55 1.33 0.91"
+      },
+      {
+        "node": "node003",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4196170928 kB\nCached:         39871204 kB\nSReclaimable:     187108 kB\nAFTER\nMemAvailable:   4200466664 kB\nCached:           563164 kB\nSReclaimable:     175812 kB\nloadavg 1.55 1.51 1.12"
+      },
+      {
+        "node": "node004",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4196032240 kB\nCached:         39883584 kB\nSReclaimable:     188016 kB\nAFTER\nMemAvailable:   4200377272 kB\nCached:           575632 kB\nSReclaimable:     178824 kB\nloadavg 2.18 1.70 1.14"
+      },
+      {
+        "node": "node005",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4197097588 kB\nCached:         39874056 kB\nSReclaimable:     185632 kB\nAFTER\nMemAvailable:   4201419624 kB\nCached:           567564 kB\nSReclaimable:     174624 kB\nloadavg 1.25 1.17 0.92"
+      },
+      {
+        "node": "node006",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4186502652 kB\nCached:         47403540 kB\nSReclaimable:    1366944 kB\nAFTER\nMemAvailable:   4191402392 kB\nCached:          8059752 kB\nSReclaimable:     301412 kB\nloadavg 3.02 2.04 1.33"
+      },
+      {
+        "node": "node007",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4186703216 kB\nCached:         47405008 kB\nSReclaimable:    1365636 kB\nAFTER\nMemAvailable:   4191627692 kB\nCached:          8057512 kB\nSReclaimable:     300308 kB\nloadavg 1.76 1.64 1.17"
+      },
+      {
+        "node": "node008",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185122704 kB\nCached:         48473472 kB\nSReclaimable:    1366552 kB\nAFTER\nMemAvailable:   4190045300 kB\nCached:          9128480 kB\nSReclaimable:     302932 kB\nloadavg 2.36 2.41 1.66"
+      },
+      {
+        "node": "node009",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184978908 kB\nCached:         48466856 kB\nSReclaimable:    1368584 kB\nAFTER\nMemAvailable:   4189899524 kB\nCached:          9126268 kB\nSReclaimable:     306496 kB\nloadavg 2.26 1.85 1.26"
+      },
+      {
+        "node": "node010",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185090292 kB\nCached:         48466256 kB\nSReclaimable:    1372104 kB\nAFTER\nMemAvailable:   4190009188 kB\nCached:          9168940 kB\nSReclaimable:     307236 kB\nloadavg 2.20 1.82 1.29"
+      },
+      {
+        "node": "node011",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184995940 kB\nCached:         48466988 kB\nSReclaimable:    1369376 kB\nAFTER\nMemAvailable:   4189906512 kB\nCached:          9128208 kB\nSReclaimable:     304708 kB\nloadavg 2.65 1.88 1.37"
+      },
+      {
+        "node": "node012",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184896632 kB\nCached:         48464972 kB\nSReclaimable:    1370068 kB\nAFTER\nMemAvailable:   4189778000 kB\nCached:          9127004 kB\nSReclaimable:     305960 kB\nloadavg 2.69 1.80 1.21"
+      },
+      {
+        "node": "node013",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185073428 kB\nCached:         48470992 kB\nSReclaimable:    1369672 kB\nAFTER\nMemAvailable:   4189983236 kB\nCached:          9127716 kB\nSReclaimable:     305584 kB\nloadavg 2.63 2.04 1.30"
+      },
+      {
+        "node": "node014",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185024388 kB\nCached:         48467652 kB\nSReclaimable:    1368072 kB\nAFTER\nMemAvailable:   4189937156 kB\nCached:          9128644 kB\nSReclaimable:     306636 kB\nloadavg 2.27 1.79 1.28"
+      },
+      {
+        "node": "node015",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185338696 kB\nCached:         48468608 kB\nSReclaimable:    1370076 kB\nAFTER\nMemAvailable:   4190290476 kB\nCached:          9127740 kB\nSReclaimable:     306460 kB\nloadavg 2.28 2.02 1.39"
+      },
+      {
+        "node": "node016",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185071228 kB\nCached:         48470032 kB\nSReclaimable:    1369856 kB\nAFTER\nMemAvailable:   4189950572 kB\nCached:          9168968 kB\nSReclaimable:     304144 kB\nloadavg 2.80 2.09 1.35"
+      },
+      {
+        "node": "node017",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185066284 kB\nCached:         48468152 kB\nSReclaimable:    1370264 kB\nAFTER\nMemAvailable:   4189963564 kB\nCached:          9129280 kB\nSReclaimable:     307712 kB\nloadavg 2.65 2.10 1.34"
+      },
+      {
+        "node": "node018",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191087244 kB\nCached:         43108100 kB\nSReclaimable:    1337456 kB\nAFTER\nMemAvailable:   4195989876 kB\nCached:          3796032 kB\nSReclaimable:     264852 kB\nloadavg 2.72 2.02 1.42"
+      },
+      {
+        "node": "node019",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191635908 kB\nCached:         43107532 kB\nSReclaimable:    1337352 kB\nAFTER\nMemAvailable:   4196572220 kB\nCached:          3793700 kB\nSReclaimable:     262684 kB\nloadavg 2.80 2.05 1.35"
+      },
+      {
+        "node": "node020",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191566716 kB\nCached:         43103148 kB\nSReclaimable:    1340144 kB\nAFTER\nMemAvailable:   4196482876 kB\nCached:          3788436 kB\nSReclaimable:     264288 kB\nloadavg 2.15 1.86 1.34"
+      },
+      {
+        "node": "node021",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191752208 kB\nCached:         43107708 kB\nSReclaimable:    1337320 kB\nAFTER\nMemAvailable:   4196637632 kB\nCached:          3793608 kB\nSReclaimable:     262716 kB\nloadavg 2.20 1.83 1.25"
+      },
+      {
+        "node": "node022",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191300492 kB\nCached:         43165116 kB\nSReclaimable:    1335092 kB\nAFTER\nMemAvailable:   4196224688 kB\nCached:          3792904 kB\nSReclaimable:     260956 kB\nloadavg 2.14 1.79 1.23"
+      },
+      {
+        "node": "node023",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191370464 kB\nCached:         43097796 kB\nSReclaimable:    1337508 kB\nAFTER\nMemAvailable:   4196314224 kB\nCached:          3795776 kB\nSReclaimable:     262740 kB\nloadavg 2.37 1.86 1.29"
+      },
+      {
+        "node": "node024",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191514448 kB\nCached:         43169340 kB\nSReclaimable:    1337336 kB\nAFTER\nMemAvailable:   4196436516 kB\nCached:          3793688 kB\nSReclaimable:     264616 kB\nloadavg 2.39 1.94 1.32"
+      },
+      {
+        "node": "node025",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192089176 kB\nCached:         43106224 kB\nSReclaimable:    1336768 kB\nAFTER\nMemAvailable:   4197047712 kB\nCached:          3792212 kB\nSReclaimable:     261692 kB\nloadavg 1.84 1.79 1.35"
+      },
+      {
+        "node": "node026",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191917980 kB\nCached:         43104372 kB\nSReclaimable:    1338580 kB\nAFTER\nMemAvailable:   4196821368 kB\nCached:          3791996 kB\nSReclaimable:     265260 kB\nloadavg 2.22 1.95 1.47"
+      },
+      {
+        "node": "node027",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191358284 kB\nCached:         43106376 kB\nSReclaimable:    1338740 kB\nAFTER\nMemAvailable:   4196288044 kB\nCached:          3793204 kB\nSReclaimable:     265596 kB\nloadavg 2.44 2.25 1.55"
+      },
+      {
+        "node": "node028",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191228144 kB\nCached:         43109120 kB\nSReclaimable:    1337640 kB\nAFTER\nMemAvailable:   4196158196 kB\nCached:          3794512 kB\nSReclaimable:     263484 kB\nloadavg 1.99 1.77 1.24"
+      },
+      {
+        "node": "node029",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191523344 kB\nCached:         43097908 kB\nSReclaimable:    1338164 kB\nAFTER\nMemAvailable:   4196466956 kB\nCached:          3784452 kB\nSReclaimable:     264080 kB\nloadavg 2.24 1.84 1.26"
+      },
+      {
+        "node": "node030",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191903156 kB\nCached:         43101140 kB\nSReclaimable:    1337364 kB\nAFTER\nMemAvailable:   4196815544 kB\nCached:          3792948 kB\nSReclaimable:     262252 kB\nloadavg 2.79 2.11 1.37"
+      },
+      {
+        "node": "node031",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191347816 kB\nCached:         43094976 kB\nSReclaimable:    1336872 kB\nAFTER\nMemAvailable:   4196274116 kB\nCached:          3790976 kB\nSReclaimable:     264856 kB\nloadavg 2.29 1.96 1.34"
+      },
+      {
+        "node": "node032",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192559968 kB\nCached:         42295224 kB\nSReclaimable:    1335308 kB\nAFTER\nMemAvailable:   4197462160 kB\nCached:          2989856 kB\nSReclaimable:     260088 kB\nloadavg 2.18 1.97 1.34"
+      },
+      {
+        "node": "node033",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192424168 kB\nCached:         42295308 kB\nSReclaimable:    1333156 kB\nAFTER\nMemAvailable:   4197338252 kB\nCached:          2990040 kB\nSReclaimable:     257548 kB\nloadavg 2.39 2.05 1.51"
+      },
+      {
+        "node": "node034",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192071988 kB\nCached:         42293784 kB\nSReclaimable:    1331856 kB\nAFTER\nMemAvailable:   4197019692 kB\nCached:          2989504 kB\nSReclaimable:     255584 kB\nloadavg 2.42 1.87 1.24"
+      },
+      {
+        "node": "node035",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4193912964 kB\nCached:         40818316 kB\nSReclaimable:    1329716 kB\nAFTER\nMemAvailable:   4198860704 kB\nCached:          1518256 kB\nSReclaimable:     253388 kB\nloadavg 2.23 1.89 1.31"
+      },
+      {
+        "node": "node036",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192577220 kB\nCached:         42026136 kB\nSReclaimable:    1335540 kB\nAFTER\nMemAvailable:   4197493928 kB\nCached:          2722244 kB\nSReclaimable:     259420 kB\nloadavg 2.28 1.90 1.33"
+      },
+      {
+        "node": "node037",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191367524 kB\nCached:         43090752 kB\nSReclaimable:    1337468 kB\nAFTER\nMemAvailable:   4196267012 kB\nCached:          3790900 kB\nSReclaimable:     263860 kB\nloadavg 4.29 2.56 1.55"
+      },
+      {
+        "node": "node038",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191601996 kB\nCached:         43096292 kB\nSReclaimable:    1337532 kB\nAFTER\nMemAvailable:   4196490272 kB\nCached:          3790892 kB\nSReclaimable:     262856 kB\nloadavg 2.17 1.88 1.29"
+      },
+      {
+        "node": "node039",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191474164 kB\nCached:         43097124 kB\nSReclaimable:    1335824 kB\nAFTER\nMemAvailable:   4196432712 kB\nCached:          3791892 kB\nSReclaimable:     265432 kB\nloadavg 2.02 1.78 1.24"
+      },
+      {
+        "node": "node040",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191520500 kB\nCached:         43092324 kB\nSReclaimable:    1337520 kB\nAFTER\nMemAvailable:   4196441536 kB\nCached:          3791424 kB\nSReclaimable:     263264 kB\nloadavg 2.07 1.86 1.29"
+      },
+      {
+        "node": "node041",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191694172 kB\nCached:         43089108 kB\nSReclaimable:    1335712 kB\nAFTER\nMemAvailable:   4196626688 kB\nCached:          3783752 kB\nSReclaimable:     262064 kB\nloadavg 2.01 1.85 1.30"
+      },
+      {
+        "node": "node042",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191715960 kB\nCached:         43097188 kB\nSReclaimable:    1336692 kB\nAFTER\nMemAvailable:   4196651896 kB\nCached:          3793076 kB\nSReclaimable:     263020 kB\nloadavg 2.41 2.13 1.55"
+      },
+      {
+        "node": "node043",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191552276 kB\nCached:         43097412 kB\nSReclaimable:    1334792 kB\nAFTER\nMemAvailable:   4196517500 kB\nCached:          3791904 kB\nSReclaimable:     261824 kB\nloadavg 2.30 2.05 1.38"
+      },
+      {
+        "node": "node044",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191699144 kB\nCached:         43095108 kB\nSReclaimable:    1335432 kB\nAFTER\nMemAvailable:   4196612836 kB\nCached:          3792748 kB\nSReclaimable:     265452 kB\nloadavg 2.27 2.09 1.47"
+      },
+      {
+        "node": "node045",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191554344 kB\nCached:         43096756 kB\nSReclaimable:    1337216 kB\nAFTER\nMemAvailable:   4196473080 kB\nCached:          3791524 kB\nSReclaimable:     262900 kB\nloadavg 1.85 1.79 1.29"
+      }
+    ]
+  },
+  {
+    "round": 2,
+    "method": "baseline",
+    "nodes": [
+      {
+        "node": "node001",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4197711756 kB\nCached:         39876004 kB\nSReclaimable:     249112 kB\nAFTER\nMemAvailable:   4202141192 kB\nCached:           571688 kB\nSReclaimable:     187072 kB\nloadavg 0.92 1.65 1.25"
+      },
+      {
+        "node": "node002",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4199217452 kB\nCached:         39818268 kB\nSReclaimable:     163816 kB\nAFTER\nMemAvailable:   4203577156 kB\nCached:           512208 kB\nSReclaimable:     155632 kB\nloadavg 1.27 1.32 0.95"
+      },
+      {
+        "node": "node003",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4196096056 kB\nCached:         39871092 kB\nSReclaimable:     186948 kB\nAFTER\nMemAvailable:   4200405112 kB\nCached:           563348 kB\nSReclaimable:     175476 kB\nloadavg 1.56 1.59 1.18"
+      },
+      {
+        "node": "node004",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4195944576 kB\nCached:         39883732 kB\nSReclaimable:     188664 kB\nAFTER\nMemAvailable:   4200244688 kB\nCached:           575212 kB\nSReclaimable:     176768 kB\nloadavg 1.49 1.61 1.16"
+      },
+      {
+        "node": "node005",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4196973096 kB\nCached:         39871128 kB\nSReclaimable:     186032 kB\nAFTER\nMemAvailable:   4201264568 kB\nCached:           568148 kB\nSReclaimable:     175344 kB\nloadavg 1.37 1.26 0.97"
+      },
+      {
+        "node": "node006",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4186335468 kB\nCached:         47403612 kB\nSReclaimable:    1367156 kB\nAFTER\nMemAvailable:   4191247684 kB\nCached:          8059980 kB\nSReclaimable:     301220 kB\nloadavg 1.96 1.99 1.38"
+      },
+      {
+        "node": "node007",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4186371712 kB\nCached:         47397416 kB\nSReclaimable:    1365748 kB\nAFTER\nMemAvailable:   4191257148 kB\nCached:          8057712 kB\nSReclaimable:     300100 kB\nloadavg 2.31 1.89 1.30"
+      },
+      {
+        "node": "node008",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184986936 kB\nCached:         48473548 kB\nSReclaimable:    1366812 kB\nAFTER\nMemAvailable:   4189925656 kB\nCached:          9128448 kB\nSReclaimable:     302808 kB\nloadavg 2.41 2.47 1.75"
+      },
+      {
+        "node": "node009",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184877100 kB\nCached:         48468752 kB\nSReclaimable:    1368968 kB\nAFTER\nMemAvailable:   4189783108 kB\nCached:          9125248 kB\nSReclaimable:     306236 kB\nloadavg 2.25 1.97 1.36"
+      },
+      {
+        "node": "node010",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184995196 kB\nCached:         48470364 kB\nSReclaimable:    1371272 kB\nAFTER\nMemAvailable:   4189904908 kB\nCached:          9127392 kB\nSReclaimable:     307864 kB\nloadavg 2.07 1.94 1.38"
+      },
+      {
+        "node": "node011",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184702016 kB\nCached:         48470600 kB\nSReclaimable:    1368764 kB\nAFTER\nMemAvailable:   4189629360 kB\nCached:          9127672 kB\nSReclaimable:     305212 kB\nloadavg 2.03 1.89 1.42"
+      },
+      {
+        "node": "node012",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185169476 kB\nCached:         48469656 kB\nSReclaimable:    1370600 kB\nAFTER\nMemAvailable:   4190048468 kB\nCached:          9168208 kB\nSReclaimable:     305812 kB\nloadavg 1.93 1.81 1.27"
+      },
+      {
+        "node": "node013",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184940388 kB\nCached:         48471088 kB\nSReclaimable:    1369460 kB\nAFTER\nMemAvailable:   4189839552 kB\nCached:          9128492 kB\nSReclaimable:     306412 kB\nloadavg 1.93 2.01 1.36"
+      },
+      {
+        "node": "node014",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185054160 kB\nCached:         48471912 kB\nSReclaimable:    1368208 kB\nAFTER\nMemAvailable:   4189967736 kB\nCached:          9128060 kB\nSReclaimable:     303868 kB\nloadavg 2.05 1.87 1.36"
+      },
+      {
+        "node": "node015",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184969132 kB\nCached:         48464996 kB\nSReclaimable:    1369776 kB\nAFTER\nMemAvailable:   4189883056 kB\nCached:          9127632 kB\nSReclaimable:     306780 kB\nloadavg 2.17 2.10 1.47"
+      },
+      {
+        "node": "node016",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4185256032 kB\nCached:         48470224 kB\nSReclaimable:    1369780 kB\nAFTER\nMemAvailable:   4190153452 kB\nCached:          9128608 kB\nSReclaimable:     305052 kB\nloadavg 2.23 2.13 1.43"
+      },
+      {
+        "node": "node017",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4184927224 kB\nCached:         48472408 kB\nSReclaimable:    1370264 kB\nAFTER\nMemAvailable:   4189866968 kB\nCached:          9129264 kB\nSReclaimable:     307220 kB\nloadavg 2.03 2.10 1.42"
+      },
+      {
+        "node": "node018",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191274244 kB\nCached:         43108180 kB\nSReclaimable:    1338376 kB\nAFTER\nMemAvailable:   4196197568 kB\nCached:          3794504 kB\nSReclaimable:     265488 kB\nloadavg 1.84 1.94 1.45"
+      },
+      {
+        "node": "node019",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191641340 kB\nCached:         43108900 kB\nSReclaimable:    1338228 kB\nAFTER\nMemAvailable:   4196559976 kB\nCached:          3793712 kB\nSReclaimable:     263016 kB\nloadavg 1.95 2.03 1.42"
+      },
+      {
+        "node": "node020",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191360168 kB\nCached:         43102816 kB\nSReclaimable:    1340196 kB\nAFTER\nMemAvailable:   4196299420 kB\nCached:          3789088 kB\nSReclaimable:     265072 kB\nloadavg 1.70 1.82 1.38"
+      },
+      {
+        "node": "node021",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191709276 kB\nCached:         43108044 kB\nSReclaimable:    1337944 kB\nAFTER\nMemAvailable:   4196647096 kB\nCached:          3794844 kB\nSReclaimable:     262832 kB\nloadavg 1.54 1.77 1.29"
+      },
+      {
+        "node": "node022",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191453536 kB\nCached:         43107524 kB\nSReclaimable:    1335964 kB\nAFTER\nMemAvailable:   4196360448 kB\nCached:          3792912 kB\nSReclaimable:     261300 kB\nloadavg 1.85 1.85 1.30"
+      },
+      {
+        "node": "node023",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191179780 kB\nCached:         43097680 kB\nSReclaimable:    1338292 kB\nAFTER\nMemAvailable:   4196124364 kB\nCached:          3784180 kB\nSReclaimable:     262012 kB\nloadavg 2.10 1.97 1.39"
+      },
+      {
+        "node": "node024",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191356276 kB\nCached:         43106852 kB\nSReclaimable:    1337288 kB\nAFTER\nMemAvailable:   4196285100 kB\nCached:          3793472 kB\nSReclaimable:     264776 kB\nloadavg 1.98 1.97 1.39"
+      },
+      {
+        "node": "node025",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191922008 kB\nCached:         43101940 kB\nSReclaimable:    1336744 kB\nAFTER\nMemAvailable:   4196834552 kB\nCached:          3791724 kB\nSReclaimable:     261656 kB\nloadavg 1.97 1.92 1.44"
+      },
+      {
+        "node": "node026",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191871604 kB\nCached:         43105968 kB\nSReclaimable:    1339044 kB\nAFTER\nMemAvailable:   4196814260 kB\nCached:          3792076 kB\nSReclaimable:     263516 kB\nloadavg 2.06 2.05 1.55"
+      },
+      {
+        "node": "node027",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191315100 kB\nCached:         43105224 kB\nSReclaimable:    1338328 kB\nAFTER\nMemAvailable:   4196245072 kB\nCached:          3793192 kB\nSReclaimable:     265332 kB\nloadavg 1.99 2.23 1.61"
+      },
+      {
+        "node": "node028",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191386548 kB\nCached:         43107784 kB\nSReclaimable:    1336852 kB\nAFTER\nMemAvailable:   4196305328 kB\nCached:          3806212 kB\nSReclaimable:     263548 kB\nloadavg 2.29 2.07 1.41"
+      },
+      {
+        "node": "node029",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191456316 kB\nCached:         43097952 kB\nSReclaimable:    1338284 kB\nAFTER\nMemAvailable:   4196399088 kB\nCached:          3784116 kB\nSReclaimable:     263396 kB\nloadavg 2.42 2.06 1.39"
+      },
+      {
+        "node": "node030",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191552616 kB\nCached:         43106468 kB\nSReclaimable:    1337896 kB\nAFTER\nMemAvailable:   4196474320 kB\nCached:          3793016 kB\nSReclaimable:     262108 kB\nloadavg 2.02 2.08 1.44"
+      },
+      {
+        "node": "node031",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191392048 kB\nCached:         43090636 kB\nSReclaimable:    1337224 kB\nAFTER\nMemAvailable:   4196344996 kB\nCached:          3791028 kB\nSReclaimable:     263292 kB\nloadavg 2.42 2.20 1.49"
+      },
+      {
+        "node": "node032",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192542632 kB\nCached:         42294140 kB\nSReclaimable:    1335712 kB\nAFTER\nMemAvailable:   4197478952 kB\nCached:          2990352 kB\nSReclaimable:     259940 kB\nloadavg 1.85 2.00 1.41"
+      },
+      {
+        "node": "node033",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192383020 kB\nCached:         42293648 kB\nSReclaimable:    1333300 kB\nAFTER\nMemAvailable:   4197305624 kB\nCached:          3000624 kB\nSReclaimable:     257912 kB\nloadavg 2.12 2.18 1.61"
+      },
+      {
+        "node": "node034",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192197508 kB\nCached:         42293456 kB\nSReclaimable:    1332608 kB\nAFTER\nMemAvailable:   4197129384 kB\nCached:          2990472 kB\nSReclaimable:     256592 kB\nloadavg 2.05 2.00 1.35"
+      },
+      {
+        "node": "node035",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4193996052 kB\nCached:         40821976 kB\nSReclaimable:    1329908 kB\nAFTER\nMemAvailable:   4198968136 kB\nCached:          1518448 kB\nSReclaimable:     253804 kB\nloadavg 2.16 2.02 1.41"
+      },
+      {
+        "node": "node036",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4192413692 kB\nCached:         42027772 kB\nSReclaimable:    1336520 kB\nAFTER\nMemAvailable:   4197364984 kB\nCached:          2722360 kB\nSReclaimable:     259880 kB\nloadavg 1.74 1.88 1.38"
+      },
+      {
+        "node": "node037",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191463712 kB\nCached:         43094952 kB\nSReclaimable:    1337788 kB\nAFTER\nMemAvailable:   4196381784 kB\nCached:          3790944 kB\nSReclaimable:     263876 kB\nloadavg 2.12 2.37 1.59"
+      },
+      {
+        "node": "node038",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191473936 kB\nCached:         43095912 kB\nSReclaimable:    1338768 kB\nAFTER\nMemAvailable:   4196384544 kB\nCached:          3793432 kB\nSReclaimable:     264372 kB\nloadavg 1.68 1.89 1.35"
+      },
+      {
+        "node": "node039",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191599592 kB\nCached:         43096528 kB\nSReclaimable:    1335804 kB\nAFTER\nMemAvailable:   4196521624 kB\nCached:          3792200 kB\nSReclaimable:     263068 kB\nloadavg 1.70 1.85 1.32"
+      },
+      {
+        "node": "node040",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191347556 kB\nCached:         43096368 kB\nSReclaimable:    1337528 kB\nAFTER\nMemAvailable:   4196255648 kB\nCached:          3791576 kB\nSReclaimable:     263452 kB\nloadavg 1.72 1.88 1.35"
+      },
+      {
+        "node": "node041",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191225076 kB\nCached:         43083712 kB\nSReclaimable:    1335640 kB\nAFTER\nMemAvailable:   4196148852 kB\nCached:          3783672 kB\nSReclaimable:     262272 kB\nloadavg 1.99 2.01 1.42"
+      },
+      {
+        "node": "node042",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191864280 kB\nCached:         43101076 kB\nSReclaimable:    1336908 kB\nAFTER\nMemAvailable:   4196804316 kB\nCached:          3793080 kB\nSReclaimable:     262040 kB\nloadavg 2.12 2.24 1.65"
+      },
+      {
+        "node": "node043",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191253656 kB\nCached:         43097072 kB\nSReclaimable:    1334180 kB\nAFTER\nMemAvailable:   4196197812 kB\nCached:          3792544 kB\nSReclaimable:     260712 kB\nloadavg 1.89 2.05 1.45"
+      },
+      {
+        "node": "node044",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191588440 kB\nCached:         43097116 kB\nSReclaimable:    1336916 kB\nAFTER\nMemAvailable:   4196508184 kB\nCached:          3792404 kB\nSReclaimable:     265092 kB\nloadavg 1.78 2.06 1.52"
+      },
+      {
+        "node": "node045",
+        "exit_code": 0,
+        "output": "BEFORE\nMemAvailable:   4191284604 kB\nCached:         43092424 kB\nSReclaimable:    1337212 kB\nAFTER\nMemAvailable:   4196188288 kB\nCached:          3792720 kB\nSReclaimable:     262412 kB\nloadavg 2.02 1.97 1.41"
+      }
+    ]
+  }
+]

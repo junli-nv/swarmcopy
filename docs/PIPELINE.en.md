@@ -10,7 +10,7 @@ This SCDP/1 extension adds optional overlapped whole-file SHA-256 and a standalo
 ./swarmcopy distribute \
   --hosts 'node[001-005]' --source /shared/nemo.sqsh \
   --dest /raid/images --bin-dir ./dist \
-  --pipeline-verify --verify-buffer-mib 4
+  --pipeline-verify --verify-buffer-mib 4 --verify-window-chunks 256
 ~~~
 
 --pipeline-verify is opt-in. --verify-buffer-mib defaults to 4 (1..64), applying to serial and pipelined file verification. Saved new jobs retain these options for resume; old records leave the pipeline disabled. Directories and multiple files remain future work.
@@ -27,7 +27,11 @@ Resume revalidates existing chunks and rebuilds whole-file hash state from the b
 
 The verifier uses one bounded read buffer, not a whole-image heap copy. A buffered notification wakes it when missing prefix data arrives. Verified final seed files retain the existing cache/recheck behavior and do not start an unnecessary second verifier.
 
-Rarest-first scheduling remains unchanged. An early missing chunk can postpone sequential SHA, so overlap is not guaranteed to hide all hashing. Hashing also competes for CPU, memory, and storage. Compare complete job wall time rather than only the final hash tail.
+With --verify-window-chunks 0 (default), global rarest-first scheduling remains unchanged. An early missing chunk can postpone sequential SHA, so overlap is not guaranteed to hide all hashing. Hashing also competes for CPU, memory, and storage. Compare complete job wall time rather than only the final hash tail.
+
+Optional --verify-window-chunks 256 prefers the next 256 chunks from the hash frontier (about 4 GiB at the default chunk size), retaining rarity within that range and falling back globally if it cannot schedule useful work there. It is a priority, not a hard transfer/memory bound. Values are 0..4096 and nonzero requires --pipeline-verify.
+
+This changes scheduling order and commonly reduces scheduler search work. Its effect cannot be attributed solely to overlapping hashing. The initial two-round unwindowed experiment is retained, followed by a new-directory same-binary plain/windowed comparison.
 
 ## Metrics
 
@@ -35,6 +39,7 @@ watch shows a receiver's whole-file hash percentage. Performance in status/resul
 
 | Field | Meaning |
 |---|---|
+| VerifyWindowChunks | Prefix-priority chunk count; zero means global rarity |
 | PipelineVerify | Configured mode |
 | FileHashBytes | Bytes included in this process's whole-file SHA |
 | FileHashBytesAtTransferEnd | Progress when the main loop observes all chunks and begins finalization |
@@ -75,4 +80,3 @@ python3 scripts/benchmark-verify.py --help
 ~~~
 
 Compare the previous release, current buffered serial mode, and current pipeline at fixed concurrency. Every case is fresh and starts after OS cache dropping. Full transfer/hash/fsync plus deployment and shutdown are timed. CPU microbenchmarks are reported separately.
-

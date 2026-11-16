@@ -177,3 +177,46 @@ func TestSerialHashRangeMatchesReferenceAndBufferBoundaries(t *testing.T) {
 		}
 	}
 }
+
+func TestVerifyWindowPreservesLocalRarityAndGlobalFallback(t *testing.T) {
+	n, _ := fixture(t)
+	n.o = Options{PipelineVerify: true, VerifyWindowChunks: 2, Workers: 4}
+	n.have = make([]bool, 8)
+	n.busy = make([]bool, 8)
+	n.m.Size = 8 * n.m.ChunkSize
+	n.m.Chunks = make([]string, 8)
+	for i := 0; i < 3; i++ {
+		n.have[i] = true
+	}
+	n.perf.FileHashBytes = 3 * n.m.ChunkSize
+	all := []bool{true, true, true, true, true, true, true, true}
+	n.remotes = []Remote{remoteFor("all:1", all), remoteFor("front:1", []bool{false, false, false, true, true, false, false, false}), remoteFor("common:1", []bool{false, false, false, false, true, false, false, false})}
+	i, _ := n.choose()
+	if i != 3 {
+		t.Fatalf("did not prefer rarest within upcoming window: %d", i)
+	}
+	n.busy[3] = false
+	n.have[3] = true
+	n.have[4] = true
+	n.peerBusy = map[string]int{}
+	i, _ = n.choose()
+	if i < 5 {
+		t.Fatalf("ready window stalled global fallback: %d", i)
+	}
+	n.busy = make([]bool, 8)
+	n.peerBusy = map[string]int{}
+	n.perf.FileHashBytes = 6 * n.m.ChunkSize
+	i, _ = n.choose()
+	if i < 6 {
+		t.Fatalf("window did not follow whole-hash frontier: %d", i)
+	}
+}
+func TestVerifyWindowDisabledKeepsGlobalRarity(t *testing.T) {
+	n, _ := fixture(t)
+	n.o = Options{PipelineVerify: true, Workers: 4}
+	n.remotes = []Remote{remoteFor("all:1", []bool{true, true}), remoteFor("common:1", []bool{true, false})}
+	i, _ := n.choose()
+	if i != 1 {
+		t.Fatalf("disabled window changed rarity: %d", i)
+	}
+}

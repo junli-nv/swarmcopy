@@ -2,6 +2,16 @@
 
 [中文](VALIDATION.zh-CN.md) · [Development](DEVELOPMENT.en.md) · [Preliminary benchmark](BENCHMARK.en.md) · [Cold-cache study protocol](COLD-STUDY.en.md)
 
+## Current verification experiment (0.2.0-dev.2)
+
+- Ordered SHA-256 tests cover prefix gaps, short tails, coalesced signals, corrupt disk content, whole-digest mismatch, read errors, and cancellation while waiting or after hashing. Window tests cover rarity, frontier tracking, busy-prefix fallback, and disabled behavior.
+- Race unit tests and go vet pass; a real race-instrumented chain tests pipeline/window/endgame/adaptive together, including corrupt-partial interruption/resume and forwarding.
+- Mixed v0.1.0 seed/new receiver recovery, every CLI help route, and real two-node SSH deployment checks pass.
+- Profiles confirm SHA-NI, AVX2, and generic backends with identical digests. Hardware acceleration predates this change.
+- [Complete 45-node comparisons and integrity audits](PIPELINE-RESULTS.en.md) retain both the initial pipeline and prefix-window studies, separately from historical 157-node/rsync measurements.
+
+Historical adaptive and v0.1.0 coverage remains scoped below.
+
 ## Current adaptive experiment
 
 - Race unit tests and go vet pass, including request deduplication/cancellation, corrupt-copy recovery, admission bounds, and write feedback.

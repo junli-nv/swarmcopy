@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.0-dev.2 (experimental)
+
+- Opt-in ordered whole-file SHA-256 pipeline, bounded read buffers, and optional prefix-window chunk priority.
+- Preserve full digest comparison, fsync, atomic publication, and restart revalidation.
+- Add hashbench with optional CPU profiles; confirm existing SHA-NI acceleration on x86_64.
+- Persist hash progress/phase diagnostics in job results and display live hash progress.
+- Race, corruption, cancellation, mixed-version recovery, and window scheduling checks.
+- Retain initial and final 45-node comparisons with fresh targets, cold OS caches, and bilingual evidence.
+- Linux x86_64/aarch64 static builds; pipeline/window disabled by default.
+
 ## 0.2.0-dev (experimental)
 
 - Opt-in adaptive download concurrency with explicit minimum/maximum bounds, measured source ranking, and persistent busy-source cooldown.

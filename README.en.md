@@ -1,5 +1,7 @@
 # swarmcopy
 
+[Download verification experiment v0.2.0-dev.2](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0-dev.2) · [45-node comparison](docs/PIPELINE-RESULTS.en.md)
+
 [Pipelined verification and CPU acceleration](docs/PIPELINE.en.md): 0.2.0-dev.2 with full SHA-256 and hashbench diagnostics.
 
 [Adaptive transfer experiment](docs/ADAPTIVE.en.md): 0.2.0-dev branch with diagnostics and opt-in scheduling. Previously published v0.1.0 results remain below.

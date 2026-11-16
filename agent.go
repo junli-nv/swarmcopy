@@ -137,6 +137,9 @@ func agentCommand(args []string) error {
 			"--uploads", strconv.Itoa(o.Uploads), "--upload-mib", strconv.FormatInt(o.UploadMiB, 10),
 			"--download-mib", strconv.FormatInt(o.DownloadMiB, 10), "--lifetime", o.Lifetime.String(),
 			"--stall-timeout", o.Stall.String()}
+		if o.VerifyWindowChunks > 0 {
+			argv = append(argv, "--verify-window-chunks", strconv.Itoa(o.VerifyWindowChunks))
+		}
 		if o.PipelineVerify {
 			argv = append(argv, "--pipeline-verify")
 		}

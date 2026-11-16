@@ -1,0 +1,52 @@
+[
+  {
+    "node": "file-node-1",
+    "result": {
+      "AdvertisedCPUFeatures": {
+        "avx2": true,
+        "bmi2": true,
+        "sha_ni": true
+      },
+      "Architecture": "amd64",
+      "CPUModel": "Intel(R) Xeon(R) 6776P",
+      "FileBufferMiB": 4,
+      "FileBytes": 40188444672,
+      "FileComputeSeconds": 36.02283543399985,
+      "FileReadSeconds": 10.763740652000015,
+      "FileSHA256": "b4b4781e7392957eb24d45e9f480ea6d8ec2d20f9200a1c48aeeefd64d2e77c1",
+      "FileSeconds": 46.791142646,
+      "GODEBUG": "",
+      "GoVersion": "go1.27.4",
+      "MemoryBytes": 1073741824,
+      "MemoryMiBPerSecond": 1062.5483069065774,
+      "MemorySHA256": "3ae4c886997de2d3e71f795504564490446f6740adcf38d003e914be1fe57a15",
+      "MemorySeconds": 0.96372089,
+      "Version": "0.2.0-dev.2"
+    }
+  },
+  {
+    "node": "file-node-2",
+    "result": {
+      "AdvertisedCPUFeatures": {
+        "avx2": true,
+        "bmi2": true,
+        "sha_ni": true
+      },
+      "Architecture": "amd64",
+      "CPUModel": "Intel(R) Xeon(R) 6767P",
+      "FileBufferMiB": 4,
+      "FileBytes": 40188444672,
+      "FileComputeSeconds": 23.01388219100005,
+      "FileReadSeconds": 14.512781889999998,
+      "FileSHA256": "b4b4781e7392957eb24d45e9f480ea6d8ec2d20f9200a1c48aeeefd64d2e77c1",
+      "FileSeconds": 37.530922373,
+      "GODEBUG": "",
+      "GoVersion": "go1.27.4",
+      "MemoryBytes": 1073741824,
+      "MemoryMiBPerSecond": 1652.9224817160218,
+      "MemorySHA256": "3ae4c886997de2d3e71f795504564490446f6740adcf38d003e914be1fe57a15",
+      "MemorySeconds": 0.619508786,
+      "Version": "0.2.0-dev.2"
+    }
+  }
+]
