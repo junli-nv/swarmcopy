@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.8.0 — unified metadata and automatic successful-job cleanup
+
+- Keep new deployment, staging/imports, one reusable manifest-bound cache and bounded latest log under destination .swarmcopy; avoid permanent per-job metadata accumulation and home-directory media migration.
+- After all targets verify/publish and owned peers stop, automatically remove deployment and empty staging. Preserve incomplete/shared/unknown data and active locks. --keep-seeding defers cleanup.
+- Add cleanup --job for completed jobs/retries while retaining controller history; persist per-node cleanup issues separately from verified transfer success. Repeated successful cleanup does not redeploy.
+- Resume old .swarmcopy-trees staging in place and preserve valid legacy cache metadata without bulk copying.
+- Validate race/vet/CLI, chunks/full, direct identical source/destination, QUIC, keep-seeding cleanup and real 0.7.1 interrupted transfer upgraded/resumed on 0.8.0.
+
 ## 0.7.1 — chunks by default for new distribution jobs
 
 - Default new distribute jobs to chunks with BLAKE3 chunks/files; retain explicit full/SHA256, advanced overrides and fixed concurrency.

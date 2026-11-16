@@ -6,6 +6,10 @@ Resumable P2P file and directory distribution for Linux clusters, using **SCDP/1
 
 **main is the only long-lived branch.** One binary includes TCP, optional UDP/QUIC, pipelined verification, optional adaptive concurrency, multiple files and directories. No separate UDP or race executable is needed. Historical tags and measurements remain available.
 
+## v0.8.0 automatic cleanup and one metadata directory
+
+New jobs keep deployment, staging and cache in one destination `.swarmcopy`; media is not moved into home directories. Once every target verifies/publishes, stop peers and remove this job's deployment/empty staging. Reuse one `cache.json` and an at-most-8-MiB `last-peer.log`, without permanent per-job directories. Preserve interrupted/shared/uncertain data. `swarmcopy cleanup --job <ID>` handles old completed jobs or retries cleanup while keeping jobs/watch/status history; --keep-seeding defers cleanup. [Layout, bounds and compatibility](docs/CLEANUP.en.md).
+
 ## v0.7.1 defaults to chunks
 
 New distribution jobs omit --verify to use chunks/BLAKE3: every chunk is validated, then fsync and publication, without final whole-file verification. Add `--verify full` for that final check. Saved jobs retain their mode/algorithms on resume; adaptive stays off. Fsync is not content validation and depends on correct underlying storage flush behavior.

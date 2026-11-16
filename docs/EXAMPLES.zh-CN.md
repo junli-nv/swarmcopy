@@ -4,6 +4,10 @@
 
 以下是统一版 main 的用法。将二进制命名为 `swarmcopy`；异构集群把两种原名二进制放入同级 `dist`（自动识别），或每条命令指定 `--bin-dir /path/to/dist`。示例节点和路径请换成实际值。
 
+## v0.8.0 自动清理与统一目录
+
+新作业的节点部署、暂存和缓存统一在目标目录内的 `.swarmcopy`，不搬介质到用户目录。全部目标校验并发布后自动停止 peer，删除本作业部署和空暂存；只复用一份 `cache.json` 和最多 8 MiB 的 `last-peer.log`，不会每个任务留下一个永久目录。中断、共享和无法确认归属的数据保留。旧完成作业或清理失败可用 `swarmcopy cleanup --job <ID>` 收尾，jobs/watch/status 记录保留；`--keep-seeding` 延后清理。[布局、限额与兼容说明](CLEANUP.zh-CN.md)。
+
 ## v0.7.0：本地复制与完成摘要
 
 调度避免逐次对全部缺块做昂贵评分；源所在节点的目标副本直接读取本地源、校验后写入，不再经网络绕回。成功结束打印总耗时、准备/分发耗时、网络/本地/复用字节和平均速度；完成后 watch 可重看，status 保持 JSON。自适应默认关闭，固定并发仍是 `--workers 4 --uploads 4`，不限速仍是默认。
@@ -225,3 +229,15 @@ SSH 默认包含 `StrictHostKeyChecking=no`、`UserKnownHostsFile=/dev/null`、`
 恢复会重新检查保留的数据，复用校验通过的块，补齐缺块/坏块，重新尝试完成；通常无需从头传整个文件。若写入后断电或设备丢数据，丢失块仍需补传；存储持续报错时不能保证完成。不要删除作业或使用 remove --purge-partials，否则会失去该恢复入口。
 
 如果已经完成改名/链接，后续目录或完成标记 fsync 才报错，某些目标文件可能已存在，但作业仍不算成功；恢复会检查并复用有效文件。多文件发布逐文件进行，不是全目录事务。fsync 成功依赖操作系统和底层设备正确兑现刷盘请求，不能代替内容复核；需要额外最终内容检查时用 --verify full。
+
+## 保留作业记录，只清理完成后的临时内容
+
+```bash
+# 正常完成后自动执行收尾；下面用于旧完成作业或重试
+./swarmcopy cleanup --job <ID>
+./swarmcopy cleanup --help
+./swarmcopy jobs
+./swarmcopy watch --job <ID>
+```
+
+cleanup 保留源、成品和控制器记录；remove/delete 则删除作业记录。不要对仍要续传的任务丢弃 partials。--keep-seeding 作业用 cleanup 停止本作业供种并收尾。若遇到共享或未知内容，按提示保留处理，不用 rm -rf 整个 .swarmcopy。

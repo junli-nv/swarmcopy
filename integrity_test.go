@@ -113,14 +113,12 @@ func TestHashModesAndMixedAlgorithmTransfers(t *testing.T) {
 					if mode == "full" && p.FileHashBytes != m.Size {
 						t.Fatalf("wrong full verification bytes: %d", p.FileHashBytes)
 					}
-					raw, e := os.ReadFile(filepath.Join(treeStage(dest, m), "verified.json"))
+					cacheRoot, e := os.OpenRoot(dest)
 					if e != nil {
 						t.Fatal(e)
 					}
-					var cache treeVerified
-					if e = json.Unmarshal(raw, &cache); e != nil {
-						t.Fatal(e)
-					}
+					cache := loadTreeVerified(cacheRoot, m)
+					cacheRoot.Close()
 					if mode == "chunks" && len(cache) != 0 {
 						t.Fatal("chunks minted full-verification cache")
 					}

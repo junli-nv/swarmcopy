@@ -19,28 +19,49 @@ import (
 
 type treeVerified map[string]fileFingerprint
 
+const treeCacheName = ".swarmcopy/cache.json"
+
+type treeCacheRecord struct {
+	ManifestID string
+	Files      treeVerified
+}
+
 func loadTreeVerified(r *os.Root, m Manifest) treeVerified {
-	v := treeVerified{}
-	f, e := r.Open(".swarmcopy-trees/" + m.id() + "/verified.json")
-	if e != nil {
-		return v
+	if f, e := r.Open(treeCacheName); e == nil {
+		var saved treeCacheRecord
+		e = json.NewDecoder(io.LimitReader(f, 32<<20)).Decode(&saved)
+		f.Close()
+		if e == nil && saved.ManifestID == m.id() && saved.Files != nil {
+			return saved.Files
+		}
 	}
-	defer f.Close()
-	if json.NewDecoder(io.LimitReader(f, 32<<20)).Decode(&v) != nil || v == nil {
-		return treeVerified{}
+	// Read old cache in place; no bulk migration or copying of media/partials.
+	for _, name := range []string{".swarmcopy-trees/" + m.id() + "/verified.json", ".swarmcopy/trees/" + m.id() + "/verified.json"} {
+		f, e := r.Open(name)
+		if e != nil {
+			continue
+		}
+		var v treeVerified
+		e = json.NewDecoder(io.LimitReader(f, 32<<20)).Decode(&v)
+		f.Close()
+		if e == nil && v != nil {
+			return v
+		}
 	}
-	return v
+	return treeVerified{}
 }
 func saveTreeVerified(r *os.Root, m Manifest, v treeVerified) error {
-	rel := ".swarmcopy-trees/" + m.id()
-	if e := strictDirs(r, rel); e != nil {
+	if len(v) == 0 {
+		return nil
+	}
+	if e := strictDirs(r, ".swarmcopy"); e != nil {
 		return e
 	}
-	b, e := json.Marshal(v)
+	b, e := json.Marshal(treeCacheRecord{m.id(), v})
 	if e != nil {
 		return e
 	}
-	tmp := rel + "/verified.next-" + randomID()
+	tmp := ".swarmcopy/cache.next-" + randomID()
 	f, e := r.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
 	if e != nil {
 		return e
@@ -57,10 +78,10 @@ func saveTreeVerified(r *os.Root, m Manifest, v treeVerified) error {
 	if ce != nil {
 		return ce
 	}
-	if e = r.Rename(tmp, rel+"/verified.json"); e != nil {
+	if e = r.Rename(tmp, treeCacheName); e != nil {
 		return e
 	}
-	return syncRootDir(r, rel)
+	return syncRootDir(r, ".swarmcopy")
 }
 func cachedTreeFile(r *os.Root, e TreeEntry, cache treeVerified) (bool, error) {
 	return cachedTreeFileContext(context.Background(), r, e, cache)

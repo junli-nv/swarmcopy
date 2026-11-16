@@ -69,11 +69,21 @@ func receiveTree(ctx context.Context, in io.Reader, dest, manifestPath string, c
 	if err = syscall.Flock(lockfd, syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
 		return m, errors.New("destination is locked by another peer")
 	}
-	tmp, err := os.MkdirTemp(dest, ".swarmcopy-import-")
+	container, err := os.OpenRoot(dest)
 	if err != nil {
 		return m, err
 	}
-	defer os.RemoveAll(tmp)
+	defer container.Close()
+	if err = strictDirs(container, ".swarmcopy"); err != nil {
+		return m, err
+	}
+	tmpRel := ".swarmcopy/import-" + randomID()
+	if err = container.Mkdir(tmpRel, 0700); err != nil {
+		return m, err
+	}
+	tmp := filepath.Join(dest, filepath.FromSlash(tmpRel))
+	defer container.RemoveAll(tmpRel)
+
 	r, err := os.OpenRoot(tmp)
 	if err != nil {
 		return m, err
@@ -170,7 +180,10 @@ func receiveTree(ctx context.Context, in io.Reader, dest, manifestPath string, c
 		return m, err
 	}
 	defer root.Close()
-	rel := ".swarmcopy-trees/" + m.id()
+	rel, err := treeNamespace(root, m)
+	if err != nil {
+		return m, err
+	}
 	if err = strictDirs(root, rel); err != nil {
 		return m, err
 	}
@@ -190,7 +203,7 @@ func receiveTree(ctx context.Context, in io.Reader, dest, manifestPath string, c
 		} else if x != nil && !os.IsNotExist(x) {
 			return m, x
 		}
-		if err = root.Rename(filepath.Base(tmp)+"/"+e.Path, target); err != nil {
+		if err = root.Rename(tmpRel+"/"+e.Path, target); err != nil {
 			return m, err
 		}
 		if err = syncRootDir(root, path.Dir(target)); err != nil {

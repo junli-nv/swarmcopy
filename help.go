@@ -32,6 +32,7 @@ COMMANDS
   status      Print JSON; default: latest active job, otherwise latest job
   watch       Show global progress; default: latest active/latest saved job
   resume      Reconnect a saved job and recover missing/corrupt chunks
+  cleanup     Clean completed deployment/staging; preserve media and job history
   remove      Stop a job and remove records/logs; alias: delete; optional partial cleanup
   stop        Stop only the selected job's recorded peer processes
   prepare     Copy an immutable source into a seed file and build its manifest
@@ -60,6 +61,16 @@ func usageText(name string) string {
 	switch name {
 	case "hashbench":
 		return "Measure SHA256 without changing input files. CPU profiles require a NEW path.\n\nExamples:\n  swarmcopy hashbench --bytes-mib 2048\n  swarmcopy hashbench --file /raid/images/media.sqsh --cpu-profile /tmp/new-sha.pprof\n"
+	case "cleanup":
+		return `Clean only a completed job's remote deployment and empty staging.
+Media and controller records stay available to jobs/watch/status.
+One reusable .swarmcopy/cache.json and last-peer.log remain per destination.
+Incomplete/shared datasets and live peer locks are protected; errors are retryable.
+
+Examples:
+  swarmcopy cleanup --job <ID>
+  swarmcopy cleanup --job /absolute/completed/job --ask-pass
+`
 	case "distribute":
 		return `Create a saved job and distribute files or directory trees through SSH/P2P.
 Source selection is automatic and printed before preparation:
@@ -131,7 +142,8 @@ SHA256 jobs use v2 manifests; custom hash jobs use v3 and require v0.5+ peers.
 Legacy prepared --seed-file workflows remain supported.
 Symbolic links/special files and overlapping roots are rejected.
 Unmatched globs and duplicate top-level basenames are errors.
-Completed peers stop automatically unless --keep-seeding is set.
+Completed peers stop and their deployment/empty staging is cleaned automatically,
+unless --keep-seeding is set. One reusable .swarmcopy cache/log area remains.
 Success prints elapsed/preparation/distribution time and average network rate.
 The saved summary separates network, local-copy and reused bytes; aggregate
 cluster throughput is labeled separately from receiving-node averages.
@@ -149,7 +161,7 @@ Examples:
   swarmcopy resume --job <ID> --existing resume
 
 Keep the job directory, token, manifest, and node .part files or
---dest/.swarmcopy-trees/<manifest-id>/data for v2 datasets.
+--dest/.swarmcopy/trees/<manifest-id>/data (legacy .swarmcopy-trees stays readable).
 Saved input selections do not expand again during resume.
 Initial controller-to-seed import is not yet chunk-resumable.
 Use --recheck to bypass unchanged final-file verification caches.
@@ -330,6 +342,8 @@ func commandHelp(name string) error {
 		return watchCommand(args)
 	case "status":
 		return statusCommand(args)
+	case "cleanup":
+		return cleanupCommand(args)
 	case "remove", "delete":
 		return removeCommand(args)
 	case "jobs":

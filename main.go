@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.7.1"
+const version = "0.8.0"
 const protocol = "SCDP/1"
 
 type Manifest struct {
@@ -446,6 +446,8 @@ func main() {
 			}
 		case "distribute", "stop":
 			e = clusterCommand(os.Args[1], os.Args[2:])
+		case "cleanup":
+			e = cleanupCommand(os.Args[2:])
 		case "remove", "delete":
 			e = removeCommand(os.Args[2:])
 		case "jobs":

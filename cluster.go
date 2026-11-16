@@ -26,6 +26,8 @@ import (
 )
 
 type Job struct {
+	CleanupIssues                                                                map[string]string `json:",omitempty"`
+	Cleaned                                                                      string            `json:",omitempty"`
 	SourceAddress, SourceDescription                                             string
 	NodeTimeout                                                                  time.Duration
 	NodeIssues                                                                   map[string]string `json:",omitempty"`
@@ -619,6 +621,10 @@ func clusterCommand(mode string, args []string) error {
 	defer cleanup()
 	r := sshRunner{env: env, user: j.SSHUser, password: *ask, cipher: j.SSHCipher, options: j.SSHOptions}
 	if mode == "stop" {
+		if j.State == "complete" && j.Cleaned != "" && len(j.CleanupIssues) == 0 {
+			fmt.Println("ALREADY STOPPED AND CLEANED:", j.ID)
+			return nil
+		}
 		if e = os.WriteFile(filepath.Join(j.Dir, "stop.request"), []byte(time.Now().String()), 0600); e != nil {
 			return e
 		}
@@ -941,6 +947,11 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 				if e = stopPeers(ctx, r, *j); e != nil {
 					return e
 				}
+				fmt.Println("CLEANUP: peers stopped; removing completed deployment and empty staging")
+				if x := cleanupCompletedNodes(ctx, r, j, false); x != nil {
+					fmt.Println("CLEANUP WARNING:", x, "; verified transfer is complete and history is retained")
+				}
+
 			}
 			finished := time.Now()
 			summary := completionSummary(attemptStarted, distributionStarted, finished, rows, initialCounters)

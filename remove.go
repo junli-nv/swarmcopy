@@ -170,10 +170,19 @@ func sharedPartial(root string, m Manifest) (bool, error) {
 	}
 	return false, nil
 }
-func cleanupPeer(config string, purge bool) error {
+func cleanupPeer(config string, purge bool) error { return cleanupPeerMode(config, purge, false) }
+func cleanupCompletedPeer(config string) error    { return cleanupPeerMode(config, false, true) }
+func cleanupPeerMode(config string, purge, completed bool) error {
 	root := filepath.Clean(filepath.Dir(config))
 	if filepath.Base(config) != "peer.json" || filepath.Base(filepath.Dir(root)) != ".swarmcopy" || filepath.Base(root) == "." {
 		return errors.New("cleanup requires a job-specific .swarmcopy/ID/peer.json")
+	}
+	parent, e := os.Lstat(filepath.Dir(root))
+	if e != nil && !os.IsNotExist(e) {
+		return e
+	}
+	if e == nil && (!parent.IsDir() || parent.Mode()&os.ModeSymlink != 0) {
+		return errors.New("unsafe job parent directory")
 	}
 	st, e := os.Lstat(root)
 	if os.IsNotExist(e) {
@@ -211,6 +220,30 @@ func cleanupPeer(config string, purge bool) error {
 				return errors.New("owned peer is still running; stop it before cleanup")
 			}
 		}
+		if completed {
+			m, x := loadManifest(o.Manifest)
+			if x != nil {
+				return x
+			}
+			// Hold the exact same persistent lock as peer; never unlink a live lock.
+			lock, e := syscall.Open(o.File+".swarmcopy.lock", syscall.O_RDWR|syscall.O_NOFOLLOW|syscall.O_CLOEXEC, 0600)
+			if e == nil {
+				defer syscall.Close(lock)
+				if e = syscall.Flock(lock, syscall.LOCK_EX|syscall.LOCK_NB); e != nil {
+					return errors.New("destination peer still active; cleanup deferred")
+				}
+			} else if !os.IsNotExist(e) {
+				return e
+			}
+			if m.isTree() {
+				if x = completedTreeCleanup(root, o, m); x != nil {
+					return x
+				}
+			}
+			if x = archiveLastPeerLog(root, o, m); x != nil {
+				return x
+			}
+		}
 		if purge {
 			m, x := loadManifest(o.Manifest)
 			if x != nil {
@@ -224,7 +257,11 @@ func cleanupPeer(config string, purge bool) error {
 				if x != nil {
 					return x
 				}
-				rel := ".swarmcopy-trees/" + m.id()
+				rel, x := treeNamespace(dest, m)
+				if x != nil {
+					dest.Close()
+					return x
+				}
 				info, x := dest.Lstat(rel)
 				if x == nil && info.Mode()&os.ModeSymlink != 0 {
 					dest.Close()

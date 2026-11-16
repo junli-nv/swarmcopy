@@ -67,6 +67,9 @@ func agentCommand(args []string) error {
 	if e := fs.Parse(args[1:]); e != nil {
 		return e
 	}
+	if mode == "cleanup-complete" {
+		return cleanupCompletedPeer(*config)
+	}
 	if mode == "cleanup" {
 		return cleanupPeer(*config, *purge)
 	}

@@ -2,7 +2,7 @@
 
 [English](DEVELOPMENT.en.md) · [中文使用说明](../README.md) · [示例](EXAMPLES.zh-CN.md)
 
-本文描述统一主线 v0.7.1。只维护 main 一个长期分支；常规 TCP、可选 UDP、自适应、流水校验及目录分发都在同一二进制内。旧标签保留历史，后续直接在 main 改进，不另行发布长期并行功能版。
+本文描述统一主线 v0.8.0。只维护 main 一个长期分支；常规 TCP、可选 UDP、自适应、流水校验及目录分发都在同一二进制内。旧标签保留历史，后续直接在 main 改进，不另行发布长期并行功能版。
 
 ## 源码地图
 
@@ -115,3 +115,11 @@ agent 的启动版本检查需随真实发布更新；二进制升级时允许�
 新建 distribute 的 CLI 和 resolveNewJobIntegrity 默认 chunks/BLAKE3；不得把 verifyMode 空值从 full 改为 chunks。空值用于旧记录和低级 peer 兼容；resume 无显式模式参数时保持保存设置，prepared manifest 保持算法。XXH3 仍必须显式 full。chunks 完成不生成 full 成品缓存。
 
 默认 chunks 并不跳过 fsync。durability_test.go 向最终阶段前两次 Sync 注入 EIO，验证拒绝 Complete/发布、保留暂存、重启重验，完整块保留，坏块缺失，修复后重新刷盘发布。不能把该测试说成真实断电或 RAID 故障测试。fsync 成功依赖底层正确兑现刷新语义，并不代替内容摘要。
+
+## v0.8.0 清理与布局契约
+
+`cleanup.go` 区分成功后清理和显式丢弃数据。新暂存使用 .swarmcopy/trees/id；treeNamespace 优先原地识别旧布局，禁止批量移动大文件。receiveTree 的 import 临时流也在 .swarmcopy 内并保持同盘发布。根目标目录只新增一个 .swarmcopy。
+
+`treeCacheRecord` 用 ManifestID 绑定一份 cache.json，接受规则仍验证完整文件指纹；新清单替换旧缓存，可能牺牲跨清单命中，换取固定文件数量。chunks 不能凭验块伪造 full 缓存。日志只覆盖 last-peer.log，最多 8 MiB，历史现场日志需用户另存；完整作业统计保存在控制器。
+
+全部目标完成、peer 停止之后才能清理。持 agent 和目标同一把锁；有真实数据、未知条目、其他作业引用或符号链接时保留，不能为消灭目录而丢弃续传数据。清理错误单独持久化 CleanupIssues，不伪装成传输校验失败。cleanup 幂等快捷路径不重新部署；stop 已清理完成作业也直接成功。详细测试和维护边界见 [清理设计](CLEANUP.zh-CN.md)。

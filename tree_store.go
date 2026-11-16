@@ -28,6 +28,7 @@ type treeStore struct {
 	mu              sync.RWMutex
 	root, stage     *os.Root
 	dest, stagePath string
+	stageRel        string
 	m               Manifest
 	spans           []treeSpan
 	starts          []int64
@@ -35,7 +36,23 @@ type treeStore struct {
 }
 
 func treeStage(dest string, m Manifest) string {
-	return filepath.Join(dest, ".swarmcopy-trees", m.id())
+	legacy := filepath.Join(dest, ".swarmcopy-trees", m.id())
+	if _, e := os.Lstat(legacy); e == nil {
+		return legacy
+	}
+	return filepath.Join(dest, ".swarmcopy", "trees", m.id())
+}
+func treeNamespace(r *os.Root, m Manifest) (string, error) {
+	legacy := ".swarmcopy-trees/" + m.id()
+	if _, e := r.Lstat(legacy); e == nil {
+		if e = strictDirs(r, legacy); e != nil {
+			return "", e
+		}
+		return legacy, nil
+	} else if !os.IsNotExist(e) {
+		return "", e
+	}
+	return ".swarmcopy/trees/" + m.id(), nil
 }
 func strictDirs(r *os.Root, p string) error {
 	if p == "." {
@@ -122,10 +139,15 @@ func openTreeStore(dest string, m Manifest, policy string, rechecks ...bool) (t 
 			opened.Close()
 		}
 	}()
-	if err = strictDirs(r, ".swarmcopy-trees/"+m.id()+"/data"); err != nil {
+	t.stageRel, err = treeNamespace(r, m)
+	if err != nil {
 		return nil, err
 	}
-	t.stage, err = r.OpenRoot(".swarmcopy-trees/" + m.id() + "/data")
+	t.stagePath = filepath.Join(dest, filepath.FromSlash(t.stageRel))
+	if err = strictDirs(r, t.stageRel+"/data"); err != nil {
+		return nil, err
+	}
+	t.stage, err = r.OpenRoot(t.stageRel + "/data")
 	if err != nil {
 		return nil, err
 	}
@@ -418,10 +440,10 @@ func (t *treeStore) Publish(ctx context.Context, fullVerification ...bool) error
 			if !ok || fp != *s.old {
 				return fmt.Errorf("destination changed since conflict check: %s", s.entry.Path)
 			}
-			err = t.root.Rename(".swarmcopy-trees/"+t.m.id()+"/data/"+s.entry.Path, s.entry.Path)
+			err = t.root.Rename(t.stageRel+"/data/"+s.entry.Path, s.entry.Path)
 		} else {
 			// Link publishes without replacing a concurrently created destination.
-			err = t.root.Link(".swarmcopy-trees/"+t.m.id()+"/data/"+s.entry.Path, s.entry.Path)
+			err = t.root.Link(t.stageRel+"/data/"+s.entry.Path, s.entry.Path)
 			if err == nil {
 				err = t.stage.Remove(s.entry.Path)
 			}
@@ -451,7 +473,7 @@ func (t *treeStore) Publish(ctx context.Context, fullVerification ...bool) error
 		}
 	}
 	b, _ := json.Marshal(map[string]string{"ManifestID": t.m.id()})
-	marker := ".swarmcopy-trees/" + t.m.id() + "/complete"
+	marker := t.stageRel + "/complete"
 	f, err := t.root.OpenFile(marker, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0600)
 	if err != nil {
 		return err

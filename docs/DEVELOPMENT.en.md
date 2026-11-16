@@ -2,7 +2,7 @@
 
 [中文（主文档）](DEVELOPMENT.zh-CN.md) · [Usage](../README.en.md) · [Examples](EXAMPLES.en.md)
 
-This describes unified main v0.7.1. Maintain one long-lived branch, main. TCP, optional UDP, adaptive scheduling, pipelined integrity and trees belong to one executable. Retain historical tags; do not maintain parallel feature releases.
+This describes unified main v0.8.0. Maintain one long-lived branch, main. TCP, optional UDP, adaptive scheduling, pipelined integrity and trees belong to one executable. Retain historical tags; do not maintain parallel feature releases.
 
 ## Source map
 
@@ -115,3 +115,9 @@ Agent started-version checks follow actual releases; upgrades may restart peers 
 New distribute CLI/resolveNewJobIntegrity use chunks/BLAKE3. Do not change empty verifyMode from full: it preserves legacy saved records and low-level peer compatibility. Resume without an explicit override keeps saved settings; prepared manifests keep algorithms. XXH3 still requires explicit full. Chunks does not create full verification caches.
 
 durability_test.go injects EIO into each of the two prepublication Sync calls, checks no Complete/publication, retains staging, reopens/rechecks good and damaged chunks, then repairs and syncs/publishes. This is fault injection, not a power-loss or RAID hardware test. Successful fsync relies on correct underlying flush semantics and does not replace content validation.
+
+## v0.8.0 cleanup/layout contracts
+
+`cleanup.go` separates completed cleanup from explicit data discard. New staging/imports live inside destination .swarmcopy; treeNamespace reuses legacy staging in place without bulk copies. Cache records bind ManifestID and full file fingerprints in one replaceable cache.json; this bounds file count at the cost of possible misses when alternating manifests. Chunks completion cannot mint full caches. Retain only the latest 8 MiB peer log; users must separately archive historical logs if needed.
+
+Cleanup follows all-target completion and peer stopping. Hold agent and destination locks; retain real partial data, unknown entries, other-job references and unsafe symlinks. Persist CleanupIssues separately from verified transfer success. Repeated cleanup and stop on already-cleaned completed jobs avoid redeployment. [Design and validation](CLEANUP.en.md).

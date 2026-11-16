@@ -4,6 +4,10 @@
 
 Use the unified main release, named `swarmcopy`. For mixed architectures, put both original architecture binaries in a sibling `dist` directory (automatically detected), or supply `--bin-dir /path/to/dist`. Replace example hosts and paths.
 
+## v0.8.0 automatic cleanup and one metadata directory
+
+New jobs keep deployment, staging and cache in one destination `.swarmcopy`; media is not moved into home directories. Once every target verifies/publishes, stop peers and remove this job's deployment/empty staging. Reuse one `cache.json` and an at-most-8-MiB `last-peer.log`, without permanent per-job directories. Preserve interrupted/shared/uncertain data. `swarmcopy cleanup --job <ID>` handles old completed jobs or retries cleanup while keeping jobs/watch/status history; --keep-seeding defers cleanup. [Layout, bounds and compatibility](CLEANUP.en.md).
+
 ## v0.7.0: native copies and completion summaries
 
 Scheduling avoids repeated expensive scoring of every missing chunk. The source-host destination reads and verifies local source data instead of receiving it back over the network. Successful runs print elapsed/preparation/distribution time, network/local/reused bytes and average rates; completed watch shows the saved summary, while status retains JSON. Adaptive stays off; fixed concurrency remains `--workers 4 --uploads 4`, with no rate cap by default.
@@ -213,3 +217,15 @@ A data fsync error prevents completion/publication of that data and retains job/
 Recovery rechecks retained data, reuses valid blocks and fills missing/damaged blocks before attempting completion again. A full restart is normally unnecessary, but power loss or storage data loss can require retransmission, and persistent storage errors prevent completion. Keep the job and partials; remove --purge-partials discards that recovery entry point.
 
 A later directory/marker fsync may fail after a file has already been renamed/linked into place. Some targets may therefore exist while the job remains unsuccessful; recovery checks and reuses valid files. Publication is per file, not a dataset transaction. Successful fsync depends on correct OS/device flush behavior and does not replace content checking; choose --verify full for an additional final content check.
+
+## Clean completed temporary data while keeping history
+
+```bash
+# Normal completion cleans automatically; retry or clean an old completed job
+./swarmcopy cleanup --job <ID>
+./swarmcopy cleanup --help
+./swarmcopy jobs
+./swarmcopy watch --job <ID>
+```
+
+Cleanup keeps source/published files and controller records; remove/delete deletes job records. Keep partials for jobs you intend to resume. Cleanup stops owned seeding peers for --keep-seeding jobs. Respect shared/unknown-data retention messages rather than deleting the entire .swarmcopy.

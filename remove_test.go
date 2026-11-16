@@ -52,7 +52,7 @@ func TestRemoveExclusivePartialsPreservesSourceAndPublishedFiles(t *testing.T) {
 	if e := cleanupPeer(filepath.Join(root, "peer.json"), true); e != nil {
 		t.Fatal(e)
 	}
-	for _, p := range []string{root, filepath.Join(dest, ".swarmcopy-trees", m.id())} {
+	for _, p := range []string{root, treeStage(dest, m)} {
 		if _, e := os.Lstat(p); !os.IsNotExist(e) {
 			t.Fatalf("residual %s: %v", p, e)
 		}
@@ -83,7 +83,7 @@ func TestRemoveKeepsSharedAndUnrequestedPartials(t *testing.T) {
 			if e := cleanupPeer(filepath.Join(root, "peer.json"), shared); e != nil {
 				t.Fatal(e)
 			}
-			if _, e := os.Stat(filepath.Join(dest, ".swarmcopy-trees", m.id())); e != nil {
+			if _, e := os.Stat(treeStage(dest, m)); e != nil {
 				t.Fatal("partial shared or not requested was deleted")
 			}
 		})
