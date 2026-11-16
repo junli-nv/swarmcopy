@@ -6,6 +6,10 @@ Resumable P2P file and directory distribution for Linux clusters, using **SCDP/1
 
 **main is the only long-lived branch.** One binary includes TCP, optional UDP/QUIC, pipelined verification, optional adaptive concurrency, multiple files and directories. No separate UDP or race executable is needed. Historical tags and measurements remain available.
 
+## Large-source progress and Ctrl+C
+
+From v0.4.1, source hashing and initial seed import report bytes, percent, rate and estimated remaining phase time about every two seconds. Deployment, inventory and listener readiness report stage/node counts/elapsed time. Watch no longer labels preparation as all peers offline. Source reads honor Ctrl+C between buffers. Estimates exclude later work. [Examples, cancellation limits and validation](docs/PROGRESS.en.md).
+
 ## Installation
 
 Download `swarmcopy-linux-x86_64` or `swarmcopy-linux-aarch64`, verify `SHA256SUMS`, rename to `swarmcopy` and make executable. Keep both original architecture filenames in `dist` and use `--bin-dir ./dist` for mixed architectures; the controller can deploy itself to same-architecture nodes.

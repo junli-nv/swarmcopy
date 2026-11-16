@@ -301,11 +301,24 @@ func watchCommand(args []string) error {
 	ticker := time.NewTicker(*interval)
 	defer ticker.Stop()
 	for sample := 1; ; sample++ {
-		rows := observe(ctx, c, t, addresses)
-		all := render(rows, previous, clear)
-		for _, o := range rows {
-			if o.err == nil {
-				previous[o.addr] = o
+		all, handled := false, false
+		if *job != "" {
+			current, x := loadJob(*job)
+			if x != nil {
+				return x
+			}
+			handled, all, x = renderSavedJob(current, *live, clear)
+			if x != nil {
+				return x
+			}
+		}
+		if !handled {
+			rows := observe(ctx, c, t, addresses)
+			all = render(rows, previous, clear)
+			for _, o := range rows {
+				if o.err == nil {
+					previous[o.addr] = o
+				}
 			}
 		}
 		if *until && all {

@@ -61,6 +61,9 @@ func usageText(name string) string {
 		return "Measure SHA256 without changing input files. CPU profiles require a NEW path.\n\nExamples:\n  swarmcopy hashbench --bytes-mib 2048\n  swarmcopy hashbench --file /raid/images/media.sqsh --cpu-profile /tmp/new-sha.pprof\n"
 	case "distribute":
 		return `Create a saved job and distribute files or directory trees through SSH/P2P.
+Source hashing and initial seed streaming show byte progress, rate and estimated
+time remaining every two seconds. Other preparation stages show node counts
+and elapsed time. Ctrl-C cancels source hashing between read buffers.
 Multiple files go directly under --dest; directories retain their basename.
 Repeat --source, use a quoted glob, or pass source operands.
 Matching existing files are reused and can seed missing nodes. If a complete
@@ -115,7 +118,9 @@ Use --recheck to bypass unchanged final-file verification caches.
 `
 	case "watch":
 		return `Monitor all nodes; no arguments selects the latest active/latest saved job.
-Shows progress, DL/UL rates, final verification, offline nodes, and ETA.
+Shows preparation phases, source hash/import bytes and estimated remaining time,
+then per-node P2P progress, rates, verification, offline nodes and ETA.
+Preparation does not query unopened peer ports; it refreshes saved job state.
 Exiting this monitor does not stop peer processes.
 
 Examples:

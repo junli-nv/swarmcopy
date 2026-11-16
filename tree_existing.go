@@ -10,9 +10,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"path"
 	"strings"
 	"sync"
+	"syscall"
 )
 
 type treeVerified map[string]fileFingerprint
@@ -61,6 +63,9 @@ func saveTreeVerified(r *os.Root, m Manifest, v treeVerified) error {
 	return syncRootDir(r, rel)
 }
 func cachedTreeFile(r *os.Root, e TreeEntry, cache treeVerified) (bool, error) {
+	return cachedTreeFileContext(context.Background(), r, e, cache)
+}
+func cachedTreeFileContext(ctx context.Context, r *os.Root, e TreeEntry, cache treeVerified) (bool, error) {
 	st, err := r.Lstat(e.Path)
 	if os.IsNotExist(err) {
 		return false, nil
@@ -78,7 +83,7 @@ func cachedTreeFile(r *os.Root, e TreeEntry, cache treeVerified) (bool, error) {
 	if old, exists := cache[e.Path]; exists && ok && old == fp {
 		return true, nil
 	}
-	same, err := sameTreeFile(r, e)
+	same, err := sameTreeFileContext(ctx, r, e)
 	if same && ok {
 		after, x := r.Lstat(e.Path)
 		if x != nil {
@@ -101,6 +106,9 @@ type treeInventory struct {
 }
 
 func inspectTree(dest string, m Manifest, recheck bool) (treeInventory, error) {
+	return inspectTreeContext(context.Background(), dest, m, recheck)
+}
+func inspectTreeContext(ctx context.Context, dest string, m Manifest, recheck bool) (treeInventory, error) {
 	out := treeInventory{Complete: true, Files: m.fileCount(), Conflicts: []string{}}
 	if err := os.MkdirAll(dest, 0755); err != nil {
 		return out, err
@@ -115,6 +123,9 @@ func inspectTree(dest string, m Manifest, recheck bool) (treeInventory, error) {
 		cache = treeVerified{}
 	}
 	for _, e := range m.Entries {
+		if x := ctx.Err(); x != nil {
+			return out, x
+		}
 		for p := path.Dir(e.Path); p != "."; p = path.Dir(p) {
 			if st, x := r.Lstat(p); x == nil {
 				if !st.IsDir() || st.Mode()&os.ModeSymlink != 0 {
@@ -137,7 +148,7 @@ func inspectTree(dest string, m Manifest, recheck bool) (treeInventory, error) {
 			}
 			continue
 		}
-		same, x := cachedTreeFile(r, e, cache)
+		same, x := cachedTreeFileContext(ctx, r, e, cache)
 		if x != nil {
 			return out, x
 		}
@@ -163,6 +174,7 @@ func treeCheckCommand(args []string) error {
 	manifest := fs.String("manifest", "", "trusted tree manifest")
 	dest := fs.String("dest", "", "destination directory")
 	recheck := fs.Bool("recheck", false, "bypass verified metadata cache")
+	watchInput := fs.Bool("watch-stdin", false, "cancel inventory when the controller input stream closes")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -176,7 +188,12 @@ func treeCheckCommand(args []string) error {
 	if m.Version != 2 {
 		return errors.New("tree-check requires a v2 manifest")
 	}
-	out, err := inspectTree(*dest, m, *recheck)
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM, syscall.SIGHUP)
+	defer stop()
+	if *watchInput {
+		go func() { io.Copy(io.Discard, os.Stdin); stop() }()
+	}
+	out, err := inspectTreeContext(ctx, *dest, m, *recheck)
 	if err != nil {
 		return err
 	}
@@ -212,14 +229,15 @@ func preflightTree(ctx context.Context, r sshRunner, j *Job, m Manifest, manifes
 		if e := r.write(c, h, mp, bytes.NewReader(manifest), false); e != nil {
 			return e
 		}
-		cmd := shellQuote(j.remoteDir()+"/swarmcopy") + " tree-check --manifest " + shellQuote(mp) + " --dest " + shellQuote(j.Dest)
+		cmd := shellQuote(j.remoteDir()+"/swarmcopy") + " tree-check --manifest " + shellQuote(mp) + " --dest " + shellQuote(j.Dest) + " --watch-stdin"
 		if j.Recheck {
 			cmd += " --recheck"
 		}
-		b, e := r.run(c, h, "check existing files before distribution", cmd, nil)
+		b, e := r.run(c, h, "check existing files before distribution", cmd, keepaliveReader{c})
 		if e != nil {
 			return e
 		}
+		reportNode(c)
 		var inv treeInventory
 		if e = json.Unmarshal(b, &inv); e != nil {
 			return e

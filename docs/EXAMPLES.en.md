@@ -120,3 +120,7 @@ Resume keeps the same manifest and verified chunks; distribute starts a new inve
 Ask-pass requests one shared password, never persists it or installs permanent trust. Pre-enroll host keys. QUIC requires UDP and TCP at the peer port, is not guaranteed faster, and remains optional. Listening on all NICs does not aggregate their bandwidth; resolve peer names onto the intended network.
 
 See `./swarmcopy distribute --help` for all options/defaults. New conflict policies apply to v2 source jobs; legacy v1 prepared-seed jobs retain their original final-file no-overwrite rule.
+
+## Preparation is visible before transfer
+
+No extra flags are needed. hashing-source builds the trusted manifest; importing streams the initial seed. Both show percent/rate/current-phase ETA every two seconds. Watch switches automatically into transfer; 100% bytes may still await validation/finalization. Ctrl+C or stop --job cancels source hashing; an incomplete initial hash restarts. [Details](PROGRESS.en.md).

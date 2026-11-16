@@ -2,7 +2,7 @@
 
 [中文（主文档）](DEVELOPMENT.zh-CN.md) · [Usage](../README.en.md) · [Examples](EXAMPLES.en.md)
 
-This describes unified main v0.4.0. Maintain one long-lived branch, main. TCP, optional UDP, adaptive scheduling, pipelined integrity and trees belong to one executable. Retain historical tags; do not maintain parallel feature releases.
+This describes unified main v0.4.1. Maintain one long-lived branch, main. TCP, optional UDP, adaptive scheduling, pipelined integrity and trees belong to one executable. Retain historical tags; do not maintain parallel feature releases.
 
 ## Source map
 
@@ -75,3 +75,7 @@ Synchronize bilingual README, examples, English help, development docs and CHANG
 Publish both architectures, checksums and notices from the same commit. State clearly if ARM hardware was not tested. Exclude credentials, job tokens, media, private logs, reverse-engineering materials and internal absolute paths. Read authorized GitHub tokens in memory, never through arguments/output or commits.
 
 Future priorities: small-file metadata/FD profiling, combined partial replicas and initial staging resume. New control strategies stay in main behind explicit options, retaining the default stable TCP path and complete integrity checks.
+
+## Preparation telemetry
+
+progress.go passes a synchronized reporter through context, emitting and atomically recording progress.json every two seconds. Stage/bytes/files/nodes are separate. Attempt and controller PID/start identity reject stale progress. ETA is a current-phase average-rate estimate, not a whole-job promise. Metadata/listener stages without reliable rates show action and elapsed time. Watch reloads jobs and handles recorded completion. Readers must retain per-buffer cancellation; remote inventory uses stdin heartbeats to detect controller exit. See [progress design and validation](PROGRESS.en.md).

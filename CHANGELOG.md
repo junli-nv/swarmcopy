@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.1 — preparation progress and cancellation
+
+- Report source hash/import bytes, percent, rate and estimated remaining phase time every two seconds; show deployment/inventory/listener readiness counts and elapsed time.
+- Make watch/status phase-aware, reload job state and avoid unopened-peer OFFLINE errors and stopped-peer completion races.
+- Honor Ctrl+C between source read buffers and local source-hash stop requests; cancel remote inventory when controller stdin closes.
+- Persist attempt-bound telemetry with controller identity, detect locally exited controllers and clearly explain restart/resume boundaries.
+- Add native 64GiB cancellation/ETA checks, race tests, two-node transfer validation and bilingual examples.
+
+
 ## 0.4.0 — unified main release
 
 - Ship TCP, optional QUIC/UDP tuning, pipeline verification and opt-in adaptive scheduling in one binary and one maintained main branch. TCP stays default, pipeline/window stay on, adaptive stays off.

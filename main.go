@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.4.0"
+const version = "0.4.1"
 const protocol = "SCDP/1"
 
 type Manifest struct {
@@ -914,6 +914,9 @@ func statusCommand(args []string) error {
 		j, e := loadJob(*job)
 		if e != nil {
 			return e
+		}
+		if preparation, ok := preparationState(j); ok {
+			return json.NewEncoder(os.Stdout).Encode(map[string]any{"JobID": j.ID, "State": preparation.State, "Stage": preparation.Stage, "Complete": false, "Preparation": preparation})
 		}
 		if j.State == "complete" && !*live {
 			_, report, e := completedJobRows(j)

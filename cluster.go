@@ -25,6 +25,8 @@ import (
 )
 
 type Job struct {
+	Attempt, ControllerHost, ControllerStartTicks                                string
+	ControllerPID                                                                int
 	Inputs                                                                       []SourceEntry `json:",omitempty"`
 	Sources                                                                      []string      `json:",omitempty"`
 	Existing                                                                     string
@@ -551,6 +553,14 @@ func clusterCommand(mode string, args []string) error {
 		if e = os.WriteFile(filepath.Join(j.Dir, "stop.request"), []byte(time.Now().String()), 0600); e != nil {
 			return e
 		}
+		if j.State == "hashing-source" && j.ControllerPID > 0 {
+			host, _ := os.Hostname()
+			ticks, x := startTicks(j.ControllerPID)
+			if host == j.ControllerHost && x == nil && ticks == j.ControllerStartTicks {
+				fmt.Println("Stop requested: source hashing will stop after the current read. Initial hashing restarts on resume; verified P2P partials are retained.")
+				return nil
+			}
+		}
 		e = stopPeers(ctx, r, j)
 		if e == nil {
 			j.State = "stopped"
@@ -575,24 +585,37 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	if e = syscall.Flock(fd, syscall.LOCK_EX|syscall.LOCK_NB); e != nil {
 		return errors.New("another controller is active for this job")
 	}
+	j.Attempt = randomID()
+	j.ControllerPID = os.Getpid()
+	j.ControllerHost, _ = os.Hostname()
+	j.ControllerStartTicks, _ = startTicks(j.ControllerPID)
 	j.State = "starting"
 	j.LastError = ""
 	if e = j.save(); e != nil {
 		return e
 	}
+	os.Remove(filepath.Join(j.Dir, "stop.request"))
+	ctx, finishProgress := startJobProgress(ctx, *j, os.Stderr)
+	defer func() { finishProgress(result) }()
 	defer func() {
 		if result != nil {
 			j.State = "interrupted"
+			if errors.Is(context.Cause(ctx), errJobStop) {
+				j.State = "stopped"
+			}
 			j.LastError = result.Error()
 			j.save()
+			if ctx.Err() != nil {
+				fmt.Fprintf(os.Stderr, "CONTROLLER STOPPED: %s; use resume --job %s. Initial source hashing/import restart when incomplete; verified P2P partials are retained. Use stop --job %s to stop any previously deployed peers.\n", j.ID, j.ID, j.ID)
+			}
 		}
 	}()
-	os.Remove(filepath.Join(j.Dir, "stop.request"))
 	if len(j.Inputs) > 0 {
 		mp := filepath.Join(j.Dir, "manifest.json")
 		if _, x := os.Stat(mp); os.IsNotExist(x) {
-			j.State = "hashing-source"
-			j.save()
+			if x = j.preparing(ctx, "hashing-source", "building trusted source manifest", sourceBytes(j.Inputs), treePlanFiles(j.Inputs), 0); x != nil {
+				return x
+			}
 			m, x := sourceManifest(ctx, *j)
 			if x != nil {
 				return x
@@ -604,7 +627,16 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 			return x
 		}
 	}
-	if e = forHosts(ctx, j.Hosts, j.Fanout, func(c context.Context, h string) error { return r.bootstrap(c, *j, h) }); e != nil {
+	if e = j.preparing(ctx, "deploying", "deploying executables and job configuration over SSH", 0, 0, len(j.Hosts)); e != nil {
+		return e
+	}
+	if e = forHosts(ctx, j.Hosts, j.Fanout, func(c context.Context, h string) error {
+		x := r.bootstrap(c, *j, h)
+		if x == nil {
+			reportNode(c)
+		}
+		return x
+	}); e != nil {
 		return e
 	}
 	root := j.remoteDir()
@@ -619,9 +651,11 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 			f.Close()
 			return e
 		}
-		j.State = "importing"
-		j.save()
-		b, e := r.run(ctx, j.Seed, "stage source once on seed", binary+" prepare --source - --size "+strconv.FormatInt(before.Size(), 10)+" --out "+shellQuote(j.SeedFile), f)
+		if e = j.preparing(ctx, "importing", "streaming source to seed; this is not P2P yet", before.Size(), 1, 0); e != nil {
+			f.Close()
+			return e
+		}
+		b, e := r.run(ctx, j.Seed, "stage source once on seed", binary+" prepare --source - --size "+strconv.FormatInt(before.Size(), 10)+" --out "+shellQuote(j.SeedFile), contextReader{ctx, io.TeeReader(f, progressWriter{ctx, io.Discard})})
 		after, se := f.Stat()
 		f.Close()
 		if e != nil {
@@ -660,14 +694,18 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 		return e
 	}
 	if m.Version == 2 {
+		if e = j.preparing(ctx, "checking-existing", "verifying existing files on each node; uncached large files require disk reads", 0, 0, len(j.Hosts)); e != nil {
+			return e
+		}
 		ready, x := preflightTree(ctx, r, j, m, manifest)
 		if x != nil {
 			return x
 		}
 		if !j.Imported {
 			if !ready {
-				j.State = "importing"
-				j.save()
+				if x = j.preparing(ctx, "importing", "streaming source once to seed; awaiting independent seed verification", m.Size, m.fileCount(), 0); x != nil {
+					return x
+				}
 				if x = importTreeJob(ctx, r, j, binary); x != nil {
 					return x
 				}
@@ -683,9 +721,29 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 			j.Existing = "keep"
 		}
 	}
-	if e = forHosts(ctx, j.Hosts, j.Fanout, func(c context.Context, h string) error { return startRemotePeer(c, r, *j, m, manifest, h) }); e != nil {
+	if e = j.preparing(ctx, "starting-peers", "starting peers; local files may require verification before listening", 0, 0, len(j.Hosts)); e != nil {
 		return e
 	}
+	if e = forHosts(ctx, j.Hosts, j.Fanout, func(c context.Context, h string) error {
+		x := startRemotePeer(c, r, *j, m, manifest, h)
+		if x == nil {
+			reportNode(c)
+		}
+		return x
+	}); e != nil {
+		return e
+	}
+	if e = j.preparing(ctx, "waiting-peers", "waiting for peer listeners; local files may still be under initial verification", 0, 0, len(j.Hosts)); e != nil {
+		return e
+	}
+	readyToken, x := token(filepath.Join(j.Dir, "job.token"))
+	if x != nil {
+		return x
+	}
+	if e = waitPeerReadiness(ctx, *j, readyToken); e != nil {
+		return e
+	}
+	reporter(ctx).phase("running", "P2P data transfer and final verification", 0, 0, 0)
 	j.State = "running"
 	if e = j.save(); e != nil {
 		return e

@@ -60,7 +60,8 @@ func strictDirs(r *os.Root, p string) error {
 	}
 	return nil
 }
-func fileSHA(r *os.Root, p string) (string, error) {
+func fileSHA(r *os.Root, p string) (string, error) { return fileSHAContext(context.Background(), r, p) }
+func fileSHAContext(ctx context.Context, r *os.Root, p string) (string, error) {
 	f, err := r.OpenFile(p, os.O_RDONLY, 0)
 	if err != nil {
 		return "", err
@@ -74,12 +75,15 @@ func fileSHA(r *os.Root, p string) (string, error) {
 		return "", errors.New("not a regular file")
 	}
 	h := sha256.New()
-	if _, err = io.CopyBuffer(h, f, make([]byte, 256<<10)); err != nil {
+	if _, err = io.CopyBuffer(h, contextReader{ctx, f}, make([]byte, 1<<20)); err != nil {
 		return "", err
 	}
 	return hex.EncodeToString(h.Sum(nil)), nil
 }
 func sameTreeFile(r *os.Root, e TreeEntry) (bool, error) {
+	return sameTreeFileContext(context.Background(), r, e)
+}
+func sameTreeFileContext(ctx context.Context, r *os.Root, e TreeEntry) (bool, error) {
 	st, err := r.Lstat(e.Path)
 	if os.IsNotExist(err) {
 		return false, nil
@@ -93,7 +97,7 @@ func sameTreeFile(r *os.Root, e TreeEntry) (bool, error) {
 	if st.Size() != e.Size {
 		return false, nil
 	}
-	sum, err := fileSHA(r, e.Path)
+	sum, err := fileSHAContext(ctx, r, e.Path)
 	return sum == e.SHA256, err
 }
 func openTreeStore(dest string, m Manifest, policy string, rechecks ...bool) (t *treeStore, err error) {

@@ -38,6 +38,9 @@ func buildSourcePlan(inputs []string) ([]SourceEntry, []string, error) {
 	return buildPlan(inputs, true)
 }
 func buildPlan(inputs []string, expand bool) ([]SourceEntry, []string, error) {
+	return buildPlanContext(context.Background(), inputs, expand)
+}
+func buildPlanContext(ctx context.Context, inputs []string, expand bool) ([]SourceEntry, []string, error) {
 	unique := map[string]bool{}
 	var roots []string
 	for _, input := range inputs {
@@ -83,6 +86,9 @@ func buildPlan(inputs []string, expand bool) ([]SourceEntry, []string, error) {
 		}
 		names[base] = true
 		err := filepath.WalkDir(p, func(current string, d os.DirEntry, walkErr error) error {
+			if err := ctx.Err(); err != nil {
+				return err
+			}
 			if walkErr != nil {
 				return walkErr
 			}
@@ -132,7 +138,10 @@ func buildPlan(inputs []string, expand bool) ([]SourceEntry, []string, error) {
 	return entries, roots, nil
 }
 func checkSourcePlan(plan []SourceEntry, roots []string) error {
-	current, _, err := buildPlan(roots, false)
+	return checkSourcePlanContext(context.Background(), plan, roots)
+}
+func checkSourcePlanContext(ctx context.Context, plan []SourceEntry, roots []string) error {
+	current, _, err := buildPlanContext(ctx, roots, false)
 	if err != nil {
 		return err
 	}
@@ -145,15 +154,19 @@ func checkSourcePlan(plan []SourceEntry, roots []string) error {
 const treeEndMarker = ".swarmcopy-stream-complete"
 
 func streamSourcePlan(ctx context.Context, w io.Writer, plan []SourceEntry, roots []string) error {
-	if err := checkSourcePlan(plan, roots); err != nil {
+	if err := checkSourcePlanContext(ctx, plan, roots); err != nil {
 		return err
 	}
 	tw := tar.NewWriter(w)
+	buf := make([]byte, 1<<20)
 	for _, s := range plan {
 		if err := ctx.Err(); err != nil {
 			return err
 		}
 		e := s.Entry
+		if e.Kind == "file" {
+			reportFile(ctx, s.Source, false)
+		}
 		h := &tar.Header{Name: e.Path, Mode: int64(e.Mode), ModTime: time.Unix(0, e.Modified), Size: e.Size, Typeflag: tar.TypeReg, Format: tar.FormatPAX}
 		if e.Kind == "dir" {
 			h.Typeflag = tar.TypeDir
@@ -177,7 +190,11 @@ func streamSourcePlan(ctx context.Context, w io.Writer, plan []SourceEntry, root
 			}
 		}
 		if err == nil {
-			_, err = io.CopyN(tw, f, e.Size)
+			var count int64
+			count, err = io.CopyBuffer(progressWriter{ctx, tw}, io.LimitReader(contextReader{ctx, f}, e.Size), buf)
+			if err == nil && count != e.Size {
+				err = io.ErrUnexpectedEOF
+			}
 		}
 		after, se := f.Stat()
 		ce := f.Close()
@@ -197,9 +214,10 @@ func streamSourcePlan(ctx context.Context, w io.Writer, plan []SourceEntry, root
 		if fp != s.Fingerprint {
 			return fmt.Errorf("source changed while streaming: %s", s.Source)
 		}
+		reportFile(ctx, s.Source, true)
 	}
 	// The seed refuses publication unless the final snapshot check succeeded.
-	if err := checkSourcePlan(plan, roots); err != nil {
+	if err := checkSourcePlanContext(ctx, plan, roots); err != nil {
 		return err
 	}
 	b, _ := json.Marshal(len(plan))
@@ -220,6 +238,9 @@ func importTreeJob(ctx context.Context, r sshRunner, j *Job, binary string) erro
 	streamErr := <-done
 	if err != nil || streamErr != nil {
 		return errors.Join(err, streamErr)
+	}
+	if p := reporter(ctx); p != nil {
+		p.emit()
 	}
 	fmt.Print(string(b))
 	return nil

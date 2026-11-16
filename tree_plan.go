@@ -15,13 +15,13 @@ import (
 
 func sourceManifest(ctx context.Context, j Job) (Manifest, error) {
 	m := Manifest{Version: 2, Name: "files", ChunkSize: 16 << 20}
-	if err := checkSourcePlan(j.Inputs, j.Sources); err != nil {
+	if err := checkSourcePlanContext(ctx, j.Inputs, j.Sources); err != nil {
 		return m, err
 	}
 	key, _ := json.Marshal(j.Inputs)
 	cachePath := filepath.Join(filepath.Dir(j.Dir), ".source-manifests", digest(key)+".json")
 	if !j.Recheck {
-		if cached, err := loadManifest(cachePath); err == nil && cached.Version == 2 && len(cached.Entries) == len(j.Inputs) {
+		if cached, err := loadManifest(cachePath); err == nil && cached.Version == 2 && cached.ChunkSize == m.ChunkSize && len(cached.Entries) == len(j.Inputs) {
 			valid := true
 			for i, s := range j.Inputs {
 				e := cached.Entries[i]
@@ -32,6 +32,14 @@ func sourceManifest(ctx context.Context, j Job) (Manifest, error) {
 				}
 			}
 			if valid {
+				if p := reporter(ctx); p != nil {
+					p.mu.Lock()
+					p.value.ProcessedBytes = cached.Size
+					p.value.FilesDone = cached.fileCount()
+					p.value.Detail = "unchanged verified source cache reused"
+					p.mu.Unlock()
+					p.emit()
+				}
 				fmt.Printf("SOURCE verified metadata cache accepted; files=%d bytes=%d\n", cached.fileCount(), cached.Size)
 				return cached, nil
 			}
@@ -45,6 +53,7 @@ func sourceManifest(ctx context.Context, j Job) (Manifest, error) {
 		}
 		e := s.Entry
 		if e.Kind == "file" {
+			reportFile(ctx, s.Source, false)
 			f, err := os.OpenFile(s.Source, os.O_RDONLY|syscall.O_NOFOLLOW, 0)
 			if err != nil {
 				return m, err
@@ -61,7 +70,7 @@ func sourceManifest(ctx context.Context, j Job) (Manifest, error) {
 			h := sha256.New()
 			if err == nil {
 				var count int64
-				count, err = io.CopyBuffer(io.MultiWriter(h, chunks), f, buf)
+				count, err = io.CopyBuffer(progressWriter{ctx, io.MultiWriter(h, chunks)}, contextReader{ctx, f}, buf)
 				if err == nil && count != e.Size {
 					err = io.ErrUnexpectedEOF
 				}
@@ -86,10 +95,11 @@ func sourceManifest(ctx context.Context, j Job) (Manifest, error) {
 			}
 			e.SHA256 = hex.EncodeToString(h.Sum(nil))
 			m.Size += e.Size
+			reportFile(ctx, s.Source, true)
 		}
 		m.Entries = append(m.Entries, e)
 	}
-	if err := checkSourcePlan(j.Inputs, j.Sources); err != nil {
+	if err := checkSourcePlanContext(ctx, j.Inputs, j.Sources); err != nil {
 		return m, err
 	}
 	m.Chunks = chunks.finish()
@@ -101,6 +111,9 @@ func sourceManifest(ctx context.Context, j Job) (Manifest, error) {
 		// Another job may have cached the same immutable source concurrently.
 		b, _ := json.Marshal(m)
 		_ = atomicWrite(cachePath, b, 0600)
+	}
+	if p := reporter(ctx); p != nil {
+		p.emit()
 	}
 	fmt.Printf("SOURCE hashed files=%d entries=%d bytes=%d tree-sha256=%s\n", m.fileCount(), len(m.Entries), m.Size, m.SHA256)
 	return m, nil
