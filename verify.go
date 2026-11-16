@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"flag"
 	"hash"
 	"io"
 	"os"
@@ -158,5 +159,19 @@ func (v *orderedVerifier) run(ctx context.Context) {
 	v.sum = hex.EncodeToString(h.Sum(nil))
 	if v.sum != n.m.SHA256 {
 		v.err = errors.New("final SHA256 mismatch")
+	}
+}
+
+// A pipeline opt-out also disables the implicit window. An explicit incompatible
+// window remains an error rather than silently ignoring the user's setting.
+func normalizeVerifyFlags(fs *flag.FlagSet, pipeline bool, window *int) {
+	explicit := false
+	fs.Visit(func(f *flag.Flag) {
+		if f.Name == "verify-window-chunks" {
+			explicit = true
+		}
+	})
+	if !pipeline && !explicit {
+		*window = 0
 	}
 }

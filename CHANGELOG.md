@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0
+
+- Promote ordered whole-file verification to a regular release; new jobs enable the pipeline and 256-chunk prefix window by default.
+- Keep adaptive concurrency disabled by default.
+- Preserve saved verification settings when deploying/resuming old jobs.
+- Add explicit pipeline/window opt-outs with documented English help and bilingual usage.
+- Retain the experimental benchmarks as historical measurements of the same verification algorithm.
+
 ## 0.2.0-dev.2 (experimental)
 
 - Opt-in ordered whole-file SHA-256 pipeline, bounded read buffers, and optional prefix-window chunk priority.

@@ -2,7 +2,7 @@
 
 [中文](PIPELINE.zh-CN.md) · [Development](DEVELOPMENT.en.md)
 
-This SCDP/1 extension adds optional overlapped whole-file SHA-256 and a standalone hashbench subcommand. It is independent of adaptive concurrency. Chunk verification, full-file SHA-256, fsync, and atomic publication remain required.
+v0.2.0 enables overlapped whole-file SHA-256 by default and a standalone hashbench subcommand. It is independent of adaptive concurrency. Chunk verification, full-file SHA-256, fsync, and atomic publication remain required.
 
 ## Usage
 
@@ -13,7 +13,7 @@ This SCDP/1 extension adds optional overlapped whole-file SHA-256 and a standalo
   --pipeline-verify --verify-buffer-mib 4 --verify-window-chunks 256
 ~~~
 
---pipeline-verify is opt-in. --verify-buffer-mib defaults to 4 (1..64), applying to serial and pipelined file verification. Saved new jobs retain these options for resume; old records leave the pipeline disabled. Directories and multiple files remain future work.
+--pipeline-verify defaults to true. Use --pipeline-verify=false to disable both the pipeline and its implicit window; an explicitly nonzero window with the pipeline disabled is rejected. --verify-buffer-mib defaults to 4 (1..64), applying to serial and pipelined file verification. Saved new jobs retain these options for resume; old records leave the pipeline disabled. Directories and multiple files remain future work.
 
 ## Integrity
 
@@ -27,9 +27,9 @@ Resume revalidates existing chunks and rebuilds whole-file hash state from the b
 
 The verifier uses one bounded read buffer, not a whole-image heap copy. A buffered notification wakes it when missing prefix data arrives. Verified final seed files retain the existing cache/recheck behavior and do not start an unnecessary second verifier.
 
-With --verify-window-chunks 0 (default), global rarest-first scheduling remains unchanged. An early missing chunk can postpone sequential SHA, so overlap is not guaranteed to hide all hashing. Hashing also competes for CPU, memory, and storage. Compare complete job wall time rather than only the final hash tail.
+With --verify-window-chunks 0 (default is 256), global rarest-first scheduling remains unchanged. An early missing chunk can postpone sequential SHA, so overlap is not guaranteed to hide all hashing. Hashing also competes for CPU, memory, and storage. Compare complete job wall time rather than only the final hash tail.
 
-Optional --verify-window-chunks 256 prefers the next 256 chunks from the hash frontier (about 4 GiB at the default chunk size), retaining rarity within that range and falling back globally if it cannot schedule useful work there. It is a priority, not a hard transfer/memory bound. Values are 0..4096 and nonzero requires --pipeline-verify.
+Default --verify-window-chunks 256 prefers the next 256 chunks from the hash frontier (about 4 GiB at the default chunk size), retaining rarity within that range and falling back globally if it cannot schedule useful work there. It is a priority, not a hard transfer/memory bound. Values are 0..4096 and nonzero requires --pipeline-verify.
 
 This changes scheduling order and commonly reduces scheduler search work. Its effect cannot be attributed solely to overlapping hashing. The initial two-round unwindowed experiment is retained, followed by a new-directory same-binary plain/windowed comparison.
 

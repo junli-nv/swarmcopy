@@ -1,12 +1,8 @@
 # swarmcopy
 
-[下载校验优化实验版 v0.2.0-dev.2](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0-dev.2) · [45 节点完整对照](docs/PIPELINE-RESULTS.zh-CN.md)
+[正式版 v0.2.0 下载](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0) · [完整校验优化](docs/PIPELINE.zh-CN.md) · [45 节点对照](docs/PIPELINE-RESULTS.zh-CN.md)
 
-[流水线整文件校验与 CPU 加速](docs/PIPELINE.zh-CN.md)：0.2.0-dev.2 分支，保留完整 SHA-256，并提供 hashbench 诊断。
-
-[自适应传输实验说明](docs/ADAPTIVE.zh-CN.md)：0.2.0-dev 分支，新增性能诊断及可选调度；v0.1.0 的既有测速结果见下文。
-
-[下载实验版](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0-dev) · [45-node results](docs/ADAPTIVE-RESULTS.zh-CN.md)
+新建任务默认启用流水线 SHA-256 和 256 块前缀窗口，自适应并发仍默认关闭。关闭流水线用 `--pipeline-verify=false`，仅关闭窗口用 `--verify-window-chunks 0`。旧任务续传沿用原配置。
 
 Linux 计算集群的大文件 P2P 分发工具。适用于将 NeMo 等容器的 `.sqsh` 介质从共享存储分发到节点本地 RAID。
 
@@ -44,7 +40,7 @@ Linux 计算集群的大文件 P2P 分发工具。适用于将 NeMo 等容器的
 
 ## 下载与安装
 
-从 [v0.1.0 Releases](https://github.com/junli-nv/swarmcopy/releases/tag/v0.1.0) 下载两个架构的二进制及 SHA256SUMS，放在同一目录：
+从 [v0.2.0 Releases](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0) 下载两个架构的二进制及 SHA256SUMS，放在同一目录：
 
 ~~~bash
 sha256sum -c SHA256SUMS

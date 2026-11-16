@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.2.0-dev.2"
+const version = "0.2.0"
 const protocol = "SCDP/1"
 
 type Manifest struct {
@@ -574,8 +574,8 @@ func peer(args []string) error {
 	fs := flag.NewFlagSet("peer", flag.ContinueOnError)
 	configureUsage(fs, "peer")
 	fs.StringVar(&o.File, "file", "", "local destination or existing seed file")
-	fs.IntVar(&o.VerifyWindowChunks, "verify-window-chunks", 0, "prefer this many upcoming hash chunks; 0=global rarity, requires pipeline-verify")
-	fs.BoolVar(&o.PipelineVerify, "pipeline-verify", false, "overlap ordered whole-file SHA256 with chunk transfer")
+	fs.IntVar(&o.VerifyWindowChunks, "verify-window-chunks", 256, "prefer this many upcoming hash chunks; 0=global rarity, requires pipeline-verify")
+	fs.BoolVar(&o.PipelineVerify, "pipeline-verify", true, "overlap ordered whole-file SHA256 with chunk transfer")
 	fs.IntVar(&o.VerifyBufferMiB, "verify-buffer-mib", 4, "whole-file verification read buffer (1..64 MiB)")
 	fs.BoolVar(&o.Recheck, "recheck", false, "ignore final-file verification cache; rehash all existing data")
 	fs.StringVar(&o.Manifest, "manifest", "", "trusted manifest JSON")
@@ -621,6 +621,7 @@ func peer(args []string) error {
 	if o.MaxWorkers < o.Workers || o.MaxWorkers > 32 || o.HedgeDelay <= 0 {
 		return errors.New("invalid max-workers or hedge-delay")
 	}
+	normalizeVerifyFlags(fs, o.PipelineVerify, &o.VerifyWindowChunks)
 	if o.VerifyWindowChunks < 0 || o.VerifyWindowChunks > 4096 || o.VerifyWindowChunks > 0 && !o.PipelineVerify {
 		return errors.New("verify-window-chunks must be 0..4096 and requires pipeline-verify")
 	}

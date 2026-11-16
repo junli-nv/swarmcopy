@@ -1,12 +1,8 @@
 # swarmcopy
 
-[Download verification experiment v0.2.0-dev.2](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0-dev.2) · [45-node comparison](docs/PIPELINE-RESULTS.en.md)
+[Download v0.2.0](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0) · [Verification design](docs/PIPELINE.en.md) · [45-node comparison](docs/PIPELINE-RESULTS.en.md)
 
-[Pipelined verification and CPU acceleration](docs/PIPELINE.en.md): 0.2.0-dev.2 with full SHA-256 and hashbench diagnostics.
-
-[Adaptive transfer experiment](docs/ADAPTIVE.en.md): 0.2.0-dev branch with diagnostics and opt-in scheduling. Previously published v0.1.0 results remain below.
-
-[Download experimental build](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0-dev) · [45-node results](docs/ADAPTIVE-RESULTS.en.md)
+New jobs default to pipelined SHA-256 with a 256-chunk prefix window. Adaptive concurrency remains off. Use `--pipeline-verify=false` to disable both or `--verify-window-chunks 0` to disable only the window. Resumed jobs retain saved settings.
 
 Resumable P2P distribution of large files, including NeMo/SquashFS container media, to node-local storage in Linux compute clusters.
 
@@ -40,7 +36,7 @@ One static executable per Linux architecture: x86_64 and aarch64. Runtime does n
 
 The controller must reach each target over SSH and TCP 19700; targets must reach one another on that TCP port. Use --port to change it. Hostnames must resolve to mutually reachable IPs everywhere. SSH-only aliases do not automatically become data-plane addresses. Destination storage should be local and have adequate space.
 
-Download [v0.1.0 release](https://github.com/junli-nv/swarmcopy/releases/tag/v0.1.0) binaries for both architectures and SHA256SUMS into one directory:
+Download [v0.2.0 release](https://github.com/junli-nv/swarmcopy/releases/tag/v0.2.0) binaries for both architectures and SHA256SUMS into one directory:
 
 ~~~bash
 sha256sum -c SHA256SUMS

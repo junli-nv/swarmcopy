@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"flag"
 	"os"
 	"path/filepath"
 	"strings"
@@ -218,5 +219,28 @@ func TestVerifyWindowDisabledKeepsGlobalRarity(t *testing.T) {
 	i, _ := n.choose()
 	if i != 1 {
 		t.Fatalf("disabled window changed rarity: %d", i)
+	}
+}
+
+func TestVerifyDefaultAndOptOutFlags(t *testing.T) {
+	for _, tc := range []struct {
+		args     []string
+		pipeline bool
+		window   int
+	}{
+		{nil, true, 256}, {[]string{"--pipeline-verify=false"}, false, 0},
+		{[]string{"--verify-window-chunks=0"}, true, 0},
+		{[]string{"--pipeline-verify=false", "--verify-window-chunks=8"}, false, 8},
+	} {
+		fs := flag.NewFlagSet("test", flag.ContinueOnError)
+		pipeline := fs.Bool("pipeline-verify", true, "")
+		window := fs.Int("verify-window-chunks", 256, "")
+		if err := fs.Parse(tc.args); err != nil {
+			t.Fatal(err)
+		}
+		normalizeVerifyFlags(fs, *pipeline, window)
+		if *pipeline != tc.pipeline || *window != tc.window {
+			t.Fatalf("%v: %v/%d", tc.args, *pipeline, *window)
+		}
 	}
 }

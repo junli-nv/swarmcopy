@@ -61,6 +61,9 @@ func usageText(name string) string {
 		return `Create a saved job, bootstrap peers over SSH, and distribute one file.
 The controller prints a job ID and monitors until all files pass SHA256.
 Completed peers stop automatically unless --keep-seeding is set.
+Ordered SHA256 verification and a 256-chunk prefix window are enabled by default.
+Use --pipeline-verify=false to disable both, or --verify-window-chunks 0 for global rarity.
+Adaptive concurrency stays disabled unless --adaptive is specified.
 
 Examples:
   swarmcopy distribute --hosts 'node[001-005]' --source /shared/nemo.sqsh --dest /raid/images

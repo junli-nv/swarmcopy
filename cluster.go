@@ -359,8 +359,8 @@ func clusterCommand(mode string, args []string) error {
 		fs.BoolVar(&recheck, "recheck", false, "force full existing-file verification")
 	}
 	if mode == "distribute" {
-		fs.IntVar(&j.VerifyWindowChunks, "verify-window-chunks", 0, "upcoming hash chunks to prefer (0..4096); requires pipeline-verify")
-		fs.BoolVar(&j.PipelineVerify, "pipeline-verify", false, "overlap ordered whole-file SHA256 with transfer")
+		fs.IntVar(&j.VerifyWindowChunks, "verify-window-chunks", 256, "upcoming hash chunks to prefer (0..4096); requires pipeline-verify")
+		fs.BoolVar(&j.PipelineVerify, "pipeline-verify", true, "overlap ordered whole-file SHA256 with transfer")
 		fs.IntVar(&j.VerifyBufferMiB, "verify-buffer-mib", 4, "whole-file verification read buffer (1..64 MiB)")
 		fs.StringVar(&hosts, "hosts", "", "host list, bracket ranges, or @host-file")
 		fs.StringVar(&j.Source, "source", "", "controller-local immutable source file")
@@ -424,6 +424,7 @@ func clusterCommand(mode string, args []string) error {
 			j.UploadMiB < 0 || j.DownloadMiB < 0 || j.UploadMiB > 100000 || j.DownloadMiB > 100000 || j.Lifetime <= 0 {
 			return errors.New("invalid resource limits")
 		}
+		normalizeVerifyFlags(fs, j.PipelineVerify, &j.VerifyWindowChunks)
 		if j.VerifyWindowChunks < 0 || j.VerifyWindowChunks > 4096 || j.VerifyWindowChunks > 0 && !j.PipelineVerify {
 			return errors.New("verify-window-chunks must be 0..4096 and requires pipeline-verify")
 		}

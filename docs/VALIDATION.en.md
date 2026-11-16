@@ -2,6 +2,13 @@
 
 [中文](VALIDATION.zh-CN.md) · [Development](DEVELOPMENT.en.md) · [Preliminary benchmark](BENCHMARK.en.md) · [Cold-cache study protocol](COLD-STUDY.en.md)
 
+## v0.2.0 defaults
+
+Pipeline and 256-chunk window default on; adaptive concurrency stays off. Flag tests and explicit propagation of saved false/zero values protect old job resume behavior. Algorithm measurements retain their original candidate hashes; the release binary is not misidentified as that historical frozen artifact.
+
+Default-enabled race chain recovery, explicit opt-out recovery, and all help routes pass. Two real SSH nodes confirm both modes, full hashed byte counts, remote window settings, and disabled adaptive concurrency.
+
+
 ## Current verification experiment (0.2.0-dev.2)
 
 - Ordered SHA-256 tests cover prefix gaps, short tails, coalesced signals, corrupt disk content, whole-digest mismatch, read errors, and cancellation while waiting or after hashing. Window tests cover rarity, frontier tracking, busy-prefix fallback, and disabled behavior.
