@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.4.1"
+const version = "0.4.2"
 const protocol = "SCDP/1"
 
 type Manifest struct {

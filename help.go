@@ -45,7 +45,7 @@ HELP
 REQUIREMENTS
   Linux x86_64/aarch64; controller ssh client; target SSH services and basic
   shell utilities; mutually reachable peer hostnames and TCP port 19700.
-  Existing SSH keys/agent/config or --ask-pass; host keys must be enrolled.
+  Existing SSH keys/agent/config or --ask-pass. SSH host-key checks are disabled.
   No pdsh, Python, Go installation, tracker, or permanent agent is required.
 
 DOCS
@@ -61,6 +61,10 @@ func usageText(name string) string {
 		return "Measure SHA256 without changing input files. CPU profiles require a NEW path.\n\nExamples:\n  swarmcopy hashbench --bytes-mib 2048\n  swarmcopy hashbench --file /raid/images/media.sqsh --cpu-profile /tmp/new-sha.pprof\n"
 	case "distribute":
 		return `Create a saved job and distribute files or directory trees through SSH/P2P.
+SSH cipher defaults to auto: prefer AES-GCM on AES/GCM-capable controllers,
+with negotiation fallback; --ssh-cipher system leaves OpenSSH selection alone.
+SSH login is checked before source hashing. SSH uses StrictHostKeyChecking=no,
+UserKnownHostsFile=/dev/null, LogLevel=quiet and CheckHostIP=no.
 Source hashing and initial seed streaming show byte progress, rate and estimated
 time remaining every two seconds. Other preparation stages show node counts
 and elapsed time. Ctrl-C cancels source hashing between read buffers.

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"golang.org/x/sys/cpu"
 	"io"
 	"log"
 	"os"
@@ -25,6 +26,7 @@ import (
 )
 
 type Job struct {
+	SSHCipher                                                                    string
 	Attempt, ControllerHost, ControllerStartTicks                                string
 	ControllerPID                                                                int
 	Inputs                                                                       []SourceEntry `json:",omitempty"`
@@ -209,6 +211,7 @@ type sshRunner struct {
 	env      []string
 	user     string
 	password bool
+	cipher   string
 }
 
 func (r sshRunner) run(ctx context.Context, host, reason, command string, in io.Reader) ([]byte, error) {
@@ -216,11 +219,7 @@ func (r sshRunner) run(ctx context.Context, host, reason, command string, in io.
 	if r.user != "" && !strings.Contains(host, "@") {
 		target = r.user + "@" + host
 	}
-	batch := "yes"
-	if r.password {
-		batch = "no"
-	}
-	args := []string{"-T", "-o", "BatchMode=" + batch, "-o", "ConnectTimeout=8", "-o", "StrictHostKeyChecking=yes", "-o", "NumberOfPasswordPrompts=1", "--", target, command}
+	args := r.arguments(target, command)
 	log.Printf("SSH target=%s reason=%s command=%s", target, reason, command)
 	cmd := exec.CommandContext(ctx, "ssh", args...)
 	cmd.Env = r.env
@@ -229,6 +228,9 @@ func (r sshRunner) run(ctx context.Context, host, reason, command string, in io.
 	cmd.Stdout = &out
 	cmd.Stderr = io.MultiWriter(&stderr, os.Stderr)
 	if e := cmd.Run(); e != nil {
+		if ctx.Err() != nil {
+			return nil, fmt.Errorf("SSH %s cancelled after controller cancellation or another operation failed: %w", target, ctx.Err())
+		}
 		msg := stderr.String()
 		if len(msg) > 2048 {
 			msg = msg[:2048]
@@ -361,6 +363,7 @@ func clusterCommand(mode string, args []string) error {
 	id := fs.String("job", "", "saved job ID or directory; new jobs default to state directory")
 	ask := fs.Bool("ask-pass", false, "prompt once for a shared SSH password (not saved)")
 	user := fs.String("ssh-user", "", "SSH username; otherwise use user@host or SSH config")
+	sshCipher := fs.String("ssh-cipher", "", "SSH cipher: auto, system, aes128-gcm@openssh.com, aes256-gcm@openssh.com or chacha20-poly1305@openssh.com")
 	var j Job
 	var hosts string
 	var sources sourceFlags
@@ -538,6 +541,12 @@ func clusterCommand(mode string, args []string) error {
 	if mode == "resume" && hasFlag(args, "recheck") {
 		j.Recheck = recheck
 	}
+	if *sshCipher != "" {
+		j.SSHCipher = *sshCipher
+	}
+	if !validSSHCipher(j.SSHCipher) {
+		return errors.New("unsupported ssh-cipher")
+	}
 	fmt.Printf("JOB ID: %s\nJOB DIRECTORY: %s\n", j.ID, j.Dir)
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -548,7 +557,7 @@ func clusterCommand(mode string, args []string) error {
 		return e
 	}
 	defer cleanup()
-	r := sshRunner{env: env, user: j.SSHUser, password: *ask}
+	r := sshRunner{env: env, user: j.SSHUser, password: *ask, cipher: j.SSHCipher}
 	if mode == "stop" {
 		if e = os.WriteFile(filepath.Join(j.Dir, "stop.request"), []byte(time.Now().String()), 0600); e != nil {
 			return e
@@ -610,6 +619,18 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 			}
 		}
 	}()
+	if e = j.preparing(ctx, "checking-ssh", "checking SSH login before expensive source hashing", 0, 0, len(j.Hosts)); e != nil {
+		return e
+	}
+	if e = forHosts(ctx, j.Hosts, j.Fanout, func(c context.Context, h string) error {
+		_, x := r.run(c, h, "check SSH login before source hashing", "true", nil)
+		if x == nil {
+			reportNode(c)
+		}
+		return x
+	}); e != nil {
+		return e
+	}
 	if len(j.Inputs) > 0 {
 		mp := filepath.Join(j.Dir, "manifest.json")
 		if _, x := os.Stat(mp); os.IsNotExist(x) {
@@ -830,4 +851,36 @@ func defaultBinaryDir(exe string) string {
 		return filepath.Join(d, "dist")
 	}
 	return d
+}
+
+const aesSSHPreference = "aes128-gcm@openssh.com,aes256-gcm@openssh.com,chacha20-poly1305@openssh.com,aes128-ctr,aes256-ctr"
+
+func validSSHCipher(s string) bool {
+	switch s {
+	case "", "auto", "system", "aes128-gcm@openssh.com", "aes256-gcm@openssh.com", "chacha20-poly1305@openssh.com":
+		return true
+	}
+	return false
+}
+func (r sshRunner) arguments(target, command string) []string {
+	batch := "yes"
+	if r.password {
+		batch = "no"
+	}
+	args := []string{"-T", "-o", "BatchMode=" + batch, "-o", "ConnectTimeout=8",
+		"-o", "StrictHostKeyChecking=no", "-o", "UserKnownHostsFile=/dev/null",
+		"-o", "LogLevel=quiet", "-o", "CheckHostIP=no",
+		"-o", "NumberOfPasswordPrompts=1"}
+	cipher := r.cipher
+	if cipher == "" || cipher == "auto" {
+		if cpu.X86.HasAES && cpu.X86.HasPCLMULQDQ || cpu.ARM64.HasAES && cpu.ARM64.HasPMULL {
+			cipher = aesSSHPreference
+		} else {
+			cipher = "system"
+		}
+	}
+	if cipher != "system" {
+		args = append(args, "-c", cipher)
+	}
+	return append(args, "--", target, command)
 }

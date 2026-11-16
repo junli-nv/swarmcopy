@@ -16,7 +16,7 @@ v0.4.1 起，建立来源清单和初始种子导入每约 2 秒显示字节、�
 
 运行时需要 Linux、控制端 OpenSSH 客户端、节点 SSH 服务和基本 shell 工具。无需 pdsh、rsync、外部 tar、Python、Go、数据库或常驻服务。Python/Go 仅用于开发测试。
 
-提前设置 SSH 密钥、agent 或 SSH config；也支持 `--ssh-user alice --ask-pass`，隐藏询问一次所有节点共用的 SSH 密码，不落盘。SSH 主机密钥须预先登记，不会自动关闭主机身份校验。
+提前设置 SSH 密钥、agent 或 SSH config；也支持 `--ssh-user alice --ask-pass`，隐藏询问一次所有节点共用的 SSH 密码，不落盘。SSH 默认使用 StrictHostKeyChecking=no、UserKnownHostsFile=/dev/null、LogLevel=quiet、CheckHostIP=no，不要求预登记主机密钥。
 
 ## 快速开始
 

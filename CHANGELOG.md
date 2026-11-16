@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.2 — cluster SSH defaults
+
+- Use the requested no-host-key-checking, null known-hosts, quiet, no-host-IP-check options for all controller SSH calls, including old-job resume.
+- Check SSH login before expensive source hashing and label sibling SSH cancellation clearly.
+- Prefer negotiated AES-GCM with fallback on AES/GCM-capable controllers; provide --ssh-cipher auto/system/explicit overrides.
+- Validate the previously failing controller-to-node login and record a small SSH cipher comparison; preserve full file integrity checks.
+
+
 ## 0.4.1 — preparation progress and cancellation
 
 - Report source hash/import bytes, percent, rate and estimated remaining phase time every two seconds; show deployment/inventory/listener readiness counts and elapsed time.

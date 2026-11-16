@@ -117,10 +117,28 @@ Resume keeps the same manifest and verified chunks; distribute starts a new inve
   --dest /raid/images --recheck
 ~~~
 
-Ask-pass requests one shared password, never persists it or installs permanent trust. Pre-enroll host keys. QUIC requires UDP and TCP at the peer port, is not guaranteed faster, and remains optional. Listening on all NICs does not aggregate their bandwidth; resolve peer names onto the intended network.
+Ask-pass requests one shared password, never persists it or installs permanent trust. Host-key enrollment is not required. QUIC requires UDP and TCP at the peer port, is not guaranteed faster, and remains optional. Listening on all NICs does not aggregate their bandwidth; resolve peer names onto the intended network.
 
 See `./swarmcopy distribute --help` for all options/defaults. New conflict policies apply to v2 source jobs; legacy v1 prepared-seed jobs retain their original final-file no-overwrite rule.
 
 ## Preparation is visible before transfer
 
 No extra flags are needed. hashing-source builds the trusted manifest; importing streams the initial seed. Both show percent/rate/current-phase ETA every two seconds. Watch switches automatically into transfer; 100% bytes may still await validation/finalization. Ctrl+C or stop --job cancels source hashing; an incomplete initial hash restarts. [Details](PROGRESS.en.md).
+
+## SSH defaults and encryption
+
+From v0.4.2 all controller SSH calls use these options, with no strict-mode switch:
+
+~~~text
+-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -o CheckHostIP=no
+~~~
+
+SSH login is checked before expensive source hashing; old jobs use the same settings on resume. Default --ssh-cipher auto prefers AES-GCM when local AES/GCM hardware capabilities are detected, with ChaCha20/AES-CTR fallback; otherwise it leaves OpenSSH selection unchanged. OpenSSH/its crypto library performs actual acceleration.
+
+~~~bash
+./swarmcopy resume --job <ID>
+./swarmcopy resume --job <ID> --ssh-cipher aes128-gcm@openssh.com
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --ssh-cipher system
+~~~
+
+system leaves cipher negotiation entirely to OpenSSH. Username/password/key/agent behavior is unchanged. SSH encryption affects deployment/initial staging, not SCDP content verification.

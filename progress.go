@@ -249,7 +249,7 @@ func (w progressWriter) Write(b []byte) (int, error) {
 func preparationState(j Job) (PreparationProgress, bool) {
 	preparing := false
 	switch j.State {
-	case "created", "starting", "hashing-source", "deploying", "checking-existing", "importing", "starting-peers", "waiting-peers":
+	case "created", "starting", "checking-ssh", "hashing-source", "deploying", "checking-existing", "importing", "starting-peers", "waiting-peers":
 		preparing = true
 	}
 	s := PreparationProgress{JobID: j.ID, Attempt: j.Attempt, Stage: j.State, State: "recorded", Detail: "Waiting for controller progress record"}

@@ -16,7 +16,7 @@ Download `swarmcopy-linux-x86_64` or `swarmcopy-linux-aarch64`, verify `SHA256SU
 
 Runtime requires Linux, an OpenSSH client on the controller, SSH services and basic shell utilities on targets. No pdsh, rsync, external tar, Python, Go, tracker, database or permanent service is required. Go/Python are development tools.
 
-Preconfigure SSH keys, agent or config. Alternatively use `--ssh-user alice --ask-pass`: one hidden prompt for the SAME password on all hosts, never persisted. Enroll SSH host keys beforehand; host verification is not disabled.
+Preconfigure SSH keys, agent or config. Alternatively use `--ssh-user alice --ask-pass`: one hidden prompt for the SAME password on all hosts, never persisted. SSH defaults to StrictHostKeyChecking=no, UserKnownHostsFile=/dev/null, LogLevel=quiet and CheckHostIP=no; no host-key enrollment is required.
 
 ## Quick start
 

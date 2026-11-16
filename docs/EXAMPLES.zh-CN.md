@@ -129,10 +129,28 @@ workers/uploads 范围 1～32，按节点分别计算；不等于精确的连接
   --dest /raid/images --recheck
 ~~~
 
-`--ask-pass` 询问所有节点共用的一个 SSH 密码，不配置永久互信、不保存密码；需提前登记主机密钥。QUIC 需 TCP 和 UDP 同端口可达，不保证比 TCP 快，默认仍 TCP。监听所有网口不等于叠加多个网卡带宽，主机名应解析到正确的数据网络。
+`--ask-pass` 询问所有节点共用的一个 SSH 密码，不配置永久登录互信、不保存密码；SSH 不要求预登记主机密钥。QUIC 需 TCP 和 UDP 同端口可达，不保证比 TCP 快，默认仍 TCP。监听所有网口不等于叠加多个网卡带宽，主机名应解析到正确的数据网络。
 
 更多参数和默认值见 `./swarmcopy distribute --help`。本手册的新冲突策略适用于 v2 的新建来源任务；历史 v1 prepared-seed 任务保留原先的成品不覆盖规则。
 
 ## 大文件开始后先看准备阶段
 
 无需增加参数。hashing-source 是建立可信清单，importing 是初次上传到种子；每约 2 秒显示百分比、速度和当前阶段 ETA。watch 会自动从准备切到传输，字节 100% 仍可能在校验／收尾。哈希时 Ctrl+C 或 stop --job 可取消；重跑会重做未完成的初始哈希。[详细说明](PROGRESS.zh-CN.md)。
+
+## SSH 默认参数与加密加速
+
+v0.4.2 起统一使用以下参数，不再提供 strict 开关：
+
+~~~text
+-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o LogLevel=quiet -o CheckHostIP=no
+~~~
+
+SSH 登录会在耗时来源哈希前先检查，旧任务 resume 也采用这些参数。默认 --ssh-cipher auto：本机有 AES 与 GCM 多项式硬件支持时优先协商 AES-GCM，并保留 ChaCha20／AES-CTR 回退；没有检测到时沿用 OpenSSH 默认。实际指令加速由 OpenSSH／加密库提供。
+
+~~~bash
+./swarmcopy resume --job <ID>
+./swarmcopy resume --job <ID> --ssh-cipher aes128-gcm@openssh.com
+./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --ssh-cipher system
+~~~
+
+system 完全沿用 OpenSSH 的 cipher 协商。密码、用户名、密钥／agent 的用法不变；SSH 加密只影响部署／初始导入，不等于 SCDP 数据校验。
