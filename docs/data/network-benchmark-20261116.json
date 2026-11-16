@@ -1,0 +1,2521 @@
+{
+  "Purpose": "Synthetic network diagnostics, not file distribution benchmarks or software-version comparisons",
+  "BuildProvenance": "Development builds during 0.9 implementation; early runs still printed version 0.8.0. Per-run JSON version retained; do not infer per-run binary hashes from the final release.",
+  "Privacy": "Route addresses and process IDs omitted; measurements unchanged. MAC addresses omitted from hardware summary.",
+  "Date": "2026-11-16",
+  "Runs": [
+    {
+      "Name": "cancel.json",
+      "Report": {
+        "ID": "benchmark-20261116T145301-bedba4e3c640ded0",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "failed",
+        "Error": "context canceled",
+        "ContentVerification": false,
+        "DurationSeconds": 30,
+        "WarmupSeconds": 0,
+        "TotalSeconds": 4.947143824,
+        "AggregateRXGbit": 0,
+        "Workers": 8,
+        "Uploads": 256,
+        "PerSource": 64,
+        "BufferKiB": 256,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "ID": "benchmark-20261116T145301-bedba4e3c640ded0",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 8,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": false,
+            "Seconds": 2.002418949,
+            "Received": 51835651210,
+            "Sent": 48883826688,
+            "Requests": 769,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 207.09213218696925,
+            "TXGbit": 195.2990974737325,
+            "From": {
+              "HGX066:19701": 51835651210
+            }
+          },
+          "HGX066:19701": {
+            "ID": "benchmark-20261116T145301-bedba4e3c640ded0",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 8,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": false,
+            "Seconds": 2.004023203,
+            "Received": 48851692258,
+            "Sent": 51856801792,
+            "Requests": 724,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 195.01447761630533,
+            "TXGbit": 207.0107839644609,
+            "From": {
+              "HGX061:19701": 48851692258
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "quic-functional.json",
+      "Report": {
+        "ID": "benchmark-20261116T145306-96a4c2c7ef8fa8da",
+        "Version": "0.9.0",
+        "Transport": "quic",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 3,
+        "WarmupSeconds": 1,
+        "TotalSeconds": 6.487719583,
+        "AggregateRXGbit": 20.133878937801295,
+        "Workers": 4,
+        "Uploads": 8,
+        "PerSource": 4,
+        "BufferKiB": 256,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "ID": "benchmark-20261116T145306-96a4c2c7ef8fa8da",
+            "Transport": "quic",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 4,
+            "UploadLimit": 8,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 3.000845313,
+            "Received": 3631649704,
+            "Sent": 3921149952,
+            "Requests": 52,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 9.681671196491958,
+            "TXGbit": 10.453454391702595,
+            "From": {
+              "HGX066:19701": 3631649704
+            }
+          },
+          "HGX066:19701": {
+            "ID": "benchmark-20261116T145306-96a4c2c7ef8fa8da",
+            "Transport": "quic",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 4,
+            "UploadLimit": 8,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 3.00098407,
+            "Received": 3920863616,
+            "Sent": 3630956544,
+            "Requests": 60,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 10.452207741309337,
+            "TXGbit": 9.679375722910786,
+            "From": {
+              "HGX061:19701": 3920863616
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-five-node-128.json",
+      "Report": {
+        "ID": "benchmark-20261116T145156-fcafc42e2411826f",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 10,
+        "WarmupSeconds": 2,
+        "TotalSeconds": 14.977218512,
+        "AggregateRXGbit": 1261.3212789423965,
+        "Workers": 128,
+        "Uploads": 256,
+        "PerSource": 128,
+        "BufferKiB": 256,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "ID": "benchmark-20261116T145156-fcafc42e2411826f",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 128,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 10.042062156,
+            "Received": 344433401372,
+            "Sent": 329196503040,
+            "Requests": 5172,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 274.3925668025909,
+            "TXGbit": 262.25410512386395,
+            "From": {
+              "HGX066:19701": 178757502891,
+              "HGX082:19701": 51802780957,
+              "HGX138:19701": 52451193065,
+              "HGX169:19701": 61422309223
+            }
+          },
+          "HGX066:19701": {
+            "ID": "benchmark-20261116T145156-fcafc42e2411826f",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 128,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 10.075786065,
+            "Received": 330539037208,
+            "Sent": 344463507456,
+            "Requests": 4919,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 262.4422829747725,
+            "TXGbit": 273.4980717008703,
+            "From": {
+              "HGX061:19701": 162603731516,
+              "HGX082:19701": 55851887770,
+              "HGX138:19701": 50530204531,
+              "HGX169:19701": 61553213391
+            }
+          },
+          "HGX082:19701": {
+            "ID": "benchmark-20261116T145156-fcafc42e2411826f",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 128,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 10.075917272,
+            "Received": 342186030220,
+            "Sent": 334824472576,
+            "Requests": 5094,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 271.68625623467705,
+            "TXGbit": 265.84138280408064,
+            "From": {
+              "HGX061:19701": 55667598912,
+              "HGX066:19701": 53768499205,
+              "HGX138:19701": 173479074682,
+              "HGX169:19701": 59271119565
+            }
+          },
+          "HGX138:19701": {
+            "ID": "benchmark-20261116T145156-fcafc42e2411826f",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 128,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 10.049073856,
+            "Received": 335514248367,
+            "Sent": 333555957760,
+            "Requests": 5024,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 267.10063289398516,
+            "TXGbit": 265.5416509340062,
+            "From": {
+              "HGX061:19701": 51862199048,
+              "HGX066:19701": 53086730838,
+              "HGX082:19701": 167744009178,
+              "HGX169:19701": 62821309303
+            }
+          },
+          "HGX169:19701": {
+            "ID": "benchmark-20261116T145156-fcafc42e2411826f",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 128,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 10.075643608,
+            "Received": 233880297947,
+            "Sent": 245205041152,
+            "Requests": 3480,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 185.69954003637085,
+            "TXGbit": 194.69131755101674,
+            "From": {
+              "HGX061:19701": 59102056951,
+              "HGX066:19701": 58435463299,
+              "HGX082:19701": 59273106281,
+              "HGX138:19701": 57069671416
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-five-node.json",
+      "Report": {
+        "ID": "benchmark-20261116T145047-30142bbaa199b5db",
+        "Version": "0.8.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 20,
+        "WarmupSeconds": 3,
+        "TotalSeconds": 25.794825135,
+        "AggregateRXGbit": 1181.529529742122,
+        "Workers": 64,
+        "Uploads": 256,
+        "PerSource": 64,
+        "BufferKiB": 256,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "ID": "benchmark-20261116T145047-30142bbaa199b5db",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 20.00224932,
+            "Received": 659626165327,
+            "Sent": 624467902464,
+            "Requests": 9828,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 263.82079526124016,
+            "TXGbit": 249.75907158185547,
+            "From": {
+              "HGX066:19701": 315920856701,
+              "HGX082:19701": 100785399110,
+              "HGX138:19701": 137745102037,
+              "HGX169:19701": 105174986439
+            }
+          },
+          "HGX066:19701": {
+            "ID": "benchmark-20261116T145047-30142bbaa199b5db",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 20.034042321,
+            "Received": 601400781482,
+            "Sent": 645835522048,
+            "Requests": 8962,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 240.1515467905754,
+            "TXGbit": 257.89524118995195,
+            "From": {
+              "HGX061:19701": 260517434785,
+              "HGX082:19701": 110661414129,
+              "HGX138:19701": 114398465318,
+              "HGX169:19701": 115823798326
+            }
+          },
+          "HGX082:19701": {
+            "ID": "benchmark-20261116T145047-30142bbaa199b5db",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 20.040734056,
+            "Received": 631553706082,
+            "Sent": 576319913984,
+            "Requests": 9413,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 252.10801333613583,
+            "TXGbit": 230.05940296341805,
+            "From": {
+              "HGX061:19701": 145223805331,
+              "HGX066:19701": 102010498616,
+              "HGX138:19701": 259312226738,
+              "HGX169:19701": 125007363305
+            }
+          },
+          "HGX138:19701": {
+            "ID": "benchmark-20261116T145047-30142bbaa199b5db",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 20.03383713,
+            "Received": 594790791888,
+            "Sent": 624084385792,
+            "Requests": 8862,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 237.5144763445524,
+            "TXGbit": 249.21212316634225,
+            "From": {
+              "HGX061:19701": 92739558066,
+              "HGX066:19701": 121372421270,
+              "HGX082:19701": 239543880128,
+              "HGX169:19701": 141134932424
+            }
+          },
+          "HGX169:19701": {
+            "ID": "benchmark-20261116T145047-30142bbaa199b5db",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 20.034113514,
+            "Received": 470638134143,
+            "Sent": 487308394496,
+            "Requests": 7013,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 187.93469800961813,
+            "TXGbit": 194.59144789429885,
+            "From": {
+              "HGX061:19701": 126740070743,
+              "HGX066:19701": 106253251988,
+              "HGX082:19701": 125135251413,
+              "HGX138:19701": 112509452623
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-cpus16-workers32.json",
+      "Report": {
+        "CPUs": 16,
+        "ID": "benchmark-20261116T145657-e32b33c84075e065",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 8,
+        "WarmupSeconds": 2,
+        "TotalSeconds": 12.90081289,
+        "AggregateRXGbit": 592.2817567728362,
+        "Workers": 32,
+        "Uploads": 128,
+        "PerSource": 32,
+        "BufferKiB": 256,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "CPUs": 16,
+            "ID": "benchmark-20261116T145657-e32b33c84075e065",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 32,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002863796,
+            "Received": 302961452455,
+            "Sent": 289525465088,
+            "Requests": 4515,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 302.8530387898657,
+            "TXGbit": 289.421859442577,
+            "From": {
+              "HGX066:19701": 302961452455
+            }
+          },
+          "HGX066:19701": {
+            "CPUs": 16,
+            "ID": "benchmark-20261116T145657-e32b33c84075e065",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 32,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002163663,
+            "Received": 289506996259,
+            "Sent": 302924955648,
+            "Requests": 4314,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 289.4287179829704,
+            "TXGbit": 302.8430493604115,
+            "From": {
+              "HGX061:19701": 289506957815
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-cpus32-workers32-buffer1024.json",
+      "Report": {
+        "CPUs": 32,
+        "ID": "benchmark-20261116T145825-262c8c80c6c2bca6",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 8,
+        "WarmupSeconds": 2,
+        "TotalSeconds": 12.57921021,
+        "AggregateRXGbit": 708.0790841078333,
+        "Workers": 32,
+        "Uploads": 128,
+        "PerSource": 32,
+        "BufferKiB": 1024,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "CPUs": 32,
+            "ID": "benchmark-20261116T145825-262c8c80c6c2bca6",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 32,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002041922,
+            "Received": 357652355247,
+            "Sent": 350595579904,
+            "Requests": 5325,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 357.5610912646753,
+            "TXGbit": 350.5061166351635,
+            "From": {
+              "HGX066:19701": 357652355247
+            }
+          },
+          "HGX066:19701": {
+            "CPUs": 32,
+            "ID": "benchmark-20261116T145825-262c8c80c6c2bca6",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 32,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002210781,
+            "Received": 350614857658,
+            "Sent": 357661933568,
+            "Requests": 5226,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 350.517992843158,
+            "TXGbit": 357.5631218484896,
+            "From": {
+              "HGX061:19701": 350614616062
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-cpus32-workers32-buffer256.json",
+      "Report": {
+        "CPUs": 32,
+        "ID": "benchmark-20261116T145812-125b6e6551b206a7",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 8,
+        "WarmupSeconds": 2,
+        "TotalSeconds": 12.835587059,
+        "AggregateRXGbit": 678.4918086462523,
+        "Workers": 32,
+        "Uploads": 128,
+        "PerSource": 32,
+        "BufferKiB": 256,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "CPUs": 32,
+            "ID": "benchmark-20261116T145812-125b6e6551b206a7",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 32,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002782645,
+            "Received": 351531908995,
+            "Sent": 327206567936,
+            "Requests": 5240,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 351.4096779470886,
+            "TXGbit": 327.0927950446666,
+            "From": {
+              "HGX066:19701": 351531908995
+            }
+          },
+          "HGX066:19701": {
+            "CPUs": 32,
+            "ID": "benchmark-20261116T145812-125b6e6551b206a7",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 32,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002794055,
+            "Received": 327196366382,
+            "Sent": 351527239680,
+            "Requests": 4875,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 327.08213069916366,
+            "TXGbit": 351.4045092392422,
+            "From": {
+              "HGX061:19701": 327196366382
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-cpus32-workers32.json",
+      "Report": {
+        "CPUs": 32,
+        "ID": "benchmark-20261116T145709-ce36c5e4de40ef53",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 8,
+        "WarmupSeconds": 2,
+        "TotalSeconds": 12.646112016,
+        "AggregateRXGbit": 711.383028450366,
+        "Workers": 32,
+        "Uploads": 128,
+        "PerSource": 32,
+        "BufferKiB": 256,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "CPUs": 32,
+            "ID": "benchmark-20261116T145709-ce36c5e4de40ef53",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 32,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.0032215,
+            "Received": 357928333468,
+            "Sent": 353748385792,
+            "Requests": 5334,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 357.78425821951816,
+            "TXGbit": 353.6059930786621,
+            "From": {
+              "HGX066:19701": 357928577716
+            }
+          },
+          "HGX066:19701": {
+            "CPUs": 32,
+            "ID": "benchmark-20261116T145709-ce36c5e4de40ef53",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 32,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.003280277,
+            "Received": 353743757970,
+            "Sent": 357930369024,
+            "Requests": 5274,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 353.59877023084795,
+            "TXGbit": 357.7836653329541,
+            "From": {
+              "HGX061:19701": 353743757970
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-cpus32-workers64-buffer1024.json",
+      "Report": {
+        "CPUs": 32,
+        "ID": "benchmark-20261116T145837-f2482e88ff8c7e99",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 8,
+        "WarmupSeconds": 2,
+        "TotalSeconds": 12.624019337,
+        "AggregateRXGbit": 700.9251986883125,
+        "Workers": 64,
+        "Uploads": 128,
+        "PerSource": 64,
+        "BufferKiB": 1024,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "CPUs": 32,
+            "ID": "benchmark-20261116T145837-f2482e88ff8c7e99",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002945214,
+            "Received": 354841921261,
+            "Sent": 346348847104,
+            "Requests": 5288,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 354.71133366276723,
+            "TXGbit": 346.22138509518976,
+            "From": {
+              "HGX066:19701": 354841957053
+            }
+          },
+          "HGX066:19701": {
+            "CPUs": 32,
+            "ID": "benchmark-20261116T145837-f2482e88ff8c7e99",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002646013,
+            "Received": 346328375824,
+            "Sent": 354812952576,
+            "Requests": 5159,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 346.21386502554526,
+            "TXGbit": 354.69563641787437,
+            "From": {
+              "HGX061:19701": 346328322136
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-cpus64-workers32.json",
+      "Report": {
+        "CPUs": 64,
+        "ID": "benchmark-20261116T145722-d2369c36987a8c8d",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 8,
+        "WarmupSeconds": 2,
+        "TotalSeconds": 12.591230157,
+        "AggregateRXGbit": 686.7946247377133,
+        "Workers": 32,
+        "Uploads": 128,
+        "PerSource": 32,
+        "BufferKiB": 256,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "CPUs": 64,
+            "ID": "benchmark-20261116T145722-d2369c36987a8c8d",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 32,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002560049,
+            "Received": 347506848178,
+            "Sent": 339501907968,
+            "Requests": 5178,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 347.395679432783,
+            "TXGbit": 339.39330003320543,
+            "From": {
+              "HGX066:19701": 347506848178
+            }
+          },
+          "HGX066:19701": {
+            "CPUs": 64,
+            "ID": "benchmark-20261116T145722-d2369c36987a8c8d",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 32,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002588276,
+            "Received": 339508752573,
+            "Sent": 347499397120,
+            "Requests": 5063,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 339.3989453049303,
+            "TXGbit": 347.3870054388889,
+            "From": {
+              "HGX061:19701": 339508752573
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-cpus64-workers64-buffer1024.json",
+      "Report": {
+        "CPUs": 64,
+        "ID": "benchmark-20261116T145850-17176ccdf8205a56",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 8,
+        "WarmupSeconds": 2,
+        "TotalSeconds": 12.584404781,
+        "AggregateRXGbit": 676.5518355905531,
+        "Workers": 64,
+        "Uploads": 128,
+        "PerSource": 64,
+        "BufferKiB": 1024,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "CPUs": 64,
+            "ID": "benchmark-20261116T145850-17176ccdf8205a56",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002763548,
+            "Received": 341522183875,
+            "Sent": 335283224576,
+            "Requests": 5091,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 341.4042479966571,
+            "TXGbit": 335.1674431613483,
+            "From": {
+              "HGX066:19701": 341522183875
+            }
+          },
+          "HGX066:19701": {
+            "CPUs": 64,
+            "ID": "benchmark-20261116T145850-17176ccdf8205a56",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002716196,
+            "Received": 335261378411,
+            "Sent": 341518057472,
+            "Requests": 5000,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 335.147587593896,
+            "TXGbit": 341.4021430800718,
+            "From": {
+              "HGX061:19701": 335261378411
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-node-128-members.json",
+      "Report": {
+        "ID": "benchmark-20261116T145513-8ec3d81aa9cc7531",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 10,
+        "WarmupSeconds": 3,
+        "TotalSeconds": 15.920080544,
+        "AggregateRXGbit": 634.1981653420708,
+        "Workers": 128,
+        "Uploads": 256,
+        "PerSource": 128,
+        "BufferKiB": 256,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "ID": "benchmark-20261116T145513-8ec3d81aa9cc7531",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 128,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 10.031431448,
+            "Received": 399747582261,
+            "Sent": 395234508800,
+            "Requests": 5967,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 318.7960436818409,
+            "TXGbit": 315.1968975504881,
+            "From": {
+              "HGX066:19701": 399747698585
+            }
+          },
+          "HGX066:19701": {
+            "ID": "benchmark-20261116T145513-8ec3d81aa9cc7531",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 128,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 10.002780041,
+            "Received": 394362255929,
+            "Sent": 398649982976,
+            "Requests": 5878,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 315.4021216602298,
+            "TXGbit": 318.8313499583031,
+            "From": {
+              "HGX061:19701": 394362255929
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-node-smoke.json",
+      "Report": {
+        "ID": "benchmark-20261116T144918-3bb9c66e3d25394c",
+        "Version": "0.8.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 5,
+        "WarmupSeconds": 1,
+        "TotalSeconds": 8.631857645,
+        "AggregateRXGbit": 683.3992111900069,
+        "Workers": 32,
+        "Uploads": 128,
+        "PerSource": 32,
+        "BufferKiB": 256,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "ID": "benchmark-20261116T144918-3bb9c66e3d25394c",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 32,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 5.001040882,
+            "Received": 216331478269,
+            "Sent": 210862342144,
+            "Requests": 3223,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 346.05832405430834,
+            "TXGbit": 337.3095275472695,
+            "From": {
+              "HGX066:19701": 216331478269
+            }
+          },
+          "HGX066:19701": {
+            "ID": "benchmark-20261116T144918-3bb9c66e3d25394c",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 32,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 5.001214952,
+            "Received": 210889286083,
+            "Sent": 216349802496,
+            "Requests": 3144,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 337.34088713569855,
+            "TXGbit": 346.0755909473255,
+            "From": {
+              "HGX061:19701": 210889286083
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-numa-0.json",
+      "Report": {
+        "NUMA": "0",
+        "CPUs": 32,
+        "ID": "benchmark-20261116T150024-2889f4508a23fd3a",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 8,
+        "WarmupSeconds": 2,
+        "TotalSeconds": 12.579522505,
+        "AggregateRXGbit": 672.4019801930833,
+        "Workers": 64,
+        "Uploads": 128,
+        "PerSource": 64,
+        "BufferKiB": 1024,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "NUMA": "0",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150024-2889f4508a23fd3a",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.004740618,
+            "Received": 338621677675,
+            "Sent": 334167539712,
+            "Requests": 5042,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 338.4211370082898,
+            "TXGbit": 333.96963690298054,
+            "From": {
+              "HGX066:19701": 338621677675
+            }
+          },
+          "HGX066:19701": {
+            "NUMA": "0",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150024-2889f4508a23fd3a",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.004315036,
+            "Received": 334160985605,
+            "Sent": 338616647680,
+            "Requests": 4978,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 333.98084318479346,
+            "TXGbit": 338.4341032625993,
+            "From": {
+              "HGX061:19701": 334160985605
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-numa-1.json",
+      "Report": {
+        "NUMA": "1",
+        "CPUs": 32,
+        "ID": "benchmark-20261116T150036-2b8b7f10bc8d3217",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 8,
+        "WarmupSeconds": 2,
+        "TotalSeconds": 12.598346438,
+        "AggregateRXGbit": 678.0189491728408,
+        "Workers": 64,
+        "Uploads": 128,
+        "PerSource": 64,
+        "BufferKiB": 1024,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "NUMA": "1",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150036-2b8b7f10bc8d3217",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002645761,
+            "Received": 340439424380,
+            "Sent": 337812389888,
+            "Requests": 5070,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 340.3268714345383,
+            "TXGbit": 337.70070546847484,
+            "From": {
+              "HGX066:19701": 340439424380
+            }
+          },
+          "HGX066:19701": {
+            "NUMA": "1",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150036-2b8b7f10bc8d3217",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.00304123,
+            "Received": 337820452648,
+            "Sent": 340449558528,
+            "Requests": 5030,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 337.69207773830254,
+            "TXGbit": 340.32018453364884,
+            "From": {
+              "HGX061:19701": 337820452648
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-numa-interleave.json",
+      "Report": {
+        "NUMA": "interleave",
+        "CPUs": 32,
+        "ID": "benchmark-20261116T150049-3031112c33404de9",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 8,
+        "WarmupSeconds": 2,
+        "TotalSeconds": 12.64173791,
+        "AggregateRXGbit": 683.3222291587076,
+        "Workers": 64,
+        "Uploads": 128,
+        "PerSource": 64,
+        "BufferKiB": 1024,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "NUMA": "interleave",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150049-3031112c33404de9",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002654614,
+            "Received": 343519892786,
+            "Sent": 340035371008,
+            "Requests": 5120,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 343.40594150849853,
+            "TXGbit": 339.9225756044855,
+            "From": {
+              "HGX066:19701": 343519892786
+            }
+          },
+          "HGX066:19701": {
+            "NUMA": "interleave",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150049-3031112c33404de9",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.003208101,
+            "Received": 340052598373,
+            "Sent": 343544954880,
+            "Requests": 5070,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 339.9162876502091,
+            "TXGbit": 343.40724423954345,
+            "From": {
+              "HGX061:19701": 340052598373
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-numa-system.json",
+      "Report": {
+        "NUMA": "system",
+        "CPUs": 32,
+        "ID": "benchmark-20261116T150011-6fda2d84cb4890be",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "mesh",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 8,
+        "WarmupSeconds": 2,
+        "TotalSeconds": 12.862815331,
+        "AggregateRXGbit": 697.401817556882,
+        "Workers": 64,
+        "Uploads": 128,
+        "PerSource": 64,
+        "BufferKiB": 1024,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "NUMA": "system",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150011-6fda2d84cb4890be",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002867987,
+            "Received": 352953510752,
+            "Sent": 344691048448,
+            "Requests": 5258,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 352.8270228376566,
+            "TXGbit": 344.567521551446,
+            "From": {
+              "HGX066:19701": 352953510752
+            }
+          },
+          "HGX066:19701": {
+            "NUMA": "system",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150011-6fda2d84cb4890be",
+            "Transport": "tcp",
+            "Topology": "mesh",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 8.002899091,
+            "Received": 344699663930,
+            "Sent": 352970604544,
+            "Requests": 5128,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 344.57479471922534,
+            "TXGbit": 352.842739142817,
+            "From": {
+              "HGX061:19701": 344699663930
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-unidirectional-64.json",
+      "Report": {
+        "NUMA": "system",
+        "CPUs": 32,
+        "ID": "benchmark-20261116T150212-895f8e2e45daeb83",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "seed",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 10,
+        "WarmupSeconds": 3,
+        "TotalSeconds": 15.906977012,
+        "AggregateRXGbit": 388.5502440443787,
+        "Workers": 64,
+        "Uploads": 128,
+        "PerSource": 64,
+        "BufferKiB": 1024,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "NUMA": "system",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150212-895f8e2e45daeb83",
+            "Transport": "tcp",
+            "Topology": "seed",
+            "Error": "",
+            "Workers": 0,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 10.003232723,
+            "Received": 0,
+            "Sent": 485848252416,
+            "Requests": 0,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 0,
+            "TXGbit": 388.55299351291524,
+            "From": {}
+          },
+          "HGX066:19701": {
+            "NUMA": "system",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150212-895f8e2e45daeb83",
+            "Transport": "tcp",
+            "Topology": "seed",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 10.003174679,
+            "Received": 485841995343,
+            "Sent": 0,
+            "Requests": 7236,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 388.5502440443787,
+            "TXGbit": 0,
+            "From": {
+              "HGX061:19701": 485841995343
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-unidirectional-members.json",
+      "Report": {
+        "NUMA": "system",
+        "CPUs": 32,
+        "ID": "benchmark-20261116T150251-327e946af2b32207",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "seed",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 10,
+        "WarmupSeconds": 3,
+        "TotalSeconds": 15.835780789,
+        "AggregateRXGbit": 388.504951142579,
+        "Workers": 64,
+        "Uploads": 256,
+        "PerSource": 64,
+        "BufferKiB": 1024,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "NUMA": "system",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150251-327e946af2b32207",
+            "Transport": "tcp",
+            "Topology": "seed",
+            "Error": "",
+            "Workers": 0,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 10.003590598,
+            "Received": 0,
+            "Sent": 485814697984,
+            "Requests": 0,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 0,
+            "TXGbit": 388.512259253095,
+            "From": {}
+          },
+          "HGX066:19701": {
+            "NUMA": "system",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150251-327e946af2b32207",
+            "Transport": "tcp",
+            "Topology": "seed",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 256,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 10.002785763,
+            "Received": 485766474268,
+            "Sent": 0,
+            "Requests": 7234,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 388.504951142579,
+            "TXGbit": 0,
+            "From": {
+              "HGX061:19701": 485766474268
+            }
+          }
+        }
+      }
+    },
+    {
+      "Name": "tcp-two-unidirectional-reverse.json",
+      "Report": {
+        "NUMA": "system",
+        "CPUs": 32,
+        "ID": "benchmark-20261116T150307-ce29702862a708ce",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "seed",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 10,
+        "WarmupSeconds": 3,
+        "TotalSeconds": 15.663268598,
+        "AggregateRXGbit": 387.65093715070344,
+        "Workers": 64,
+        "Uploads": 128,
+        "PerSource": 64,
+        "BufferKiB": 1024,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "NUMA": "system",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150307-ce29702862a708ce",
+            "Transport": "tcp",
+            "Topology": "seed",
+            "Error": "",
+            "Workers": 64,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 10.002659461,
+            "Received": 484692539257,
+            "Sent": 0,
+            "Requests": 7225,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 387.65093715070344,
+            "TXGbit": 0,
+            "From": {
+              "HGX066:19701": 484692539257
+            }
+          },
+          "HGX066:19701": {
+            "NUMA": "system",
+            "CPUs": 32,
+            "ID": "benchmark-20261116T150307-ce29702862a708ce",
+            "Transport": "tcp",
+            "Topology": "seed",
+            "Error": "",
+            "Workers": 0,
+            "UploadLimit": 128,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 10.002758825,
+            "Received": 0,
+            "Sent": 484694818816,
+            "Requests": 0,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 0,
+            "TXGbit": 387.64890950252413,
+            "From": {}
+          }
+        }
+      }
+    },
+    {
+      "Name": "final-ring.json",
+      "Report": {
+        "NUMA": "system",
+        "CPUs": 0,
+        "ID": "benchmark-20261116T150847-aee25407b607726b",
+        "Version": "0.9.0",
+        "Transport": "tcp",
+        "Topology": "ring",
+        "State": "complete",
+        "Error": "",
+        "ContentVerification": false,
+        "DurationSeconds": 2,
+        "WarmupSeconds": 1,
+        "TotalSeconds": 5.772645429,
+        "AggregateRXGbit": 349.7101051660471,
+        "Workers": 4,
+        "Uploads": 8,
+        "PerSource": 64,
+        "BufferKiB": 256,
+        "BlockMiB": 64,
+        "Nodes": {
+          "HGX061:19701": {
+            "NUMA": "system",
+            "CPUs": 256,
+            "ID": "benchmark-20261116T150847-aee25407b607726b",
+            "Transport": "tcp",
+            "Topology": "ring",
+            "Error": "",
+            "Workers": 4,
+            "UploadLimit": 8,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 2.002030777,
+            "Received": 30113267712,
+            "Sent": 29115023360,
+            "Requests": 448,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 120.33088824787832,
+            "TXGbit": 116.34196115058026,
+            "From": {
+              "HGX082:19701": 30113529856
+            }
+          },
+          "HGX066:19701": {
+            "NUMA": "system",
+            "CPUs": 256,
+            "ID": "benchmark-20261116T150847-aee25407b607726b",
+            "Transport": "tcp",
+            "Topology": "ring",
+            "Error": "",
+            "Workers": 4,
+            "UploadLimit": 8,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 2.00195463,
+            "Received": 29111828833,
+            "Sent": 28296347648,
+            "Requests": 434,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 116.33362073944703,
+            "TXGbit": 113.07488081485641,
+            "From": {
+              "HGX061:19701": 29111828833
+            }
+          },
+          "HGX082:19701": {
+            "NUMA": "system",
+            "CPUs": 256,
+            "ID": "benchmark-20261116T150847-aee25407b607726b",
+            "Transport": "tcp",
+            "Topology": "ring",
+            "Error": "",
+            "Workers": 4,
+            "UploadLimit": 8,
+            "Running": true,
+            "Measuring": true,
+            "Frozen": true,
+            "Seconds": 2.002045052,
+            "Received": 28290297060,
+            "Sent": 30115364864,
+            "Requests": 422,
+            "Failures": 0,
+            "Busy": 0,
+            "RXGbit": 113.04559617872174,
+            "TXGbit": 120.33841030266684,
+            "From": {
+              "HGX066:19701": 28290297060
+            }
+          }
+        }
+      }
+    }
+  ],
+  "IndependentCounterSamples": {
+    "tcp-five-node-probes.json": {
+      "Samples": [
+        [
+          {
+            "Host": "HGX061",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 2269378495460,
+              "tx_bytes": 35880551752363,
+              "rx_dropped": 94384,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "90640 kB",
+                "VmHWM": "90640 kB",
+                "Threads": "403"
+              }
+            ],
+            "Monotonic": 709023.971117536
+          },
+          {
+            "Host": "HGX066",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 4070622474326,
+              "tx_bytes": 3527396058036,
+              "rx_dropped": 94400,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "90496 kB",
+                "VmHWM": "90496 kB",
+                "Threads": "416"
+              }
+            ],
+            "Monotonic": 709141.314401559
+          },
+          {
+            "Host": "HGX082",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 3817107623870,
+              "tx_bytes": 3481275421411,
+              "rx_dropped": 85040,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "89752 kB",
+                "VmHWM": "89752 kB",
+                "Threads": "396"
+              }
+            ],
+            "Monotonic": 638859.180692534
+          },
+          {
+            "Host": "HGX138",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 3811463131836,
+              "tx_bytes": 3277692412562,
+              "rx_dropped": 94940,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "89828 kB",
+                "VmHWM": "89828 kB",
+                "Threads": "430"
+              }
+            ],
+            "Monotonic": 713195.880237567
+          },
+          {
+            "Host": "HGX169",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 3777439089766,
+              "tx_bytes": 3289467946547,
+              "rx_dropped": 94936,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "89380 kB",
+                "VmHWM": "89380 kB",
+                "Threads": "403"
+              }
+            ],
+            "Monotonic": 713148.330948651
+          }
+        ],
+        [
+          {
+            "Host": "HGX061",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 2598511107378,
+              "tx_bytes": 36193206323205,
+              "rx_dropped": 94388,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "97132 kB",
+                "VmHWM": "97132 kB",
+                "Threads": "415"
+              }
+            ],
+            "Monotonic": 709033.927436652
+          },
+          {
+            "Host": "HGX066",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 4373314551369,
+              "tx_bytes": 3850007314677,
+              "rx_dropped": 94400,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "96360 kB",
+                "VmHWM": "96360 kB",
+                "Threads": "416"
+              }
+            ],
+            "Monotonic": 709151.2768198
+          },
+          {
+            "Host": "HGX082",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 4131249593235,
+              "tx_bytes": 3767727787246,
+              "rx_dropped": 85044,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "94936 kB",
+                "VmHWM": "94936 kB",
+                "Threads": "410"
+              }
+            ],
+            "Monotonic": 638869.140425412
+          },
+          {
+            "Host": "HGX138",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 4106598379279,
+              "tx_bytes": 3589008956760,
+              "rx_dropped": 94942,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "98020 kB",
+                "VmHWM": "98020 kB",
+                "Threads": "430"
+              }
+            ],
+            "Monotonic": 713205.836073506
+          },
+          {
+            "Host": "HGX169",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 4012863492039,
+              "tx_bytes": 3536252744512,
+              "rx_dropped": 94937,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "98212 kB",
+                "VmHWM": "98212 kB",
+                "Threads": "423"
+              }
+            ],
+            "Monotonic": 713158.299898262
+          }
+        ]
+      ],
+      "Errors": []
+    },
+    "tcp-two-node-128-members-probes.json": {
+      "Samples": [
+        [
+          {
+            "Host": "HGX061",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 3542930371653,
+              "tx_bytes": 37100748409264,
+              "rx_dropped": 94420,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "133580 kB",
+                "VmHWM": "133580 kB",
+                "Threads": "452"
+              }
+            ],
+            "Members": {
+              "ens1f0np0": {
+                "rx_bytes": 844012836542,
+                "tx_bytes": 9648595082739,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens1f1np1": {
+                "rx_bytes": 680969356476,
+                "tx_bytes": 9398746360429,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f0np0": {
+                "rx_bytes": 657850785720,
+                "tx_bytes": 9489335953895,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f1np1": {
+                "rx_bytes": 1377966980374,
+                "tx_bytes": 8566638271033,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              }
+            },
+            "Monotonic": 709289.898345177
+          },
+          {
+            "Host": "HGX066",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 5270157908335,
+              "tx_bytes": 4788648436771,
+              "rx_dropped": 94436,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "129828 kB",
+                "VmHWM": "129828 kB",
+                "Threads": "443"
+              }
+            ],
+            "Members": {
+              "ens1f0np0": {
+                "rx_bytes": 1500247630258,
+                "tx_bytes": 1186208832626,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f0np0": {
+                "rx_bytes": 1275859644896,
+                "tx_bytes": 1241819663190,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens1f1np1": {
+                "rx_bytes": 1234909654329,
+                "tx_bytes": 1216811762393,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f1np1": {
+                "rx_bytes": 1276785171395,
+                "tx_bytes": 1148528533360,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              }
+            },
+            "Monotonic": 709407.249991966
+          }
+        ],
+        [
+          {
+            "Host": "HGX061",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 3787630578226,
+              "tx_bytes": 37342788747721,
+              "rx_dropped": 94420,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "140348 kB",
+                "VmHWM": "140348 kB",
+                "Threads": "480"
+              }
+            ],
+            "Members": {
+              "ens1f0np0": {
+                "rx_bytes": 910088115650,
+                "tx_bytes": 9709081852177,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens1f1np1": {
+                "rx_bytes": 738028491380,
+                "tx_bytes": 9459594464641,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f0np0": {
+                "rx_bytes": 714458533068,
+                "tx_bytes": 9550106731418,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f1np1": {
+                "rx_bytes": 1443638575532,
+                "tx_bytes": 8627335554371,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              }
+            },
+            "Monotonic": 709296.008779172
+          },
+          {
+            "Host": "HGX066",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 5510264482080,
+              "tx_bytes": 5031604410437,
+              "rx_dropped": 94436,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "137108 kB",
+                "VmHWM": "137108 kB",
+                "Threads": "443"
+              }
+            ],
+            "Members": {
+              "ens1f0np0": {
+                "rx_bytes": 1567674998047,
+                "tx_bytes": 1246738679493,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f0np0": {
+                "rx_bytes": 1328211685130,
+                "tx_bytes": 1302609885318,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens1f1np1": {
+                "rx_bytes": 1293324189734,
+                "tx_bytes": 1276864240297,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f1np1": {
+                "rx_bytes": 1338464695283,
+                "tx_bytes": 1209870383021,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              }
+            },
+            "Monotonic": 709413.289923456
+          }
+        ]
+      ],
+      "Errors": []
+    },
+    "tcp-two-unidirectional-members-probes.json": {
+      "Samples": [
+        [
+          {
+            "Host": "HGX061",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 8593881629186,
+              "tx_bytes": 42975689787031,
+              "rx_dropped": 94480,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "30236 kB",
+                "VmHWM": "30236 kB",
+                "Threads": "72"
+              }
+            ],
+            "Members": {
+              "ens1f0np0": {
+                "rx_bytes": 2130092206782,
+                "tx_bytes": 11128112097253,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens1f1np1": {
+                "rx_bytes": 1904479374511,
+                "tx_bytes": 10857099921287,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f0np0": {
+                "rx_bytes": 1930529348523,
+                "tx_bytes": 10957967398392,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f1np1": {
+                "rx_bytes": 2644088913004,
+                "tx_bytes": 10035369136531,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              }
+            },
+            "Monotonic": 709748.256743371
+          },
+          {
+            "Host": "HGX066",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 11141319781511,
+              "tx_bytes": 9839184618854,
+              "rx_dropped": 94496,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "114056 kB",
+                "VmHWM": "114056 kB",
+                "Threads": "70"
+              }
+            ],
+            "Members": {
+              "ens1f0np0": {
+                "rx_bytes": 2985084356914,
+                "tx_bytes": 2462758673844,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f0np0": {
+                "rx_bytes": 2737182342273,
+                "tx_bytes": 2523791660831,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens1f1np1": {
+                "rx_bytes": 2676572058520,
+                "tx_bytes": 2454004773949,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f1np1": {
+                "rx_bytes": 2760163042433,
+                "tx_bytes": 2400992500574,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              }
+            },
+            "Monotonic": 709865.531940047
+          }
+        ],
+        [
+          {
+            "Host": "HGX061",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 8593975238167,
+              "tx_bytes": 43266232064169,
+              "rx_dropped": 94483,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "32416 kB",
+                "VmHWM": "32416 kB",
+                "Threads": "72"
+              }
+            ],
+            "Members": {
+              "ens1f0np0": {
+                "rx_bytes": 2130120186763,
+                "tx_bytes": 11200457116654,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens1f1np1": {
+                "rx_bytes": 1904512359135,
+                "tx_bytes": 10929434101798,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f0np0": {
+                "rx_bytes": 1930542303743,
+                "tx_bytes": 11030868809732,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f1np1": {
+                "rx_bytes": 2644108554818,
+                "tx_bytes": 10108297650445,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              }
+            },
+            "Monotonic": 709754.188388857
+          },
+          {
+            "Host": "HGX066",
+            "NIC": "bond0",
+            "speed": 400000,
+            "mtu": 9000,
+            "Counters": {
+              "rx_bytes": 11434272565615,
+              "tx_bytes": 9839278983688,
+              "rx_dropped": 94496,
+              "tx_dropped": 0,
+              "rx_errors": 0,
+              "tx_errors": 0
+            },
+            "Processes": [
+              {
+                "VmRSS": "139168 kB",
+                "VmHWM": "139168 kB",
+                "Threads": "70"
+              }
+            ],
+            "Members": {
+              "ens1f0np0": {
+                "rx_bytes": 3059658243279,
+                "tx_bytes": 2462781643321,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f0np0": {
+                "rx_bytes": 2809054320858,
+                "tx_bytes": 2523809971976,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens1f1np1": {
+                "rx_bytes": 2749279720180,
+                "tx_bytes": 2454027190722,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              },
+              "ens3f1np1": {
+                "rx_bytes": 2833931663991,
+                "tx_bytes": 2401023138133,
+                "rx_dropped": 0,
+                "tx_dropped": 0,
+                "rx_errors": 0,
+                "tx_errors": 0
+              }
+            },
+            "Monotonic": 709871.513706096
+          }
+        ]
+      ],
+      "Errors": []
+    }
+  },
+  "Hardware": [
+    {
+      "Host": "HGX061",
+      "Mode": "IEEE 802.3ad Dynamic link aggregation",
+      "TransmitHashPolicy": "layer3+4 (1)",
+      "Members": {
+        "ens1f0np0": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens1f1np1": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens3f0np0": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens3f1np1": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        }
+      }
+    },
+    {
+      "Host": "HGX066",
+      "Mode": "IEEE 802.3ad Dynamic link aggregation",
+      "TransmitHashPolicy": "layer3+4 (1)",
+      "Members": {
+        "ens1f0np0": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens3f0np0": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens1f1np1": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens3f1np1": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        }
+      }
+    },
+    {
+      "Host": "HGX082",
+      "Mode": "IEEE 802.3ad Dynamic link aggregation",
+      "TransmitHashPolicy": "layer3+4 (1)",
+      "Members": {
+        "ens3f0np0": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens3f1np1": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens1f0np0": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens1f1np1": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        }
+      }
+    },
+    {
+      "Host": "HGX138",
+      "Mode": "IEEE 802.3ad Dynamic link aggregation",
+      "TransmitHashPolicy": "layer3+4 (1)",
+      "Members": {
+        "ens1f1np1": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens3f0np0": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens3f1np1": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens1f0np0": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        }
+      }
+    },
+    {
+      "Host": "HGX169",
+      "Mode": "IEEE 802.3ad Dynamic link aggregation",
+      "TransmitHashPolicy": "layer3+4 (1)",
+      "Members": {
+        "ens3f1np1": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens1f1np1": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens1f0np0": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        },
+        "ens3f0np0": {
+          "speed": "100000",
+          "operstate": "up",
+          "mtu": "9000"
+        }
+      }
+    }
+  ],
+  "NUMA061And066": {
+    "node0": [
+      "ens1f0np0",
+      "ens1f1np1"
+    ],
+    "node1": [
+      "ens3f0np0",
+      "ens3f1np1"
+    ]
+  },
+  "FinalBuild": {
+    "swarmcopy-linux-x86_64": "793e6e7ccf2e4f1832bad88b03fb6d8e18a3b6c96f8e5264af67acb78c9a92fa",
+    "swarmcopy-linux-aarch64": "ae13cdd7c45132f5b07f92329dfbfa8cafe391e4f4b61c7df27360bef8f1537a"
+  },
+  "Validation": [
+    "go test -mod=vendor -race ./...",
+    "go vet -mod=vendor ./...",
+    "CLI help and missing-argument checks",
+    "interrupted/corrupt-partial process-chain recovery with independent SHA256",
+    "real SSH mesh/seed/ring",
+    "real SSH QUIC",
+    "Ctrl-C exit and temporary deployment cleanup"
+  ]
+}

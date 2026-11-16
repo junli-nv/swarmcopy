@@ -8,6 +8,7 @@ Start at the project home to install/run. Topic guides describe current main. Hi
 
 | Topic | Chinese | English |
 | --- | --- | --- |
+| Memory network benchmark, LACP and NUMA | [中文](NETWORK.zh-CN.md) | [English](NETWORK.en.md) |
 | Operation examples | [中文](EXAMPLES.zh-CN.md) | [English](EXAMPLES.en.md) |
 | Sources and node failures | [中文](SOURCE-MODES.zh-CN.md) | [English](SOURCE-MODES.en.md) |
 | Progress and cancellation | [中文](PROGRESS.zh-CN.md) | [English](PROGRESS.en.md) |

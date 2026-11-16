@@ -22,6 +22,7 @@ Build output contains both static Linux architectures and SHA256SUMS; SWARMCOPY_
 
 | Module | Responsibility |
 | --- | --- |
+| benchmark.go / benchmark_cluster.go | Bounded network streams, SSH stdin leases, measurement windows and optional NUMA |
 | main.go / help.go | CLI, peer lifecycle, HTTP and help |
 | cluster.go / parallel.go | Host expansion, saved jobs, SSH deployment and controller |
 | cli_sources.go / tree_source.go | Multiple sources, globs, immutable source plans and streams |
@@ -90,3 +91,9 @@ Freeze binaries/sources/settings for benchmarks, use fresh destinations and matc
 Update Chinese-primary/English docs, CLI help and change history together. Check links/examples/defaults and maintain topic guides rather than prepending release sections to README. Publish same-commit architecture builds, checksums and licenses. Read [QUIC patch maintenance](QUIC-TUNING.en.md) before vendor changes and keep upstream versions, patch and tests consistent. Do not publish credentials, media, private logs or reverse-analysis artifacts. Preserve upstream third-party documentation.
 
 Future work should follow profiling: small-file metadata/FD costs, combining dispersed partial replicas, and initial import recovery. Preserve default TCP and selected integrity gates rather than masking bottlenecks with complexity or concurrency.
+
+## Maintaining the network benchmark
+
+benchmark is an isolated synthetic network test, not distribute with verification disabled. Bound payload memory independently of total traffic; discard receive buffers. Mesh is simultaneous send/receive; two-node seed is unidirectional. Compare like directions. Payload stays within hosts; SSH handles deployment/control/leases, with dedicated default port 19701. NUMA uses constrained arguments to optional target numactl; system adds no dependency. --cpus changes Go parallelism only.
+
+Use per-node monotonic reset/freeze snapshots excluding warmup. Keep flows alive until all final snapshots are collected, so an early stop does not truncate another measurement. Reports omit tokens and mark failures. Ctrl+C closes stdin leases, waits for exit and cleans exclusive temporary directories without killing unrelated jobs. Validate real TCP/QUIC, no TCP fallback, frozen windows, bounded memory and cancellation. See the [network guide](NETWORK.en.md) for hardware checks, 64-stream/LACP/NUMA findings and evidence.

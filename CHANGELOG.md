@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0 — bounded-memory compute-node network benchmark
+
+- Add benchmark: synthetic TCP/QUIC payload streams between selected compute nodes, count/discard receiving, no media I/O or content hashes; production integrity remains unchanged.
+- Add mesh/ring/seed topology, 64-stream default, 1..1024 download/upload/source limits, bounded buffers, warmup, global node rates and new-path JSON reports.
+- Add optional Go CPU parallelism and explicit target numactl policies, defaulting to system NUMA; retain one default standalone runtime binary.
+- Bound peers with SSH stdin leases and lifetime; clean temporary deployment after shutdown; preserve failure state and refuse report overwrite.
+- Document 4x100G LACP/MTU9000, 64 streams, NUMA tradeoffs and unidirectional versus simultaneous send/receive. Record near-389 Gbit/s unidirectional checks and slower diagnostic rounds without claiming equivalent file-distribution speed.
+
 ## 0.8.0 — unified metadata and automatic successful-job cleanup
 
 - Keep new deployment, staging/imports, one reusable manifest-bound cache and bounded latest log under destination .swarmcopy; avoid permanent per-job metadata accumulation and home-directory media migration.

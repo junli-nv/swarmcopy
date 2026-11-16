@@ -3,7 +3,7 @@
 import os,pathlib,subprocess,tempfile
 root=pathlib.Path(__file__).resolve().parents[1]
 binary=os.environ.get('SWARMCOPY_BINARY',str(root/'swarmcopy'))
-commands=['distribute','jobs','inspect','watch','status','resume','stop','cleanup','remove','delete','prepare','peer','hashbench']
+commands=['distribute','jobs','inspect','watch','status','resume','stop','cleanup','remove','delete','prepare','peer','hashbench','benchmark']
 with tempfile.TemporaryDirectory(prefix='swarmcopy-cli-') as tmp:
     env=os.environ.copy();env['XDG_STATE_HOME']=tmp
     def call(args):
@@ -16,7 +16,7 @@ with tempfile.TemporaryDirectory(prefix='swarmcopy-cli-') as tmp:
             result=call(args)
             assert result.returncode==0,(args,result.stderr)
             assert 'Example' in result.stdout+result.stderr,(args,result.stdout,result.stderr)
-    for command in ['distribute','inspect','resume','stop','cleanup','remove','delete','prepare','peer']:
+    for command in ['distribute','inspect','resume','stop','cleanup','remove','delete','prepare','peer','benchmark']:
         r=call([command])
         assert r.returncode!=0 and 'Usage:' in r.stdout+r.stderr,command
     for command in ['watch','status']:

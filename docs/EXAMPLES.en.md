@@ -164,3 +164,11 @@ Cleanup retains jobs/watch/status history; remove/delete removes records. The un
 ```
 
 Prepare, peer and hashbench are advanced/development entry points; normal distribution deploys peers for you. See [installation](../README.en.md), [source modes](SOURCE-MODES.en.md), [progress](PROGRESS.en.md) and [development](DEVELOPMENT.en.md) for architecture deployment, connectivity and field semantics.
+
+## Network benchmark
+
+```bash
+./swarmcopy benchmark --hosts 'HGX[061,066,082,138,169]'
+```
+
+Fixed small buffers generate traffic and discard received bytes, without media I/O or content hashing; default 64 download streams per node. SSH deploys/controls only. Global progress, directional topologies, configurable concurrency and optional NUMA tests are included. Compare unidirectional and simultaneous sending/receiving separately; see the [network guide](NETWORK.en.md) for 400G bond, 64-stream, MTU/LACP and NUMA measurements.

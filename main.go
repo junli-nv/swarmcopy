@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.8.0"
+const version = "0.9.0"
 const protocol = "SCDP/1"
 
 type Manifest struct {
@@ -432,6 +432,10 @@ func main() {
 			e = prepareTreeCommand(os.Args[2:])
 		case "tree-check":
 			e = treeCheckCommand(os.Args[2:])
+		case "benchmark":
+			e = benchmarkCommand(os.Args[2:])
+		case "benchmark-peer":
+			e = benchmarkPeerCommand()
 		case "hashbench":
 			e = hashbenchCommand(os.Args[2:])
 		case "prepare":

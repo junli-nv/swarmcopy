@@ -108,6 +108,14 @@ After every target verifies and publishes, stop peers and clean owned deployment
 
 Interrupted/shared data, active locks and uncertain ownership are protected. `--keep-seeding` retains seeding peers until explicit cleanup. Cleanup failures are reported and remain retryable. See [metadata and cleanup rules](docs/CLEANUP.en.md).
 
+## Network benchmark
+
+```bash
+./swarmcopy benchmark --hosts 'HGX[061,066,082,138,169]'
+```
+
+Fixed small buffers generate traffic and discard received bytes, without media I/O or content hashing; default 64 download streams per node. SSH deploys/controls only. Global progress, directional topologies, configurable concurrency and optional NUMA tests are included. Compare unidirectional and simultaneous sending/receiving separately; see the [network guide](docs/NETWORK.en.md) for 400G bond, 64-stream, MTU/LACP and NUMA measurements.
+
 ## Common options and networking
 
 | Option | Default / meaning |

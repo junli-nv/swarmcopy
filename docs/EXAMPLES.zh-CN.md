@@ -164,3 +164,11 @@ cleanup 保留 jobs/watch/status 历史；remove/delete 删除记录。`.swarmco
 ```
 
 `prepare`、`peer` 和 `hashbench` 是高级或开发入口，日常分发不必手动启动节点 peer。异构集群部署、来源网络要求及字段语义分别见[README](../README.md)、[来源方式](SOURCE-MODES.zh-CN.md)、[进度指南](PROGRESS.zh-CN.md)和[开发指南](DEVELOPMENT.zh-CN.md)。
+
+## 网络测速
+
+```bash
+./swarmcopy benchmark --hosts 'HGX[061,066,082,138,169]'
+```
+
+固定小内存缓冲循环收发，接收即丢弃，无介质读写、无内容哈希；默认每节点 64 路下载。SSH 只负责部署与控制。支持全局进度、单向/双向拓扑、可调并发和可选 NUMA 测试。单向与同时收发的成绩应分开比较；400G bond、64 路连接、MTU/LACP 与 NUMA 的可复现实测见[网络基准指南](NETWORK.zh-CN.md)。

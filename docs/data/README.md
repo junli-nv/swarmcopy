@@ -2,12 +2,13 @@
 
 [中文索引](../README.md) · [English index](../README.en.md)
 
-此目录集中保存报告实际引用的测量数据，不是软件运行配置、节点作业状态或介质。40 份 JSON 合计约 4.52 MiB，整理时保持原始字节不变；文本文件是内存哈希微基准输出。普通使用不需要下载或编辑它们。
+此目录集中保存报告实际引用的测量数据，不是软件运行配置、节点作业状态或介质。JSON 保存历史测量与内存网络基准证据；历史文件迁移时保持原始字节不变，新采样移除路由地址和进程 ID。文本文件是内存哈希微基准输出。普通使用不需要下载或编辑它们。
 
-These are referenced measurement evidence, not runtime configuration, live jobs or media. The 40 JSON files total about 4.52 MiB; relocation preserves their bytes. The text file records a memory-hash microbenchmark. Normal use requires none of these files.
+These are referenced measurement evidence, not runtime configuration, live jobs or media. Historical files retain their original bytes; new network samples omit route addresses and process IDs. The text file records a memory-hash microbenchmark. Normal use requires none of these files.
 
 | 数据 / Data | 报告或用途 / Report or purpose |
 | --- | --- |
+| [network-benchmark-20261116.json](network-benchmark-20261116.json) | [中文](../NETWORK.zh-CN.md) / [English](../NETWORK.en.md) |
 | [adaptive-cache-barriers.json](adaptive-cache-barriers.json) | [中文](../ADAPTIVE-RESULTS.zh-CN.md) / [English](../ADAPTIVE-RESULTS.en.md) |
 | [adaptive-initial-cache-barriers.json](adaptive-initial-cache-barriers.json) | [中文](../ADAPTIVE-INITIAL-RESULTS.zh-CN.md) / [English](../ADAPTIVE-INITIAL-RESULTS.en.md) |
 | [adaptive-initial-node-results.json](adaptive-initial-node-results.json) | [中文](../ADAPTIVE-INITIAL-RESULTS.zh-CN.md) / [English](../ADAPTIVE-INITIAL-RESULTS.en.md) |

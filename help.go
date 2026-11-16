@@ -37,6 +37,7 @@ COMMANDS
   stop        Stop only the selected job's recorded peer processes
   prepare     Copy an immutable source into a seed file and build its manifest
   peer        Run one peer directly with a manifest and token
+  benchmark   Measure compute-node P2P network throughput using memory only
   hashbench   Measure memory/file SHA256 and optionally record a CPU profile
   version     Print the executable version
 
@@ -59,6 +60,8 @@ DOCS
 }
 func usageText(name string) string {
 	switch name {
+	case "benchmark":
+		return benchmarkUsage
 	case "hashbench":
 		return "Measure SHA256 without changing input files. CPU profiles require a NEW path.\n\nExamples:\n  swarmcopy hashbench --bytes-mib 2048\n  swarmcopy hashbench --file /raid/images/media.sqsh --cpu-profile /tmp/new-sha.pprof\n"
 	case "cleanup":
@@ -353,6 +356,8 @@ func commandHelp(name string) error {
 		return e
 	case "prepare":
 		return prepare(args)
+	case "benchmark":
+		return benchmarkCommand(args)
 	case "hashbench":
 		return hashbenchCommand(args)
 	case "peer":

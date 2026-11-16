@@ -8,6 +8,7 @@
 
 | 主题 | 中文 | English |
 | --- | --- | --- |
+| 内存网络基准、LACP 与 NUMA | [中文](NETWORK.zh-CN.md) | [English](NETWORK.en.md) |
 | 操作示例 | [中文](EXAMPLES.zh-CN.md) | [English](EXAMPLES.en.md) |
 | 来源方式与节点故障 | [中文](SOURCE-MODES.zh-CN.md) | [English](SOURCE-MODES.en.md) |
 | 准备进度、停止与恢复 | [中文](PROGRESS.zh-CN.md) | [English](PROGRESS.en.md) |

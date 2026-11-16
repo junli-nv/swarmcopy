@@ -22,6 +22,7 @@ build.sh 输出两种静态 Linux 二进制和 SHA256SUMS；可通过 SWARMCOPY_
 
 | 模块 | 职责 |
 | --- | --- |
+| benchmark.go / benchmark_cluster.go | 固定缓冲网络流、SSH stdin 租约、测量窗口和可选 NUMA |
 | main.go / help.go | CLI、peer 生命周期、HTTP 服务与帮助 |
 | cluster.go / parallel.go | 主机展开、作业持久化、SSH 部署与控制器 |
 | cli_sources.go / tree_source.go | 多来源参数、glob、只读来源快照与流 |
@@ -90,3 +91,9 @@ cleanup 持控制器/agent/目标锁并验证归属，清理失败保存 Cleanup
 发布前同步中文主文档、英文对应页、CLI 帮助和变更记录，检查链接/示例/默认值；文档按主题更新，禁止再将 release 段落逐次堆到 README 顶部。发布同一提交的双架构构建、校验和与许可证。改 vendor 前读 [QUIC 补丁维护](QUIC-TUNING.zh-CN.md)，保持上游版本、补丁和测试一致。仓库不提交凭据、介质、私有日志或逆向材料；第三方文档保留原文。
 
 后续优化以 profiling 为依据：大量小文件的元数据/FD 开销、分散的部分副本组合、初始导入续传。保持默认 TCP 和所选完整性门槛，不以增加复杂度或默认并发掩盖瓶颈。
+
+## 网络基准维护
+
+benchmark 是独立的合成网络测试，不是禁用校验的 distribute。保持 payload 固定缓冲、接收即丢弃，禁止按测试总量分配内存。默认 mesh 同时收发；seed 在双节点时为单向，不能混比两种成绩。流量只在 hosts 内，SSH 仅部署、控制和租约；默认端口 19701。默认无 numactl 依赖，显式 NUMA 策略通过受限参数调用现有 numactl。--cpus 仅调 Go 并行度。
+
+测量 reset/freeze 使用每节点单调时钟和计数快照，预热不计入；冻结后保留流量到全部节点取得快照，避免停止早的节点截断其他窗口。JSON 不保存 token，失败标记 failed。Ctrl+C 先关闭 stdin 租约，再等待 peer 退出、清理独占临时目录；不杀其他作业。新增场景要验证真实 TCP/QUIC、无 TCP 回退、计时冻结、有限内存和中断收尾。硬件检查、64 路/LACP/NUMA 经验和证据见[网络指南](NETWORK.zh-CN.md)。
