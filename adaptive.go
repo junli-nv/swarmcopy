@@ -12,6 +12,7 @@ import (
 
 // Performance durations are sums of concurrent request work unless named as a phase.
 type Performance struct {
+	QUICMaxPayload                                                                           int
 	QUICSockets                                                                              int
 	Transport                                                                                string
 	QUICChunkRequests                                                                        int64
@@ -82,6 +83,7 @@ func (n *Node) performanceLocked() *Performance {
 	p.Transport = transportName(n.o.Transport)
 	if p.Transport == "quic" {
 		p.QUICSockets = max(1, n.o.QUICSockets)
+		p.QUICMaxPayload = max(1452, n.o.QUICMaxPayload)
 	}
 	p.QUICChunkRequests = n.quicRequests.Load()
 	p.Adaptive = n.o.Adaptive

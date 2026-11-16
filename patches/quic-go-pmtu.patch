@@ -1,0 +1,104 @@
+--- a/vendor/github.com/quic-go/quic-go/interface.go
++++ b/vendor/github.com/quic-go/quic-go/interface.go
+@@ -104,6 +104,10 @@
+ 
+ // Config contains all configuration data needed for a QUIC server or client.
+ type Config struct {
++	// MaxUDPPayloadSize is the advertised receive and local send ceiling.
++	// Swarmcopy extension: zero defaults to 1452, valid range is 1280..8952.
++	// The initial packet remains 1280; PMTU discovery validates larger packets.
++	MaxUDPPayloadSize uint16
+ 	// GetConfigForClient is called for incoming connections.
+ 	// If the error is not nil, the connection attempt is refused.
+ 	GetConfigForClient func(info *ClientInfo) (*Config, error)
+--- a/vendor/github.com/quic-go/quic-go/config.go
++++ b/vendor/github.com/quic-go/quic-go/config.go
+@@ -33,6 +33,9 @@
+ 	if config == nil {
+ 		return nil
+ 	}
++	if config.MaxUDPPayloadSize != 0 && (config.MaxUDPPayloadSize < 1280 || config.MaxUDPPayloadSize > protocol.MaxPacketBufferSize) {
++		return fmt.Errorf("invalid maximum UDP payload size: %d", config.MaxUDPPayloadSize)
++	}
+ 	const maxStreams = 1 << 60
+ 	if config.MaxIncomingStreams > maxStreams {
+ 		config.MaxIncomingStreams = maxStreams
+@@ -49,8 +52,12 @@
+ 	if config.InitialPacketSize > 0 && config.InitialPacketSize < protocol.MinInitialPacketSize {
+ 		config.InitialPacketSize = protocol.MinInitialPacketSize
+ 	}
+-	if config.InitialPacketSize > protocol.MaxPacketBufferSize {
+-		config.InitialPacketSize = protocol.MaxPacketBufferSize
++	limit := config.MaxUDPPayloadSize
++	if limit == 0 {
++		limit = 1452
++	}
++	if config.InitialPacketSize > limit {
++		config.InitialPacketSize = limit
+ 	}
+ 	// check that all QUIC versions are actually supported
+ 	for _, v := range config.Versions {
+@@ -67,6 +74,10 @@
+ func populateConfig(config *Config) *Config {
+ 	if config == nil {
+ 		config = &Config{}
++	}
++	maxPayload := config.MaxUDPPayloadSize
++	if maxPayload == 0 {
++		maxPayload = 1452
+ 	}
+ 	versions := config.Versions
+ 	if len(versions) == 0 {
+@@ -109,6 +120,7 @@
+ 		maxIncomingUniStreams = 0
+ 	}
+ 	return &Config{
++		MaxUDPPayloadSize:                maxPayload,
+ 		GetConfigForClient:               config.GetConfigForClient,
+ 		Versions:                         versions,
+ 		HandshakeIdleTimeout:             handshakeIdleTimeout,
+--- a/vendor/github.com/quic-go/quic-go/connection.go
++++ b/vendor/github.com/quic-go/quic-go/connection.go
+@@ -342,7 +342,7 @@
+ 		MaxUniStreamNum:                 protocol.StreamNum(s.config.MaxIncomingUniStreams),
+ 		MaxAckDelay:                     ackhandler.MaxAckDelay + protocol.TimerGranularity,
+ 		AckDelayExponent:                protocol.AckDelayExponent,
+-		MaxUDPPayloadSize:               protocol.MaxPacketBufferSize,
++		MaxUDPPayloadSize:               protocol.ByteCount(conf.MaxUDPPayloadSize),
+ 		StatelessResetToken:             &statelessResetToken,
+ 		OriginalDestinationConnectionID: origDestConnID,
+ 		// For interoperability with quic-go versions before May 2023, this value must be set to a value
+@@ -479,7 +479,7 @@
+ 		MaxBidiStreamNum:               protocol.StreamNum(s.config.MaxIncomingStreams),
+ 		MaxUniStreamNum:                protocol.StreamNum(s.config.MaxIncomingUniStreams),
+ 		MaxAckDelay:                    ackhandler.MaxAckDelay + protocol.TimerGranularity,
+-		MaxUDPPayloadSize:              protocol.MaxPacketBufferSize,
++		MaxUDPPayloadSize:              protocol.ByteCount(conf.MaxUDPPayloadSize),
+ 		AckDelayExponent:               protocol.AckDelayExponent,
+ 		// For interoperability with quic-go versions before May 2023, this value must be set to a value
+ 		// different from protocol.DefaultActiveConnectionIDLimit.
+@@ -2528,9 +2528,9 @@
+ 
+ func (c *Conn) maxMTU() protocol.ByteCount {
+ 	if c.peerParams == nil || c.peerParams.MaxUDPPayloadSize <= 0 {
+-		return protocol.MaxPacketBufferSize
+-	}
+-	return min(protocol.MaxPacketBufferSize, c.peerParams.MaxUDPPayloadSize)
++		return protocol.ByteCount(c.config.MaxUDPPayloadSize)
++	}
++	return min(protocol.ByteCount(c.config.MaxUDPPayloadSize), c.peerParams.MaxUDPPayloadSize)
+ }
+ 
+ func (c *Conn) triggerSending(now monotime.Time) error {
+--- a/vendor/github.com/quic-go/quic-go/internal/protocol/protocol.go
++++ b/vendor/github.com/quic-go/quic-go/internal/protocol/protocol.go
+@@ -108,7 +108,8 @@
+ // ethernet's max size, minus the IP and UDP headers. IPv6 has a 40 byte header,
+ // UDP adds an additional 8 bytes.  This is a total overhead of 48 bytes.
+ // Ethernet's max packet size is 1500 bytes,  1500 - 48 = 1452.
+-const MaxPacketBufferSize = 1452
++// Swarmcopy: capacity for a 9000-byte IPv6 path, with per-connection limits.
++const MaxPacketBufferSize = 8952
+ 
+ // MaxLargePacketBufferSize is used when using GSO
+ const MaxLargePacketBufferSize = 20 * 1024

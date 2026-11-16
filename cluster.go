@@ -25,6 +25,7 @@ import (
 )
 
 type Job struct {
+	QUICMaxPayload                                                               int
 	QUICSockets                                                                  int
 	Transport                                                                    string
 	VerifyWindowChunks                                                           int
@@ -361,7 +362,8 @@ func clusterCommand(mode string, args []string) error {
 		fs.BoolVar(&recheck, "recheck", false, "force full existing-file verification")
 	}
 	if mode == "distribute" {
-		fs.IntVar(&j.QUICSockets, "quic-sockets", 1, "QUIC client UDP socket shards (1..32)")
+		fs.IntVar(&j.QUICMaxPayload, "quic-max-payload", 8952, "QUIC UDP payload ceiling (1452..8952), with path MTU discovery")
+		fs.IntVar(&j.QUICSockets, "quic-sockets", 4, "QUIC client UDP socket shards (1..32)")
 		fs.StringVar(&j.Transport, "transport", "tcp", "chunk data transport: tcp or quic (UDP); control stays TCP")
 		fs.IntVar(&j.VerifyWindowChunks, "verify-window-chunks", 256, "upcoming hash chunks to prefer (0..4096); requires pipeline-verify")
 		fs.BoolVar(&j.PipelineVerify, "pipeline-verify", true, "overlap ordered whole-file SHA256 with transfer")
@@ -400,6 +402,9 @@ func clusterCommand(mode string, args []string) error {
 		return errors.New("unexpected positional arguments; this release accepts a single source file")
 	}
 	if mode == "distribute" {
+		if j.QUICMaxPayload < 1452 || j.QUICMaxPayload > 8952 {
+			return errors.New("quic-max-payload must be 1452..8952")
+		}
 		if j.QUICSockets < 1 || j.QUICSockets > 32 {
 			return errors.New("quic-sockets must be 1..32")
 		}

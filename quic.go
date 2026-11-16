@@ -66,8 +66,12 @@ func jobTLS(token string) (*tls.Config, error) {
 		// Standard DNS/CA verification is replaced by mandatory job-key pinning above.
 		InsecureSkipVerify: true, VerifyConnection: verify}, nil
 }
-func quicConfig() *quic.Config {
-	return &quic.Config{HandshakeIdleTimeout: 3 * time.Second, MaxIdleTimeout: 45 * time.Second, KeepAlivePeriod: 15 * time.Second,
+func quicConfig(maxPayloads ...int) *quic.Config {
+	maxPayload := 1452
+	if len(maxPayloads) > 0 && maxPayloads[0] != 0 {
+		maxPayload = maxPayloads[0]
+	}
+	return &quic.Config{MaxUDPPayloadSize: uint16(maxPayload), HandshakeIdleTimeout: 3 * time.Second, MaxIdleTimeout: 45 * time.Second, KeepAlivePeriod: 15 * time.Second,
 		InitialStreamReceiveWindow: 2 << 20, MaxStreamReceiveWindow: 32 << 20,
 		InitialConnectionReceiveWindow: 8 << 20, MaxConnectionReceiveWindow: 128 << 20, MaxIncomingStreams: 64}
 }
@@ -109,9 +113,16 @@ func newDataClient(mode, token string, socketCounts ...int) (*http.Client, func(
 	if count < 1 || count > 32 {
 		return nil, nil, errors.New("quic-sockets must be 1..32")
 	}
+	maxPayload := 1452
+	if len(socketCounts) > 1 && socketCounts[1] != 0 {
+		maxPayload = socketCounts[1]
+	}
+	if maxPayload < 1452 || maxPayload > 8952 {
+		return nil, nil, errors.New("quic-max-payload must be 1452..8952")
+	}
 	q := &quicRoundTripper{}
 	for range count {
-		q.shards = append(q.shards, &http3.Transport{TLSClientConfig: conf.Clone(), QUICConfig: quicConfig(), DisableCompression: true, MaxResponseHeaderBytes: 8192})
+		q.shards = append(q.shards, &http3.Transport{TLSClientConfig: conf.Clone(), QUICConfig: quicConfig(maxPayload), DisableCompression: true, MaxResponseHeaderBytes: 8192})
 	}
 	c.Transport = q
 	return c, func() {
@@ -141,7 +152,7 @@ func (n *Node) startQUIC(ctx context.Context, addr string, serverErr chan<- erro
 	if err != nil {
 		return nil, err
 	}
-	srv := &http3.Server{Addr: addr, TLSConfig: conf, QUICConfig: quicConfig(), MaxHeaderBytes: 8192, IdleTimeout: 30 * time.Second,
+	srv := &http3.Server{Addr: addr, TLSConfig: conf, QUICConfig: quicConfig(n.o.QUICMaxPayload), MaxHeaderBytes: 8192, IdleTimeout: 30 * time.Second,
 		Handler: http.HandlerFunc(n.serve), ConnContext: func(_ context.Context, _ *quic.Conn) context.Context { return ctx }}
 	go func() { serverErr <- srv.Serve(packet) }()
 	return func() { _ = srv.Close(); _ = packet.Close() }, nil

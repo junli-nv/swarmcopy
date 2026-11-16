@@ -1,0 +1,12 @@
+{
+  "scope": "Five-node8GiB correctness preflight; ingress capture on receiver bond, only own source port19879, first five packets above8000bytes; not performance timing",
+  "udp_payload_lengths": [
+    7993,
+    8232,
+    8232,
+    8232,
+    8232
+  ],
+  "successful_whole_file_verification": true,
+  "capture_filter_note": "BPF greater8000 tests captured packet length, including headers; these numbers are decoded UDP payload lengths."
+}
