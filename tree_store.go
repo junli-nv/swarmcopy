@@ -121,7 +121,10 @@ func sameTreeFileContext(ctx context.Context, r *os.Root, e TreeEntry) (bool, er
 	sum, err := fileHashContext(ctx, r, e.Path, e.fileAlgorithm())
 	return sum == e.fileDigest(), err
 }
-func openTreeStore(dest string, m Manifest, policy string, rechecks ...bool) (t *treeStore, err error) {
+func openTreeStore(dest string, m Manifest, policy string, rechecks ...bool) (*treeStore, error) {
+	return openTreeStoreContext(context.Background(), dest, m, policy, rechecks...)
+}
+func openTreeStoreContext(ctx context.Context, dest string, m Manifest, policy string, rechecks ...bool) (t *treeStore, err error) {
 	if err = m.validateTree(); err != nil {
 		return nil, err
 	}
@@ -158,6 +161,9 @@ func openTreeStore(dest string, m Manifest, policy string, rechecks ...bool) (t 
 	all := true
 	var offset int64
 	for _, e := range m.Entries {
+		if err = ctx.Err(); err != nil {
+			return nil, err
+		}
 		if e.Kind == "dir" {
 			// Validate final ancestors without creating/changing final directories yet.
 			if st, x := r.Lstat(e.Path); x == nil {
@@ -186,7 +192,7 @@ func openTreeStore(dest string, m Manifest, policy string, rechecks ...bool) (t 
 		s := treeSpan{entry: e, offset: offset, available: true}
 		offset += e.Size
 		var same bool
-		same, err = cachedTreeFile(r, e, cache)
+		same, err = cachedTreeFileContext(ctx, r, e, cache)
 		if err != nil {
 			return nil, err
 		}
@@ -196,7 +202,7 @@ func openTreeStore(dest string, m Manifest, policy string, rechecks ...bool) (t 
 			all = false
 			if st, x := r.Lstat(e.Path); x == nil {
 				if policy != "replace" && policy != "resume" {
-					return nil, fmt.Errorf("destination conflict: %s; choose --existing resume or replace", e.Path)
+					return nil, fmt.Errorf("%w: %s; choose --existing resume or replace", errExistingConflict, e.Path)
 				}
 				fp, _ := fingerprint(st)
 				s.old = &fp
@@ -218,7 +224,7 @@ func openTreeStore(dest string, m Manifest, policy string, rechecks ...bool) (t 
 				linkedOld = ok && fp.Device == s.old.Device && fp.Inode == s.old.Inode
 				linkedMode = st.Mode()
 			}
-			if err = detachTreePartial(t.stage, e.Path); err != nil {
+			if err = detachTreePartialContext(ctx, t.stage, e.Path); err != nil {
 				return nil, err
 			}
 			if linkedOld {
@@ -260,7 +266,7 @@ func openTreeStore(dest string, m Manifest, policy string, rechecks ...bool) (t 
 				var old *os.File
 				old, x = r.Open(e.Path)
 				if x == nil {
-					_, x = io.CopyBuffer(f, io.LimitReader(old, e.Size), make([]byte, 256<<10))
+					_, x = io.CopyBuffer(f, io.LimitReader(contextReader{ctx, old}, e.Size), make([]byte, 256<<10))
 					old.Close()
 				}
 			}

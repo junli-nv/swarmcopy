@@ -243,7 +243,7 @@ func (n *Node) finalizeContext(ctx context.Context) (err error) {
 	if err = ctx.Err(); err != nil {
 		return err
 	}
-	if tree, ok := n.f.(*treeStore); ok {
+	if tree := n.treeStoreFile(); tree != nil {
 		err = tree.Publish(ctx, verifyMode(n.o.Verify) == "full")
 	} else {
 		err = publish(n.f.Name(), n.o.File)

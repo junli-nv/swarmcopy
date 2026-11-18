@@ -1,0 +1,29 @@
+{
+  "date": "2026-11-18",
+  "version": "0.9.2",
+  "scenario": "direct-source existing complete replicas; not a fresh transfer benchmark",
+  "targets": 140,
+  "files_per_target": 8,
+  "bytes_per_target": 322781454336,
+  "summary": {
+    "Started": "2026-11-18T13:31:09.767387958Z",
+    "Finished": "2026-11-18T13:37:04.658646062Z",
+    "TotalSeconds": 354.891258104,
+    "PreparationSeconds": 56.506566899,
+    "DistributionSeconds": 298.384691205,
+    "NetworkReceivedBytes": 0,
+    "LocalCopiedBytes": 0,
+    "ReusedBytes": 45189403607040,
+    "AverageNetworkMiBps": 0,
+    "AverageLocalMiBps": 0,
+    "MedianNodeNetworkMiBps": 0,
+    "CompletedNodes": 140,
+    "TotalNodes": 140
+  },
+  "all_targets_verified": true,
+  "node_errors": 0,
+  "cleanup_errors": 0,
+  "arm_hardware_tested": false,
+  "tested_candidate_sha256": "e43258503125fbd17c14f3e3e6eef859f071b15e9c6ddd1e53738a5eb934d38c",
+  "candidate_note": "Subsequent executable changes only clarify CLI help and startup progress text; final source reran race/vet, CLI and TCP/QUIC chunks/full process tests."
+}

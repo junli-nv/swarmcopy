@@ -17,6 +17,8 @@ import (
 	"syscall"
 )
 
+var errExistingConflict = errors.New("destination conflict")
+
 type treeVerified map[string]fileFingerprint
 
 const treeCacheName = ".swarmcopy/cache.json"
@@ -121,6 +123,7 @@ func cachedTreeFileContext(ctx context.Context, r *os.Root, e TreeEntry, cache t
 
 type treeInventory struct {
 	Complete                         bool
+	UnverifiedFiles                  int
 	Files, ReusedFiles, MissingFiles int
 	ReusedBytes                      int64
 	Conflicts                        []string
@@ -195,6 +198,7 @@ func treeCheckCommand(args []string) error {
 	manifest := fs.String("manifest", "", "trusted tree manifest")
 	dest := fs.String("dest", "", "destination directory")
 	recheck := fs.Bool("recheck", false, "bypass verified metadata cache")
+	metadata := fs.Bool("metadata-only", false, "check metadata and verified fingerprints without hashing media")
 	watchInput := fs.Bool("watch-stdin", false, "cancel inventory when the controller input stream closes")
 	if err := fs.Parse(args); err != nil {
 		return err
@@ -214,7 +218,12 @@ func treeCheckCommand(args []string) error {
 	if *watchInput {
 		go func() { io.Copy(io.Discard, os.Stdin); stop() }()
 	}
-	out, err := inspectTreeContext(ctx, *dest, m, *recheck)
+	out, err := func() (treeInventory, error) {
+		if *metadata {
+			return inspectTreeMetadata(ctx, *dest, m, *recheck)
+		}
+		return inspectTreeContext(ctx, *dest, m, *recheck)
+	}()
 	if err != nil {
 		return err
 	}
@@ -242,6 +251,9 @@ func promptExisting(in io.Reader, out io.Writer) (string, error) {
 	}
 }
 func preflightTree(ctx context.Context, r sshRunner, j *Job, m Manifest, manifest []byte, selected ...string) (bool, error) {
+	return preflightTreeMode(ctx, r, j, m, manifest, false, selected...)
+}
+func preflightTreeMode(ctx context.Context, r sshRunner, j *Job, m Manifest, manifest []byte, metadataOnly bool, selected ...string) (bool, error) {
 	var mu sync.Mutex
 	anyComplete := false
 	var conflicts int
@@ -255,6 +267,9 @@ func preflightTree(ctx context.Context, r sshRunner, j *Job, m Manifest, manifes
 			return e
 		}
 		cmd := shellQuote(j.remoteDir()+"/swarmcopy") + " tree-check --manifest " + shellQuote(mp) + " --dest " + shellQuote(j.Dest) + " --watch-stdin"
+		if metadataOnly {
+			cmd += " --metadata-only"
+		}
 		if j.Recheck {
 			cmd += " --recheck"
 		}
@@ -262,7 +277,6 @@ func preflightTree(ctx context.Context, r sshRunner, j *Job, m Manifest, manifes
 		if e != nil {
 			return e
 		}
-		reportNode(c)
 		var inv treeInventory
 		if e = json.Unmarshal(b, &inv); e != nil {
 			return e
@@ -271,7 +285,7 @@ func preflightTree(ctx context.Context, r sshRunner, j *Job, m Manifest, manifes
 		defer mu.Unlock()
 		anyComplete = anyComplete || inv.Complete
 		conflicts += len(inv.Conflicts)
-		fmt.Printf("EXISTING %s: valid=%d missing=%d different=%d total=%d\n", h, inv.ReusedFiles, inv.MissingFiles, len(inv.Conflicts), inv.Files)
+		fmt.Printf("EXISTING %s: valid=%d missing=%d different=%d total=%d pending-verification=%d\n", h, inv.ReusedFiles, inv.MissingFiles, len(inv.Conflicts), inv.Files, inv.UnverifiedFiles)
 		for i, p := range inv.Conflicts {
 			if i >= 10 {
 				fmt.Printf("  ... %d more\n", len(inv.Conflicts)-i)
@@ -305,4 +319,98 @@ func preflightTree(ctx context.Context, r sshRunner, j *Job, m Manifest, manifes
 		}
 	}
 	return anyComplete, nil
+}
+
+// Direct-source jobs already have a trusted complete origin. Do not make every
+// node hash its media inside the short SSH deployment deadline.
+func inspectTreeMetadata(ctx context.Context, dest string, m Manifest, recheck bool) (treeInventory, error) {
+	out := treeInventory{Complete: true, Files: m.fileCount(), Conflicts: []string{}}
+	view, err := openStartupTree(dest, m, recheck)
+	if err != nil {
+		return out, err
+	}
+	defer view.Close()
+	for _, e := range m.Entries {
+		if err := ctx.Err(); err != nil {
+			return out, err
+		}
+		if e.Kind == "dir" {
+			if _, err := view.root.Lstat(e.Path); os.IsNotExist(err) {
+				out.Complete = false
+			} else if err != nil {
+				return out, err
+			}
+		}
+	}
+	for _, s := range view.spans {
+		if err := ctx.Err(); err != nil {
+			return out, err
+		}
+		if s.cached {
+			out.ReusedFiles++
+			out.ReusedBytes += s.entry.Size
+			continue
+		}
+		out.Complete = false
+		if !s.exists {
+			out.MissingFiles++
+			continue
+		}
+		st, err := view.root.Lstat(s.entry.Path)
+		if err != nil {
+			return out, err
+		}
+		if st.Size() == s.entry.Size {
+			out.UnverifiedFiles++
+		} else {
+			out.Conflicts = append(out.Conflicts, s.entry.Path)
+		}
+	}
+	return out, nil
+}
+
+func resolveExistingDecisions(ctx context.Context, r sshRunner, j *Job, m Manifest, manifest []byte, rows []observation) error {
+	hosts := []string{}
+	for i, row := range rows {
+		if row.err == nil && row.st.ExistingConflict && !strings.HasPrefix(j.NodeIssues[j.Hosts[i]], "resolving-existing:") {
+			hosts = append(hosts, j.Hosts[i])
+		}
+	}
+	if len(hosts) == 0 {
+		return nil
+	}
+	if j.Existing == "resume" || j.Existing == "replace" {
+		return applyExistingDecision(ctx, r, j, m, manifest, hosts, j.Existing)
+	}
+	if j.Existing == "keep" {
+		return errors.New("cancelled by --existing keep; existing files preserved")
+	}
+	fmt.Printf("EXISTING verified content conflicts on %s; originals preserved\n", strings.Join(hosts, ","))
+	tty, err := os.OpenFile("/dev/tty", os.O_RDWR, 0)
+	if err != nil {
+		return errors.New("verified destination conflicts need a choice; resume with --existing resume/replace/keep")
+	}
+	choice, err := promptExisting(tty, tty)
+	tty.Close()
+	if err != nil {
+		return err
+	}
+	return applyExistingDecision(ctx, r, j, m, manifest, hosts, choice)
+}
+
+func applyExistingDecision(ctx context.Context, r sshRunner, j *Job, m Manifest, manifest []byte, hosts []string, choice string) error {
+	if choice == "keep" {
+		return errors.New("cancelled by --existing keep; existing files preserved")
+	}
+	if choice != "resume" && choice != "replace" {
+		return errors.New("invalid existing-file choice")
+	}
+	j.Existing = choice
+	if err := j.save(); err != nil {
+		return err
+	}
+	_, err := nodeStage(ctx, j, hosts, "resolving-existing", func(c context.Context, h string) error {
+		return startRemotePeer(c, r, *j, m, manifest, h)
+	})
+	return err
 }

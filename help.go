@@ -97,7 +97,8 @@ Multiple files go directly under --dest; directories retain their basename.
 Repeat --source, use a quoted glob, or pass source operands.
 Matching existing files are reused and can seed missing nodes. If a complete
 replica already exists, controller-to-seed media transfer is skipped.
-Conflicting regular files prompt once with --existing ask (default).
+Conflicting regular files prompt once with --existing ask (default); background
+verification may discover conflicts later and reuses the selected policy.
 Use --existing resume to reuse matching chunks, replace to receive conflicting
 files afresh, or keep to cancel safely. Old files stay intact until verification.
 Publication is atomic per file, not across the whole dataset.
@@ -105,7 +106,9 @@ Healthy nodes continue when other nodes are unavailable. Monitoring starts
 without waiting for every listener. Failed/pending nodes remain incomplete.
 Per-node diagnostics identify the host, stage, peer process and recent log.
 --node-timeout bounds each SSH/deployment/inventory attempt (default 1m);
-slow existing-file inventory can continue inside the peer after startup.
+direct mode inventories metadata/caches only; peer listeners open before local
+content verification. Proven chunks can seed during verification; downloads
+start after local initialization. Staged mode retains full seed inventory.
 Resume the same job after recovery; this does not automatically redeploy offline hosts.
 
 Examples:

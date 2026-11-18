@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.9.1"
+const version = "0.9.2"
 const protocol = "SCDP/1"
 
 type Manifest struct {
@@ -255,6 +255,9 @@ type Options struct {
 	Lifetime, Stall                          time.Duration
 }
 type Status struct {
+	CheckingExisting, ExistingConflict       bool
+	ExistingCheckedBytes, ExistingTotalBytes int64
+
 	Instance                    string
 	Verify, ChunkHash, FileHash string
 	Files                       int
@@ -308,39 +311,41 @@ type Remote struct {
 	seen time.Time
 }
 type Node struct {
-	instance                       string
-	manifestID                     string
-	localSource                    *sourceView
-	localNext                      int
-	localCopied                    atomic.Int64
-	dataClient                     *http.Client
-	quicRequests                   atomic.Int64
-	verifier                       *orderedVerifier
-	m                              Manifest
-	o                              Options
-	token                          string
-	f                              contentFile
-	mu                             sync.Mutex
-	have, busy                     []bool
-	remotes                        []Remote
-	peerBusy                       map[string]int
-	from                           map[string]int64
-	complete, origin               bool
-	failure                        string
-	lastProgress                   time.Time
-	downloaded, uploaded           atomic.Int64
-	up, down                       pacer
-	slots                          chan struct{}
-	client                         *http.Client
-	flights                        map[int]map[string]*flight
-	chunkLocks                     []sync.Mutex
-	sourceStats                    map[string]*sourceState
-	active, target, cooldownTicks  int
-	probing                        bool
-	previousRate                   float64
-	perf                           Performance
-	wireReceived                   atomic.Int64
-	transferStarted, transferEnded time.Time
+	instance                           string
+	manifestID                         string
+	localSource                        *sourceView
+	localNext                          int
+	localCopied                        atomic.Int64
+	dataClient                         *http.Client
+	quicRequests                       atomic.Int64
+	verifier                           *orderedVerifier
+	m                                  Manifest
+	o                                  Options
+	token                              string
+	f                                  contentFile
+	mu                                 sync.Mutex
+	have, busy                         []bool
+	remotes                            []Remote
+	peerBusy                           map[string]int
+	from                               map[string]int64
+	checkingExisting, existingConflict bool
+	existingChecked, existingTotal     int64
+	complete, origin                   bool
+	failure                            string
+	lastProgress                       time.Time
+	downloaded, uploaded               atomic.Int64
+	up, down                           pacer
+	slots                              chan struct{}
+	client                             *http.Client
+	flights                            map[int]map[string]*flight
+	chunkLocks                         []sync.Mutex
+	sourceStats                        map[string]*sourceState
+	active, target, cooldownTicks      int
+	probing                            bool
+	previousRate                       float64
+	perf                               Performance
+	wireReceived                       atomic.Int64
+	transferStarted, transferEnded     time.Time
 }
 
 func token(path string) (string, error) {
@@ -486,18 +491,29 @@ func main() {
 	}
 }
 
-func (n *Node) scan() error {
+func (n *Node) scan() error { return n.scanContext(context.Background()) }
+func (n *Node) scanContext(ctx context.Context) error {
 	buf := make([]byte, int(n.m.ChunkSize))
 	whole := newContentHash(n.m)
 	count := 0
 	for i, h := range n.m.Chunks {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		n.mu.Lock()
+		known := n.have[i]
+		n.mu.Unlock()
+		if known && verifyMode(n.o.Verify) == "chunks" {
+			count++
+			continue
+		}
 		b := buf[:n.m.length(i)]
-		if tree, ok := n.f.(*treeStore); ok && !tree.chunkMayExist(int64(i)*n.m.ChunkSize, n.m.length(i)) {
+		if tree := n.treeStoreFile(); tree != nil && !tree.chunkMayExist(int64(i)*n.m.ChunkSize, n.m.length(i)) {
 			continue
 		}
 		_, e := n.f.ReadAt(b, int64(i)*n.m.ChunkSize)
 		if e == nil && contentDigest(n.m.chunkAlgorithm(), b) == h {
-			n.have[i] = true
+			n.startupHave(i)
 			count++
 			if verifyMode(n.o.Verify) == "full" {
 				whole.Write(b)
@@ -510,7 +526,9 @@ func (n *Node) scan() error {
 	if n.origin && count != len(n.have) {
 		return errors.New("existing final file does not match manifest; refusing overwrite")
 	}
-	n.complete = n.origin
+	n.mu.Lock()
+	n.complete = n.origin && !n.checkingExisting
+	n.mu.Unlock()
 	log.Printf("VERIFIED existing_chunks=%d/%d", count, len(n.have))
 	return nil
 }
@@ -521,7 +539,7 @@ func (n *Node) snapshot() Status {
 	for k, v := range n.from {
 		from[k] = v
 	}
-	return Status{Instance: n.instance, Verify: verifyMode(n.o.Verify), ChunkHash: n.m.chunkAlgorithm(), FileHash: n.m.fileAlgorithm(), Files: n.m.fileCount(), Entries: len(n.m.Entries), Transport: transportName(n.o.Transport), Performance: n.performanceLocked(), Protocol: protocol, Size: n.m.Size, VerifiedBytes: verifiedBytes(n.m, n.have), ID: n.protocolID(), Version: version, Have: append([]bool(nil), n.have...), Complete: n.complete,
+	return Status{ExistingCheckedBytes: n.existingChecked, ExistingTotalBytes: n.existingTotal, CheckingExisting: n.checkingExisting, ExistingConflict: n.existingConflict, Instance: n.instance, Verify: verifyMode(n.o.Verify), ChunkHash: n.m.chunkAlgorithm(), FileHash: n.m.fileAlgorithm(), Files: n.m.fileCount(), Entries: len(n.m.Entries), Transport: transportName(n.o.Transport), Performance: n.performanceLocked(), Protocol: protocol, Size: n.m.Size, VerifiedBytes: verifiedBytes(n.m, n.have), ID: n.protocolID(), Version: version, Have: append([]bool(nil), n.have...), Complete: n.complete,
 		Origin: n.origin, Downloaded: n.downloaded.Load(), Uploaded: n.uploaded.Load(), LocalCopied: n.localCopied.Load(), From: from, Error: n.failure}
 }
 func (n *Node) serve(w http.ResponseWriter, r *http.Request) {
@@ -776,28 +794,19 @@ func peer(args []string) error {
 		log.Printf("LOCAL SOURCE: original files will be read and chunk-verified locally; no network download for this target")
 	}
 
-	log.Printf("STARTUP checking existing/partial files at %s; listener opens after local verification", o.File)
+	log.Printf("STARTUP preparing existing/partial files at %s", o.File)
 	scanStart := time.Now()
 	if m.isTree() {
-		if o.Existing != "" && o.Existing != "keep" && o.Existing != "resume" && o.Existing != "replace" {
+		if o.Existing != "" && o.Existing != "ask" && o.Existing != "keep" && o.Existing != "resume" && o.Existing != "replace" {
 			return errors.New("invalid existing-file policy")
 		}
-		store, err := openTreeStore(o.File, m, o.Existing, o.Recheck)
+		view, err := openStartupTree(o.File, m, o.Recheck)
 		if err != nil {
 			return err
 		}
-		n.f = store
-		n.origin = store.complete
-		if n.origin {
-			for i := range n.have {
-				n.have[i] = true
-			}
-			n.complete = true
-			log.Printf("VERIFIED tree files=%d; all existing content matches", m.fileCount())
-		} else if err = n.scan(); err != nil {
-			store.Close()
-			return err
-		}
+		n.f = view
+		n.existingTotal = view.totalBytes()
+		n.checkingExisting = true
 	} else {
 		path := o.File
 		info, err := os.Lstat(path)
@@ -866,19 +875,23 @@ func peer(args []string) error {
 	}
 	defer n.f.Close()
 
-	n.perf.ScanSeconds = time.Since(scanStart).Seconds()
 	n.initTransfersLocked()
-	n.perf.Stage = "transfer"
-	if n.complete {
-		n.perf.Stage = "complete"
+	if n.checkingExisting {
+		n.perf.Stage = "scan"
 	} else {
-		n.transferStarted = time.Now()
+		n.perf.ScanSeconds = time.Since(scanStart).Seconds()
+		n.perf.Stage = "transfer"
+		if n.complete {
+			n.perf.Stage = "complete"
+		} else {
+			n.transferStarted = time.Now()
+		}
 	}
 	signalCtx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	ctx, cancel := context.WithTimeout(signalCtx, o.Lifetime)
 	defer cancel()
-	log.Printf("STARTUP local verification finished in %s; opening listener %s", time.Since(scanStart).Round(time.Second), o.Listen)
+	log.Printf("STARTUP opening listener %s; local verification continues in background=%t", o.Listen, n.checkingExisting)
 	ln, e := net.Listen("tcp", o.Listen)
 	if e != nil {
 		return e
@@ -894,23 +907,47 @@ func peer(args []string) error {
 	defer closeQUIC()
 	go func() { serverErr <- srv.Serve(ln) }()
 	var wg sync.WaitGroup
-	if o.PipelineVerify && !n.complete {
-		n.verifier = newOrderedVerifier(n)
-		wg.Add(1)
-		go func() { defer wg.Done(); n.verifier.run(ctx) }()
-	}
+	defer func() { cancel(); srv.Close(); closeQUIC(); wg.Wait() }()
 	wg.Add(1)
 	go func() { defer wg.Done(); n.discover(ctx, addresses) }()
-	if o.Adaptive {
-		wg.Add(1)
-		go func() { defer wg.Done(); n.control(ctx) }()
+	startTransfers := func() {
+		n.mu.Lock()
+		n.checkingExisting = false
+		n.perf.ScanSeconds = time.Since(scanStart).Seconds()
+		n.complete = n.origin
+		n.perf.Stage = "transfer"
+		n.lastProgress = time.Now()
+		if n.complete {
+			n.perf.Stage = "complete"
+		} else {
+			n.transferStarted = time.Now()
+		}
+		n.mu.Unlock()
+		if o.PipelineVerify && !n.snapshot().Complete {
+			n.verifier = newOrderedVerifier(n)
+			wg.Add(1)
+			go func() { defer wg.Done(); n.verifier.run(ctx) }()
+		}
+		if o.Adaptive {
+			wg.Add(1)
+			go func() { defer wg.Done(); n.control(ctx) }()
+		}
+		for j := 0; j < n.maxWorkers(); j++ {
+			wg.Add(1)
+			go func() { defer wg.Done(); n.worker(ctx) }()
+		}
+		log.Printf("READY listen=%s transport=%s bytes=%d chunks=%d origin=%t", ln.Addr(), transportName(o.Transport), m.Size, len(m.Chunks), n.snapshot().Origin)
 	}
-	for j := 0; j < n.maxWorkers(); j++ {
+	var initialized <-chan error
+	if view, ok := n.f.(*startupTree); ok {
+		ready := make(chan error, 1)
+		initialized = ready
 		wg.Add(1)
-		go func() { defer wg.Done(); n.worker(ctx) }()
+		go func() { defer wg.Done(); ready <- view.prepare(ctx, n) }()
+		log.Printf("VERIFYING LOCAL: control endpoint ready; verified chunks become available progressively")
+	} else {
+		startTransfers()
 	}
-	defer func() { cancel(); srv.Close(); closeQUIC(); wg.Wait() }()
-	log.Printf("READY listen=%s transport=%s bytes=%d chunks=%d origin=%t", ln.Addr(), transportName(o.Transport), m.Size, len(m.Chunks), n.origin)
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	ticks := 0
@@ -923,8 +960,31 @@ func peer(args []string) error {
 			return nil
 		case e := <-serverErr:
 			return e
+		case err := <-initialized:
+			initialized = nil
+			if err != nil {
+				if errors.Is(err, errExistingConflict) && (o.Existing == "" || o.Existing == "ask") {
+					n.mu.Lock()
+					n.checkingExisting = false
+					n.existingConflict = true
+					n.failure = err.Error()
+					n.perf.Stage = "existing-conflict"
+					n.mu.Unlock()
+					log.Printf("EXISTING DECISION REQUIRED: %v; originals preserved", err)
+					continue
+				}
+				return err
+			}
+			startTransfers()
 		case <-ticker.C:
 			st := n.snapshot()
+			if st.CheckingExisting || st.ExistingConflict {
+				ticks++
+				if ticks%10 == 0 {
+					log.Printf("LOCAL CHECK verified_bytes=%d/%d waiting_for_policy=%t elapsed=%s", st.VerifiedBytes, st.Size, st.ExistingConflict, time.Since(scanStart).Round(time.Second))
+				}
+				continue
+			}
 			if st.Error != "" {
 				return errors.New(st.Error)
 			}
@@ -1030,7 +1090,7 @@ func statusCommand(args []string) error {
 					count++
 				}
 			}
-			result[a] = map[string]any{"Verify": verifyMode(st.Verify), "ChunkHash": hashName(st.ChunkHash), "FileHash": hashName(st.FileHash), "Protocol": st.Protocol, "Size": st.Size, "VerifiedBytes": st.VerifiedBytes, "Complete": st.Complete, "Chunks": count, "TotalChunks": len(st.Have),
+			result[a] = map[string]any{"ExistingCheckedBytes": st.ExistingCheckedBytes, "ExistingTotalBytes": st.ExistingTotalBytes, "CheckingExisting": st.CheckingExisting, "ExistingConflict": st.ExistingConflict, "Verify": verifyMode(st.Verify), "ChunkHash": hashName(st.ChunkHash), "FileHash": hashName(st.FileHash), "Protocol": st.Protocol, "Size": st.Size, "VerifiedBytes": st.VerifiedBytes, "Complete": st.Complete, "Chunks": count, "TotalChunks": len(st.Have),
 				"Downloaded": st.Downloaded, "Uploaded": st.Uploaded, "LocalCopied": st.LocalCopied, "From": st.From, "Error": st.Error, "ID": st.ID}
 			if !st.Complete || st.Error != "" {
 				ok = false

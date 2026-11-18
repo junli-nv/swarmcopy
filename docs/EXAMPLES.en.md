@@ -65,7 +65,7 @@ Shell expansion/positional inputs also work: `./swarmcopy distribute --hosts @ho
   --dest /raid/images --existing replace
 ```
 
-Default --existing ask lists conflicts and prompts once. Keep cancels on a conflict; it does not skip conflicts and declare success. Matching files are reused even with replace. Old final files remain until verified per-file replacement; allow independent staging space. Extra target files are not deleted.
+Default --existing ask lists conflicts and prompts once. Direct-mode background checks may discover conflicts later; the chosen policy also applies to those nodes. Keep cancels on a conflict; it does not skip conflicts and declare success. Matching files are reused even with replace. Old final files remain until verified per-file replacement; allow independent staging space. Extra target files are not deleted.
 
 ## Host lists and SSH
 

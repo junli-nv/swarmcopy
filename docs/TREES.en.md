@@ -18,8 +18,8 @@ Full-mode treeHash consumes ordered bytes and verifies each file with its declar
 
 1. Freeze repeated sources, source operands and glob results; recursively collect entries. Reject duplicate basenames, overlapping roots, symlinks and special files.
 2. Hash the trusted source, checking identity/size/mtime/ctime, permissions and directory membership before/after. Reuse unchanged source metadata caches unless recheck is set.
-3. Deploy the same executable over SSH, upload the trusted manifest, then run tree-check on every node.
-4. List content conflicts and apply existing policy. Ask prompts once through /dev/tty before publication; scripts must select a policy explicitly.
+3. Deploy the same executable over SSH, upload the trusted manifest, then run tree-check on every node. Direct mode inventories metadata/caches only; staged mode verifies uncached contents before selecting a seed.
+4. List content conflicts and apply existing policy. Ask prompts once through /dev/tty; direct-mode background verification may discover conflicts after healthy nodes have published. The selected policy applies to later conflicts; scripts must select a policy explicitly.
 5. A controller included among targets directly serves original files; identical local paths reuse them and different paths use native copying. Otherwise, if a complete replica exists, skip controller media upload and let that replica seed others—even if the selected seed lacks files. Otherwise import once to the selected seed.
 6. Initial import uses a Go archive/tar stream with no complete intermediate archive. Only after the controller's final source snapshot check is a completion marker written. The seed independently matches its computed manifest to the trusted controller manifest before retaining imported data.
 7. Run existing P2P scheduling, TCP/QUIC, pacing, verification and global monitoring; atomically save results and stop owned peers and clean deployment/empty staging on completion, unless keep-seeding is selected.
@@ -79,3 +79,9 @@ The table records development-build functional cases. Final x86_64 candidate SHA
 Profile metadata/FD overhead on large small-file trees before adding descriptor pools or file-aligned small-chunk packing. Never trade away integrity for cache acceptance. Potential next work: initial SSH chunk resume, and combining partial replicas when no single complete replica exists.
 
 All new strategies enter main and the same executable behind explicit options. New performance claims need identical hardware/manifests, fresh targets and comparable caches, with staging, inventory, deployment, transfer, hash, fsync and publication accounted for separately. This functional table is not a speedup claim.
+
+## Background verification of existing replicas
+
+When the source node is a target (SOURCE MODE: direct), startup inventory checks metadata and valid content-verification caches. A same-name, same-size file without a trusted cache remains unverified. Peers open their status endpoint before background local verification; each verified chunk becomes available to other peers immediately. Local downloads start after initialization. A slow disk no longer forces all targets to wait for a full inventory pass. Staged mode retains full inventory to find a complete seed and avoid unnecessary SSH import.
+
+VERIFYING LOCAL in watch means local verification is active and proven chunks can seed; it does not mean offline or complete. Fully verified files get incremental cache checkpoints that survive cancellation. Names and sizes never establish availability. Same-size conflicts may be discovered later. The default still prompts; unattended jobs should specify --existing resume, replace or keep. A chosen policy also applies to later conflicts. Originals remain until verified replacements publish.

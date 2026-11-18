@@ -65,6 +65,10 @@ Matching files are reused; missing data is filled only where needed. Different c
 | `--existing replace` | Receive conflicting files afresh and replace after verification |
 | `--existing keep` | Cancel on content conflicts and retain old files |
 
+When the source node is a target (SOURCE MODE: direct), startup inventory checks metadata and valid content-verification caches. A same-name, same-size file without a trusted cache remains unverified. Peers open their status endpoint before background local verification; each verified chunk becomes available to other peers immediately. Local downloads start after initialization. A slow disk no longer forces all targets to wait for a full inventory pass. Staged mode retains full inventory to find a complete seed and avoid unnecessary SSH import.
+
+VERIFYING LOCAL in watch means local verification is active and proven chunks can seed; it does not mean offline or complete. Fully verified files get incremental cache checkpoints that survive cancellation. Names and sizes never establish availability. Same-size conflicts may be discovered later. The default still prompts; unattended jobs should specify --existing resume, replace or keep. A chosen policy also applies to later conflicts. Originals remain until verified replacements publish.
+
 Publication is atomic per file, not across a dataset. Extra target files are not deleted, so this is not a directory mirror with deletion. Regular files/directories are supported; symlinks and special files are not. See [layout and limits](docs/TREES.en.md). Keep sources and targets unchanged by other writers during a job.
 
 ## Monitor, stop and resume

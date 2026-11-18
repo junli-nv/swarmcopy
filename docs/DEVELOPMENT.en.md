@@ -4,6 +4,8 @@
 
 This guide describes current architecture, compatibility contracts and validation. Maintain main only and ship all options in one executable. Release history belongs in [CHANGELOG](../CHANGELOG.md); historical measurements have separate indexed reports.
 
+Before every change, fetch remote branches and tags (git fetch origin --tags), inspect the worktree and synchronize the baseline while preserving local changes. Fetch again before publishing; rerun affected validation after any merge.
+
 ## Build and local validation
 
 Use Go 1.26+ and vendored dependencies. Go/Python are development tools, not distribution runtime requirements.
@@ -14,6 +16,7 @@ go vet -mod=vendor ./...
 bash scripts/build.sh
 SWARMCOPY_BINARY="$PWD/dist/swarmcopy-linux-x86_64" python3 scripts/cli-smoke.py
 SWARMCOPY_BINARY="$PWD/dist/swarmcopy-linux-x86_64" python3 scripts/integration.py
+SWARMCOPY_BINARY="$PWD/dist/swarmcopy-linux-x86_64" go test -mod=vendor -race -run TestStartupTreePeerProcesses -v .
 ```
 
 Build output contains both static Linux architectures and SHA256SUMS; SWARMCOPY_GO selects a compiler. The last two commands check CLI behavior and a real process chain in isolated temporary directories. x86_64 has cluster hardware validation; ARM cross-compilation is not hardware validation.
@@ -56,6 +59,8 @@ New staging/imports stay in destination .swarmcopy on the final filesystem. Resu
 
 Conflicting resume/replace uses independent staging and preserves old published files until selected verification passes. Publication is per file, not a dataset transaction. Recover link-before-unlink crashes by detaching retained hardlinks before repair. Metadata/fsync errors cannot report Complete. Use os.Root, validated relative paths and ancestor-type checks; reject symlinks/special files. Coordinate with external writers.
 
+Direct inventory trusts verified caches plus metadata; uncached same-size files remain unverified. startup_tree.go verifies files and cross-file chunks after listeners open, advertising only proven Have bits. Downloads start after writable initialization. Staged mode retains full inventory. File checkpoints require full digests and stable fingerprints; chunks downloads cannot mint full caches. Late conflicts reuse saved policies; prompting restarts only affected owned peers. Count inventory success once and distinguish node deadlines from controller cancellation. Test HTTP serving during scanning, cache boundaries, cancellation, mutation, conflicts and tree process chains.
+
 ## Scheduling and accounting
 
 Fixed downloads/uploads default to 4/4; adaptive and endgame are off. Adaptive changes download admission only, within effective min/max. Live tuning is not exposed. Reducing admission must not cancel normal in-flight work.
@@ -89,6 +94,8 @@ Choose checks for the change: IDs/legacy manifests, source mutation, bad/short/o
 Freeze binaries/sources/settings for benchmarks, use fresh destinations and matching cache treatment, preserve every round and in-transfer retries. Distinguish preparation, inventory, transfer, hashing, fsync, publication and stop/cleanup. State timing and independent verification boundaries. Resume is not a fresh benchmark; CPU hash ratios are not network gains. Raw evidence lives in [data](data/README.md), with reports in the [index](README.en.md).
 
 Update Chinese-primary/English docs, CLI help and change history together. Check links/examples/defaults and maintain topic guides rather than prepending release sections to README. Publish same-commit architecture builds, checksums and licenses. Read [QUIC patch maintenance](QUIC-TUNING.en.md) before vendor changes and keep upstream versions, patch and tests consistent. Do not publish credentials, media, private logs or reverse-analysis artifacts. Preserve upstream third-party documentation.
+
+0.9.2 validated 140 existing complete replicas in direct mode (300.61 GiB each): 5m54.891s total, 56.507s preparation, zero media download, no node or cleanup errors. [Aggregate evidence](data/startup-v0.9.2-validation.json) excludes credentials and raw logs. This is a reuse/verification regression, not a fresh-transfer benchmark or a throughput comparison with the earlier transfer.
 
 Future work should follow profiling: small-file metadata/FD costs, combining dispersed partial replicas, and initial import recovery. Preserve default TCP and selected integrity gates rather than masking bottlenecks with complexity or concurrency.
 

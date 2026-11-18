@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"io"
 	"os"
@@ -11,6 +12,9 @@ import (
 // A crash between publication's link and unlink may leave two hard links.
 // Detach a retained partial before any write so the old final stays immutable.
 func detachTreePartial(r *os.Root, p string) error {
+	return detachTreePartialContext(context.Background(), r, p)
+}
+func detachTreePartialContext(ctx context.Context, r *os.Root, p string) error {
 	st, err := r.Lstat(p)
 	if os.IsNotExist(err) {
 		return nil
@@ -39,7 +43,7 @@ func detachTreePartial(r *os.Root, p string) error {
 		return err
 	}
 	defer r.Remove(tmp)
-	_, err = io.CopyBuffer(out, in, make([]byte, 256<<10))
+	_, err = io.CopyBuffer(out, contextReader{ctx, in}, make([]byte, 256<<10))
 	if err == nil {
 		err = out.Sync()
 	}

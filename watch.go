@@ -152,8 +152,14 @@ func render(observations []observation, previous map[string]observation, clear b
 		up += u
 		verified += s.VerifiedBytes
 		state := "DOWNLOADING"
-		if s.Error != "" {
+		if s.ExistingConflict {
+			state = "NEEDS DECISION: " + s.Error
+			all = false
+		} else if s.Error != "" {
 			state = "ERROR: " + s.Error
+			all = false
+		} else if s.CheckingExisting {
+			state = fmt.Sprintf("VERIFYING LOCAL %.2f/%.2f GiB; SHARING VERIFIED CHUNKS", float64(s.ExistingCheckedBytes)/(1<<30), float64(s.ExistingTotalBytes)/(1<<30))
 			all = false
 		} else if s.Complete {
 			state = "COMPLETE / SEEDING"

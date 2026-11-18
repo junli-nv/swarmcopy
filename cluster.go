@@ -246,7 +246,10 @@ func (r sshRunner) run(ctx context.Context, host, reason, command string, in io.
 	}
 	if e := cmd.Run(); e != nil {
 		if ctx.Err() != nil {
-			return nil, fmt.Errorf("SSH %s cancelled after controller cancellation or another operation failed: %w", target, ctx.Err())
+			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				return nil, fmt.Errorf("SSH %s operation deadline exceeded: %w", target, ctx.Err())
+			}
+			return nil, fmt.Errorf("SSH %s cancelled by controller: %w", target, ctx.Err())
 		}
 		msg := stderr.String()
 		if len(msg) > 2048 {
@@ -844,10 +847,14 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 		return e
 	}
 	if m.isTree() {
-		if e = j.preparing(ctx, "checking-existing", "verifying existing files on each node; uncached large files require disk reads", 0, 0, len(j.Hosts)); e != nil {
+		detail := "verifying existing files on each node; uncached large files require disk reads"
+		if directHost != "" {
+			detail = "checking metadata; uncached files will be verified by peers in background"
+		}
+		if e = j.preparing(ctx, "checking-existing", detail, 0, 0, len(j.Hosts)); e != nil {
 			return e
 		}
-		ready, x := preflightTree(ctx, r, j, m, manifest, active...)
+		ready, x := preflightTreeMode(ctx, r, j, m, manifest, directHost != "", active...)
 		if x != nil {
 			return x
 		}
@@ -873,11 +880,11 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 				return x
 			}
 		}
-		if j.Existing == "" || j.Existing == "ask" {
+		if directHost == "" && (j.Existing == "" || j.Existing == "ask") {
 			j.Existing = "keep"
 		}
 	}
-	if e = j.preparing(ctx, "starting-peers", "starting peers; local files may require verification before listening", 0, 0, len(j.Hosts)); e != nil {
+	if e = j.preparing(ctx, "starting-peers", "starting peer listeners; existing files are verified in background", 0, 0, len(j.Hosts)); e != nil {
 		return e
 	}
 	started, x := nodeStage(ctx, j, active, "starting-peers", func(c context.Context, h string) error { return startRemotePeer(c, r, *j, m, manifest, h) })
@@ -914,6 +921,9 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 			return errors.New("stop requested; partial files retained")
 		}
 		rows := observe(ctx, c, t, j.addresses())
+		if e = resolveExistingDecisions(ctx, r, j, m, manifest, rows); e != nil {
+			return e
+		}
 		if time.Since(lastDiagnostic) >= 30*time.Second {
 			if e = diagnosePeers(ctx, r, j, rows, previous); e != nil {
 				return e
@@ -923,7 +933,7 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 		annotateJobRows(*j, &m, rows)
 		recovered := false
 		for i, row := range rows {
-			if row.err == nil && j.NodeIssues[j.Hosts[i]] != "" {
+			if row.err == nil && row.st.Error == "" && j.NodeIssues[j.Hosts[i]] != "" {
 				delete(j.NodeIssues, j.Hosts[i])
 				recovered = true
 			}

@@ -14,7 +14,7 @@
 ./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify full
 ```
 
-Chunks does not disable or sample verification; it omits final whole-file content verification. Initial trusted source hashing still reads all bytes; existing-file inventory also uses file digests or valid caches. Full hashing is pipelined by default and can overlap transfer rather than always adding a serial scan.
+Chunks does not disable or sample verification; it omits final whole-file content verification. Initial trusted source hashing still reads all bytes; existing replicas require file digests or valid caches. Direct-mode startup inventory checks only metadata/caches; uncached contents are verified by the peer in the background before being trusted. Each advertised chunk has passed its bound digest (or derives from a valid full-file cache). Full hashing is pipelined by default and can overlap transfer rather than always adding a serial scan.
 
 Chunks cannot detect damage after a verified chunk write; the guarantees differ. Fsync requests persistence and relies on correct filesystem/RAID/device behavior. It is not independent content verification or physical-media readback.
 

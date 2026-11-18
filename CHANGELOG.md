@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.9.2 — progressive verification and earlier replica sharing
+
+- Direct-source jobs use metadata/cache inventory; uncached files remain explicitly unverified.
+- Open tree peer listeners before background verification and share only cryptographically verified chunks.
+- Checkpoint fully verified files; retain safe conflict handling and apply saved choices to late conflicts.
+- Show local verification progress; fix duplicate preparation counts and misleading node timeout diagnostics.
+- Add cancellation, mutation, cache-boundary, conflict, HTTP availability and TCP/QUIC tree process regressions. Preserve integrity defaults and staged seed selection.
+- Synchronize Chinese/English guides and require fetching the remote baseline before changes and releases.
+- Validate all 140 targets with existing 300.61 GiB replicas: 5m54.891s total, 56.507s preparation, zero media download, no node or cleanup errors. This is a reuse/verification check, not a fresh-transfer throughput comparison. See [aggregate evidence](docs/data/startup-v0.9.2-validation.json).
+
 ## 0.9.1 — quiet mesh defaults and real per-node NIC measurements
 
 - Make the default hosts-only mesh command the primary example, hide SSH details unless verbose, split common/full help and refresh a live terminal dashboard instead of appending repeated tables.

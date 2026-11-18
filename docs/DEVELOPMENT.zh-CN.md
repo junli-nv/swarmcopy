@@ -4,6 +4,8 @@
 
 本文记录当前主线的架构、兼容约束和验证方法。只维护 `main`，所有传输与调度选项都在同一二进制内；发布沿革见 [CHANGELOG](../CHANGELOG.md)，历史测量见文档索引。
 
+每次修改前先获取远端分支和标签（git fetch origin --tags），检查工作区并确认基线同步；保留本地修改后再合并远端更新。发布前再次获取远端状态，合并后重新运行相关验证。
+
 ## 构建与本地验证
 
 需要 Go 1.26+；依赖已 vendor。Go/Python 只供开发使用，分发程序运行时不依赖它们。
@@ -14,6 +16,7 @@ go vet -mod=vendor ./...
 bash scripts/build.sh
 SWARMCOPY_BINARY="$PWD/dist/swarmcopy-linux-x86_64" python3 scripts/cli-smoke.py
 SWARMCOPY_BINARY="$PWD/dist/swarmcopy-linux-x86_64" python3 scripts/integration.py
+SWARMCOPY_BINARY="$PWD/dist/swarmcopy-linux-x86_64" go test -mod=vendor -race -run TestStartupTreePeerProcesses -v .
 ```
 
 build.sh 输出两种静态 Linux 二进制和 SHA256SUMS；可通过 SWARMCOPY_GO 指定编译器。最后两项在独立临时目录检查 CLI 和真实进程链。x86_64 已有集群实机验证；ARM 交叉编译成功不代表实机测试。
@@ -56,6 +59,8 @@ staged 模式先盘点已有副本；没有完整来源时，SSH tar 仅作为�
 
 冲突 resume/replace 使用独立暂存，保留旧成品到所选验证通过。逐文件原子发布，不是集合事务；link 成功/unlink 前崩溃时必须脱离保留硬链接后再修复，避免改写成品。文件和目录元数据/fsync 错误不得误报 Complete。路径受 os.Root、相对路径与逐层类型检查约束，拒绝符号链接和特殊文件；来源与目标须与外部写入者互斥。
 
+direct 盘点只可信缓存加元数据，未缓存的同尺寸文件必须保持 unverified。startup_tree.go 在状态/块服务开放后后台验证文件和跨文件分块，Have 仅发布已验块；可写暂存准备完成后才下载。staged 仍完整盘点。逐文件检查点须通过完整摘要和稳定指纹验证；chunks 新下载不能制造 full 缓存。迟到冲突沿用保存策略，询问后只重启受影响的自有 peer。盘点成功只计数一次；区分节点 deadline 和控制器取消。测试须覆盖扫描中 HTTP 供块、缓存边界、取消、文件变更、冲突和目录进程链。
+
 ## 调度与指标
 
 固定 workers/uploads 默认 4/4，自适应和 endgame 默认关闭。自适应只改变下载目标数，范围是有效 min-workers 到 max-workers；没有运行中热调参 API。降低并发不能无故取消普通请求。
@@ -89,6 +94,8 @@ cleanup 持控制器/agent/目标锁并验证归属，清理失败保存 Cleanup
 测速冻结构建、来源和参数，使用全新目标与一致的缓存处理，保留所有轮次和运行中重试。分别报告准备、盘点、传输、校验、fsync、发布、停止/清理；独立成品核验与计时口径写清楚。不能用续传假装从零，或将 CPU 微基准比值当网络收益。历史 JSON 在 [data](data/README.md)，报告入口见[索引](README.md)。
 
 发布前同步中文主文档、英文对应页、CLI 帮助和变更记录，检查链接/示例/默认值；文档按主题更新，禁止再将 release 段落逐次堆到 README 顶部。发布同一提交的双架构构建、校验和与许可证。改 vendor 前读 [QUIC 补丁维护](QUIC-TUNING.zh-CN.md)，保持上游版本、补丁和测试一致。仓库不提交凭据、介质、私有日志或逆向材料；第三方文档保留原文。
+
+0.9.2 已验证 direct 模式的 140 个已有完整副本（每节点 300.61 GiB）：总耗时 5m54.891s、准备 56.507s、零媒体下载，节点和清理错误均为零。[聚合记录](data/startup-v0.9.2-validation.json) 不含凭据或原始日志。这是复用/校验回归，不是从零分发测速；与此前需要传输的任务不能直接比较速度。
 
 后续优化以 profiling 为依据：大量小文件的元数据/FD 开销、分散的部分副本组合、初始导入续传。保持默认 TCP 和所选完整性门槛，不以增加复杂度或默认并发掩盖瓶颈。
 

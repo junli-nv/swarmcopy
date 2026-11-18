@@ -56,3 +56,9 @@ A real two-node TCP job with 139,460,641 bytes and five files passed all prepara
 progress.go owns telemetry, estimates, cancellation and phase views. progress.json uses atomic replacement without per-heartbeat fsync; durable job/manifest records retain their original rules. Telemetry write failure is reported but cannot certify unverified content. Unit/race tests cover ETA, cancellation, stop requests, attempt isolation, process identity, no peer probes and payload-only counting.
 
 Ready peers transfer independently without an all-listener barrier. A current-file path during hashing-source is not the entire source selection; totals cover all frozen inputs. Old waiting-peers output is not proof that a node died: consult process/log/node diagnostics. Completion summaries and cleanup are described in [examples](EXAMPLES.en.md) and [cleanup](CLEANUP.en.md).
+
+## Background verification of existing replicas
+
+When the source node is a target (SOURCE MODE: direct), startup inventory checks metadata and valid content-verification caches. A same-name, same-size file without a trusted cache remains unverified. Peers open their status endpoint before background local verification; each verified chunk becomes available to other peers immediately. Local downloads start after initialization. A slow disk no longer forces all targets to wait for a full inventory pass. Staged mode retains full inventory to find a complete seed and avoid unnecessary SSH import.
+
+VERIFYING LOCAL in watch means local verification is active and proven chunks can seed; it does not mean offline or complete. Fully verified files get incremental cache checkpoints that survive cancellation. Names and sizes never establish availability. Same-size conflicts may be discovered later. The default still prompts; unattended jobs should specify --existing resume, replace or keep. A chosen policy also applies to later conflicts. Originals remain until verified replacements publish.
