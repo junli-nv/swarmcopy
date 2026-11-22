@@ -17,12 +17,15 @@ func rootHelp() {
 Protocol: SCDP/1 (SwarmCopy Distribution Protocol)
 
 QUICK START
-  swarmcopy distribute --hosts 'node[001-005]' --source /shared/nemo.sqsh --dest /raid/images
-  swarmcopy distribute --hosts @hosts.txt --dest /raid/images --source /shared/nemo --source /shared/config.json
+  --dest is the parent directory on each target. Files and directories keep their names.
+  swarmcopy distribute --hosts 'node[001-005]' --source /raid/source/nemo.sqsh --dest /raid/images
+  # Copy the whole dist directory to /raid/dist/ on each target.
+  swarmcopy distribute --hosts @hosts.txt --source /raid/dist --dest /raid
+  swarmcopy distribute --hosts @hosts.txt --dest /raid/images --source /raid/source/nemo.sqsh --source /raid/source/config.json
   swarmcopy jobs
   swarmcopy watch
-  swarmcopy distribute --hosts @hosts.txt --source /shared/media.sqsh --dest /raid/images --workers 8 --uploads 8
-  swarmcopy distribute --hosts @hosts.txt --source /shared/media.sqsh --dest /raid/images --adaptive --workers 4 --min-workers 2 --max-workers 16 --uploads 8
+  swarmcopy distribute --hosts @hosts.txt --source /raid/source/media.sqsh --dest /raid/images --workers 8 --uploads 8
+  swarmcopy distribute --hosts @hosts.txt --source /raid/source/media.sqsh --dest /raid/images --adaptive --workers 4 --min-workers 2 --max-workers 16 --uploads 8
   swarmcopy resume --job <ID>
 
 COMMANDS
@@ -93,7 +96,8 @@ Options are saved for resume. Explicit --ssh-cipher overrides --ssh-opt Ciphers.
 Source hashing and staged seed copying show byte progress, rate and estimated
 time remaining every two seconds. Other preparation stages show node counts
 and elapsed time. Ctrl-C cancels source hashing between read buffers.
-Multiple files go directly under --dest; directories retain their basename.
+--dest is the parent directory on each target. Files and directories keep their
+names, so --source /raid/dist --dest /raid gives /raid/dist/ on each target.
 Repeat --source, use a quoted glob, or pass source operands.
 Matching existing files are reused and can seed missing nodes. If a complete
 replica already exists, controller-to-seed media transfer is skipped.
@@ -112,18 +116,20 @@ start after local initialization. Staged mode retains full seed inventory.
 Resume the same job after recovery; this does not automatically redeploy offline hosts.
 
 Examples:
-  swarmcopy distribute --hosts 'node[001-005]' --source /shared/nemo.sqsh --dest /raid/images
-  swarmcopy distribute --hosts @hosts.txt --dest /raid/images --source /shared/nemo --source /shared/config.json
-  swarmcopy distribute --hosts @hosts.txt --dest /raid/images --source '/shared/*.sqsh'
-  swarmcopy distribute --hosts @hosts.txt --dest /raid/images /shared/*.sqsh
-  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --existing resume
-  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --workers 8 --uploads 8
-  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --adaptive --workers 4 --min-workers 2 --max-workers 16 --uploads 8
-  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --verify full --chunk-hash xxh3-128 --file-hash blake3
-  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --verify chunks
-  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --ssh-opt ServerAliveInterval=15 --ssh-opt ConnectTimeout=20
-  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --transport quic
-  swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --ssh-user alice --ask-pass --bin-dir ./dist
+  swarmcopy distribute --hosts 'node[001-005]' --source /raid/source/nemo.sqsh --dest /raid/images
+  # Copy the whole dist directory to /raid/dist/ on each target.
+  swarmcopy distribute --hosts @hosts.txt --source /raid/dist --dest /raid
+  swarmcopy distribute --hosts @hosts.txt --dest /raid/images --source /raid/source/nemo.sqsh --source /raid/source/config.json
+  swarmcopy distribute --hosts @hosts.txt --dest /raid/images --source '/raid/source/*.sqsh'
+  swarmcopy distribute --hosts @hosts.txt --dest /raid/images /raid/source/*.sqsh
+  swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh --existing resume
+  swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh --workers 8 --uploads 8
+  swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh --adaptive --workers 4 --min-workers 2 --max-workers 16 --uploads 8
+  swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh --verify full --chunk-hash xxh3-128 --file-hash blake3
+  swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh --verify chunks
+  swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh --ssh-opt ServerAliveInterval=15 --ssh-opt ConnectTimeout=20
+  swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh --transport quic
+  swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh --ssh-user alice --ask-pass --bin-dir ./dist
   swarmcopy distribute --hosts @hosts.txt --seed node001 --seed-file /raid/images/nemo.sqsh
 
 Workers/uploads are per-node chunk-request concurrency, each 1..32; defaults 4/4.
@@ -238,7 +244,7 @@ Examples:
 The output and manifest must not already exist. Default chunk size: 16 MiB.
 
 Example (on the seed):
-  swarmcopy prepare --source /shared/nemo.sqsh --out /raid/images/nemo.sqsh
+  swarmcopy prepare --source /raid/source/nemo.sqsh --out /raid/images/nemo.sqsh
 `
 	case "peer":
 		return `Run one peer directly. It serves verified chunks while downloading.

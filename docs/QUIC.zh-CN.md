@@ -10,7 +10,7 @@ QUIC 数据通道使用有界接收 socket 分片、可协商的负载上限与 
 
 ~~~bash
 ./swarmcopy distribute --hosts 'node[001-005]' \
-  --source /shared/nemo.sqsh --dest /raid/images --bin-dir ./dist \
+  --source /raid/source/nemo.sqsh --dest /raid/images --bin-dir ./dist \
   --transport quic
 ./swarmcopy jobs
 ./swarmcopy watch --job <ID>

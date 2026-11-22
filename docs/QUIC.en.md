@@ -8,7 +8,7 @@ Optional --transport quic uses reliable HTTP/3 streams over UDP. TCP remains def
 
 ~~~bash
 ./swarmcopy distribute --hosts 'node[001-005]' \
-  --source /shared/nemo.sqsh --dest /raid/images --bin-dir ./dist \
+  --source /raid/source/nemo.sqsh --dest /raid/images --bin-dir ./dist \
   --transport quic
 ./swarmcopy watch --job <ID>
 ./swarmcopy stop --job <ID>

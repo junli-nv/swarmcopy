@@ -38,7 +38,7 @@ Sources are on the **machine executing the command**. A BCM controller outside t
 
 ```bash
 ./swarmcopy distribute --hosts 'HGX[061,066,082]' \
-  --source /shared/nemo.sqsh --dest /raid/images
+  --source /data/nemo.sqsh --dest /raid/images
 ```
 
 `SOURCE MODE: direct/staged` explains the selected path. `hashing-source` builds a trusted manifest and initially reads every source byte; unchanged sources can reuse a cache. `importing` means seed copying, not unpacking or importing a container. Preparation and transfer show progress; an ETA describes the current phase, not the entire remaining job.
@@ -48,11 +48,11 @@ Sources are on the **machine executing the command**. A BCM controller outside t
 ```bash
 # Files go directly under the destination
 ./swarmcopy distribute --hosts @hosts.txt --dest /raid/images \
-  --source /shared/nemo.sqsh --source /shared/config.json
+  --source /raid/source/nemo.sqsh --source /raid/source/config.json
 
 # Keep the directory name: /raid/images/models/...
 ./swarmcopy distribute --hosts @hosts.txt \
-  --source /shared/models --dest /raid/images
+  --source /raid/source/models --dest /raid/images
 ```
 
 Quote globs for program expansion. `'/raid/nemo*'` matches immediate entries under `/raid`, not files under `/raid/images`. Matched directories are copied recursively, including empty files/directories. Inputs must have distinct top-level names and no overlapping parent/child roots. Selections are frozen at job creation; resume does not add newly matching inputs.

@@ -8,7 +8,7 @@
 
 ~~~bash
 ./swarmcopy distribute \
-  --hosts 'node[001-005]' --source /shared/nemo.sqsh \
+  --hosts 'node[001-005]' --source /raid/source/nemo.sqsh \
   --dest /raid/images --bin-dir ./dist \
   --verify full --pipeline-verify --verify-buffer-mib 4 --verify-window-chunks 256
 ~~~

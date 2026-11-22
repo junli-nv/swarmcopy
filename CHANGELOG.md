@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.3 — clearer distribution examples
+
+- Explain that `--dest` is the target parent directory and show where an entire source directory is copied.
+- Use `/raid/source/` for compute-node examples and `/data/` for BCM examples in CLI help and documentation.
+
 ## 0.9.2 — progressive verification and earlier replica sharing
 
 - Direct-source jobs use metadata/cache inventory; uncached files remain explicitly unverified.

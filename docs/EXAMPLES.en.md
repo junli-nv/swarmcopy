@@ -23,7 +23,7 @@ Automatic direct mode needs the controller in the target list. Use real hostname
 ```bash
 # On BCM: copy once to a compute seed through SSH when needed
 ./swarmcopy distribute --hosts 'HGX[061,066,082]' \
-  --source /shared/nemo.sqsh --dest /raid/images
+  --source /data/nemo.sqsh --dest /raid/images
 
 # On HGX167: serve originals; native reads/checks/writes fill the local destination
 ./swarmcopy distribute --hosts 'HGX[061,066,167]' \
@@ -36,32 +36,32 @@ A complete existing replica avoids unnecessary initial media upload. Importing m
 
 ```bash
 ./swarmcopy distribute --hosts @hosts.txt --dest /raid/images \
-  --source /shared/nemo.sqsh --source /shared/config.json
+  --source /raid/source/nemo.sqsh --source /raid/source/config.json
 
 ./swarmcopy distribute --hosts @hosts.txt --dest /raid/images \
-  --source '/shared/*.sqsh'
+  --source '/raid/source/*.sqsh'
 
 ./swarmcopy distribute --hosts @hosts.txt --dest /raid/images \
-  --source /shared/models
+  --source /raid/source/models
 ```
 
 | Input | Destination layout |
 | --- | --- |
-| `/shared/nemo.sqsh` | `/raid/images/nemo.sqsh` |
+| `/raid/source/nemo.sqsh` | `/raid/images/nemo.sqsh` |
 | Two source files | Both directly under /raid/images, without a batch directory |
-| `/shared/models` or `/shared/models/` | `/raid/images/models/...` |
+| `/raid/source/models` or `/raid/source/models/` | `/raid/images/models/...` |
 
-Shell expansion/positional inputs also work: `./swarmcopy distribute --hosts @hosts.txt --dest /raid/images /shared/*.sqsh`. Prefer quoting globs and bracketed host lists. Globs support `*`, `?`, `[]`; `**` has no special recursive meaning. Unmatched patterns, overlapping roots and duplicate top-level names fail. Empty files/directories are retained; symlinks and special files are unsupported.
+Shell expansion/positional inputs also work: `./swarmcopy distribute --hosts @hosts.txt --dest /raid/images /raid/source/*.sqsh`. Prefer quoting globs and bracketed host lists. Globs support `*`, `?`, `[]`; `**` has no special recursive meaning. Unmatched patterns, overlapping roots and duplicate top-level names fail. Empty files/directories are retained; symlinks and special files are unsupported.
 
 ## Existing files and conflicts
 
 ```bash
 # Reuse matching chunks from old files before verified replacement
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --existing resume
 
 # Receive conflicting files afresh, then replace
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --existing replace
 ```
 
@@ -71,12 +71,12 @@ Default --existing ask lists conflicts and prompts once. Direct-mode background 
 
 ```bash
 ./swarmcopy distribute --hosts 'HGX[061,066,167],node[001-005]' \
-  --source /shared/nemo.sqsh --dest /raid/images
+  --source /raid/source/nemo.sqsh --dest /raid/images
 
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --ssh-user root --ask-pass
 
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --ssh-opt ConnectTimeout=20 \
   --ssh-opt ServerAliveInterval=15 --ssh-cipher aes128-gcm@openssh.com
 ```
@@ -87,19 +87,19 @@ hosts.txt can contain one host per line. Use SSH keys, agent or config. Ask-pass
 
 ```bash
 # Per-node fixed concurrency; defaults are 4/4
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --workers 8 --uploads 8 --port 19800
 
 # Aggregate per-node MiB/s; 0 means unlimited
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --download-mib 200 --upload-mib 200
 
 # Explicit adaptive downloads: initial 4, minimum 2, maximum 16; uploads stay capped at 8
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --adaptive --workers 4 --min-workers 2 --max-workers 16 --uploads 8
 
 # Optional UDP data in the same executable
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --transport quic
 ```
 
@@ -109,14 +109,14 @@ Workers/uploads accept 1..32 parallel chunk requests, not exact socket counts. A
 
 ```bash
 # Defaults to chunks/BLAKE3; no separate hash flags needed
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh --dest /raid/images
 
 # Final file-content check; defaults to SHA256 and pipelined verification
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --verify full
 
 # Advanced: noncryptographic chunk checks require a cryptographic full-file gate
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --verify full --chunk-hash xxh3-128 --file-hash blake3
 ```
 

@@ -5,10 +5,10 @@
 Preparation reports the current action, completed bytes or nodes, elapsed time and a rate/ETA when measurable. No extra flags are required. The path shown during source hashing is the current file; totals cover the entire selected dataset.
 
 ~~~text
-PREPARING hashing-source  32.3% | 156.40 / 483.84 GiB | 1126.4 MiB/s | ETA ~4m58s | elapsed 2m22s | /shared/local-ai.tar
+PREPARING hashing-source  32.3% | 156.40 / 483.84 GiB | 1126.4 MiB/s | ETA ~4m58s | elapsed 2m22s | /data/local-ai.tar
 PREPARING deploying | nodes 3/9 | elapsed 4s | deploying executables and job configuration over SSH
 PREPARING checking-existing | nodes 5/9 | elapsed 20s | verifying existing files on each node
-PREPARING importing  40.0% | 193.54 / 483.84 GiB | 980.0 MiB/s | ETA ~5m3s | elapsed 3m22s | /shared/local-ai.tar
+PREPARING importing  40.0% | 193.54 / 483.84 GiB | 980.0 MiB/s | ETA ~5m3s | elapsed 3m22s | /data/local-ai.tar
 PREPARING starting-peers | nodes 8/9 | elapsed 12s | starting peers
 ~~~
 

@@ -18,7 +18,7 @@ Ordinary rmem_max256 KiB is not effective socket allocation: an identical short 
 
 ~~~bash
 ./swarmcopy distribute --hosts 'node[001-005]' \
-  --source /shared/nemo.sqsh --dest /raid/images --bin-dir ./dist \
+  --source /raid/source/nemo.sqsh --dest /raid/images --bin-dir ./dist \
   --transport quic
 ~~~
 

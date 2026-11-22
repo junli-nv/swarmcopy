@@ -25,7 +25,7 @@ If the controller is not among the targets, it copies the source through SSH to 
 
 ~~~bash
 ./swarmcopy distribute --hosts 'HGX[061,066,082]' \
-  --source /shared/nemo.sqsh \
+  --source /data/nemo.sqsh \
   --dest /raid/images --verify chunks
 ~~~
 

@@ -23,7 +23,7 @@
 ```bash
 # 在 BCM 上：必要时先经 SSH 复制一次到计算节点种子
 ./swarmcopy distribute --hosts 'HGX[061,066,082]' \
-  --source /shared/nemo.sqsh --dest /raid/images
+  --source /data/nemo.sqsh --dest /raid/images
 
 # 在 HGX167 上：原文件直接供种，本机目标副本用本地读取/验块/写入
 ./swarmcopy distribute --hosts 'HGX[061,066,167]' \
@@ -36,32 +36,32 @@
 
 ```bash
 ./swarmcopy distribute --hosts @hosts.txt --dest /raid/images \
-  --source /shared/nemo.sqsh --source /shared/config.json
+  --source /raid/source/nemo.sqsh --source /raid/source/config.json
 
 ./swarmcopy distribute --hosts @hosts.txt --dest /raid/images \
-  --source '/shared/*.sqsh'
+  --source '/raid/source/*.sqsh'
 
 ./swarmcopy distribute --hosts @hosts.txt --dest /raid/images \
-  --source /shared/models
+  --source /raid/source/models
 ```
 
 | 来源 | 目标布局 |
 | --- | --- |
-| `/shared/nemo.sqsh` | `/raid/images/nemo.sqsh` |
+| `/raid/source/nemo.sqsh` | `/raid/images/nemo.sqsh` |
 | 两个来源文件 | 都直接放在 `/raid/images/`，不增加批次目录 |
-| `/shared/models` 或 `/shared/models/` | `/raid/images/models/...` |
+| `/raid/source/models` 或 `/raid/source/models/` | `/raid/images/models/...` |
 
-也支持 shell 展开和位置参数：`./swarmcopy distribute --hosts @hosts.txt --dest /raid/images /shared/*.sqsh`。建议给通配符及方括号主机表达式加引号。glob 支持 `*`、`?`、`[]`；`**` 没有额外递归语义。未匹配、重叠根及重复顶层名称会报错。目录中的空文件/空目录保留，符号链接和特殊文件不支持。
+也支持 shell 展开和位置参数：`./swarmcopy distribute --hosts @hosts.txt --dest /raid/images /raid/source/*.sqsh`。建议给通配符及方括号主机表达式加引号。glob 支持 `*`、`?`、`[]`；`**` 没有额外递归语义。未匹配、重叠根及重复顶层名称会报错。目录中的空文件/空目录保留，符号链接和特殊文件不支持。
 
 ## 已有文件与冲突处理
 
 ```bash
 # 复用旧文件的有效块，补齐后替换
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --existing resume
 
 # 不从冲突旧文件复制数据，重新接收该文件后替换
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --existing replace
 ```
 
@@ -71,12 +71,12 @@
 
 ```bash
 ./swarmcopy distribute --hosts 'HGX[061,066,167],node[001-005]' \
-  --source /shared/nemo.sqsh --dest /raid/images
+  --source /raid/source/nemo.sqsh --dest /raid/images
 
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --ssh-user root --ask-pass
 
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --ssh-opt ConnectTimeout=20 \
   --ssh-opt ServerAliveInterval=15 --ssh-cipher aes128-gcm@openssh.com
 ```
@@ -87,19 +87,19 @@
 
 ```bash
 # 固定并发；默认是 4/4，参数按每节点计数
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --workers 8 --uploads 8 --port 19800
 
 # 每节点聚合限速，单位 MiB/s；0 表示不限速
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --download-mib 200 --upload-mib 200
 
 # 显式自适应下载：初始 4、下限 2、上限 16，上传上限仍为 8
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --adaptive --workers 4 --min-workers 2 --max-workers 16 --uploads 8
 
 # 同一二进制中的可选 UDP 数据通道
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --transport quic
 ```
 
@@ -109,14 +109,14 @@ workers/uploads 范围 1～32，是并行分块请求数，不保证等于连接
 
 ```bash
 # 默认就是 chunks/BLAKE3，无需再写两项 hash 参数
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh --dest /raid/images
 
 # 最终整文件内容复核；默认 SHA256，流水校验开启
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --verify full
 
 # 高级混合：非密码学块摘要必须配 full 密码学文件复核
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --verify full --chunk-hash xxh3-128 --file-hash blake3
 ```
 

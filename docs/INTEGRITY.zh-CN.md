@@ -10,8 +10,8 @@
 | full | SHA256 块与文件摘要 | 在验块之外，按清单复核实际文件内容，再完成发布 |
 
 ```bash
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh --dest /raid/images --verify full
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh --dest /raid/images
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh --dest /raid/images --verify full
 ```
 
 chunks 不等于关闭校验，不采样冒充完整性；它省掉最终整文件内容复核。首次可信来源清单仍完整读取文件，已有副本仍须通过文件摘要或可信缓存。direct 启动盘点只查元数据/缓存，未缓存内容在 peer 后台验证后才可信；声明可用的分块必须通过绑定摘要，或来自仍有效的完整文件校验缓存。full 的文件校验默认流水进行，可能与下载重叠，不保证总是额外串行读一遍。
@@ -27,7 +27,7 @@ chunks 无法检测验块写入后发生的内容损坏；两种模式不能称�
 | --verify | chunks、full | 新作业采用预设；显式摘要参数可覆盖 |
 
 ```bash
-./swarmcopy distribute --hosts @hosts.txt --source /shared/nemo.sqsh \
+./swarmcopy distribute --hosts @hosts.txt --source /raid/source/nemo.sqsh \
   --dest /raid/images --verify full --chunk-hash xxh3-128 --file-hash blake3
 ```
 

@@ -12,7 +12,7 @@
 
 ~~~bash
 ./swarmcopy distribute \
-  --hosts 'node[001-005]' --source /shared/nemo.sqsh \
+  --hosts 'node[001-005]' --source /raid/source/nemo.sqsh \
   --dest /raid/images --bin-dir ./dist \
   --adaptive --workers 4 --max-workers 16 --endgame --hedge-delay 2s
 ~~~

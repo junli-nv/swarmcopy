@@ -32,7 +32,7 @@ no initial seed copy; ALL targets including this node receive into /raid/images
 
 ~~~bash
 ./swarmcopy distribute --hosts 'HGX[061,066,082]' \
-  --source /shared/nemo.sqsh \
+  --source /data/nemo.sqsh \
   --dest /raid/images --verify chunks
 ~~~
 

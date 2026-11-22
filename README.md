@@ -38,7 +38,7 @@ ARM 控制节点将复制来源改为 `swarmcopy-linux-aarch64`。保留 `dist/`
 
 ```bash
 ./swarmcopy distribute --hosts 'HGX[061,066,082]' \
-  --source /shared/nemo.sqsh --dest /raid/images
+  --source /data/nemo.sqsh --dest /raid/images
 ```
 
 启动时的 `SOURCE MODE: direct/staged` 说明选择的方式。`hashing-source` 是建立可信来源清单，首次要完整读取源；来源未变时可复用缓存。`importing` 是初始种子复制，不是解压或导入容器。准备和传输阶段显示进度；当前阶段的 ETA 不等于全任务剩余时间。
@@ -48,11 +48,11 @@ ARM 控制节点将复制来源改为 `swarmcopy-linux-aarch64`。保留 `dist/`
 ```bash
 # 多个文件直接放在目标目录下
 ./swarmcopy distribute --hosts @hosts.txt --dest /raid/images \
-  --source /shared/nemo.sqsh --source /shared/config.json
+  --source /raid/source/nemo.sqsh --source /raid/source/config.json
 
 # 目录保留自身名称：得到 /raid/images/models/...
 ./swarmcopy distribute --hosts @hosts.txt \
-  --source /shared/models --dest /raid/images
+  --source /raid/source/models --dest /raid/images
 ```
 
 给通配符加引号，由程序展开；`'/raid/nemo*'` 匹配 `/raid` 直属的同名前缀条目，不会搜索 `/raid/images`。匹配到目录时递归分发，保留内部结构和空文件/空目录。多个来源不能有重复顶层名称或重叠的父子根。输入列表在作业创建时固定，续传不会加入后来新增的匹配项。
