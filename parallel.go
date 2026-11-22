@@ -79,7 +79,20 @@ func startRemotePeer(ctx context.Context, r sshRunner, j Job, m Manifest, manife
 	if e := r.write(ctx, h, filepath.Join(root, "peer.json"), bytes.NewReader(config), false); e != nil {
 		return e
 	}
-	b, e := r.run(ctx, h, "start or reuse owned peer", shellQuote(filepath.Join(root, "swarmcopy"))+" agent start --config "+shellQuote(filepath.Join(root, "peer.json")), nil)
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	// Let an in-flight launch settle before Ctrl-C teardown so agent stop cannot
+	// race with a peer launched after its SSH connection is cancelled.
+	startCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), nodeTimeout(j))
+	defer cancel()
+	stop := context.AfterFunc(ctx, func() {
+		if !errors.Is(context.Cause(ctx), errControllerInterrupt) {
+			cancel()
+		}
+	})
+	defer stop()
+	b, e := r.run(startCtx, h, "start or reuse owned peer", shellQuote(filepath.Join(root, "swarmcopy"))+" agent start --config "+shellQuote(filepath.Join(root, "peer.json")), nil)
 	if e != nil {
 		return e
 	}
@@ -91,8 +104,10 @@ func stopRemotePeers(ctx context.Context, r sshRunner, j Job) error {
 	var mu sync.Mutex
 	var errs []error
 	root := j.remoteDir()
+	config := shellQuote(filepath.Join(root, "peer.json"))
+	command := "if [ -f " + config + " ]; then " + shellQuote(filepath.Join(root, "swarmcopy")) + " agent stop --config " + config + "; fi"
 	e := forHosts(ctx, j.Hosts, j.Fanout, func(c context.Context, h string) error {
-		b, err := r.run(c, h, "stop owned peer", shellQuote(filepath.Join(root, "swarmcopy"))+" agent stop --config "+shellQuote(filepath.Join(root, "peer.json")), nil)
+		b, err := r.run(c, h, "stop owned peer", command, nil)
 		if err != nil {
 			mu.Lock()
 			errs = append(errs, err)

@@ -137,7 +137,9 @@ Initial source hashing still reads all bytes. Chunks omits final whole-file veri
 
 JOB SUMMARY saves invocation elapsed/preparation/distribution time, network/local/reused bytes and average rates. Aggregate rate divides new bytes by this invocation's total elapsed time including preparation; receiving-node median rate is separate. Completed watch replays records, status keeps JSON, and missing old timing is not invented.
 
-One failed node does not cancel healthy nodes or count as completed. Leaving watch does not stop a transfer; Ctrl+C stops the controller while peers may continue, so explicitly stop the job. After resolving fsync/I/O faults, stop a waiting controller and resume the same ID: reuse good blocks and refill missing/damaged ones. A later directory fsync can fail after some files appear; the job still cannot be declared successful. Keep records/partials rather than purging first.
+When all other targets have verified and published their files, confirmed node failures end the run as `partial` with exit status 1. The final summary lists the failed nodes and their reasons. `watch` and `status` show this saved outcome. After repairing a failed node, resume the same job to reuse verified data.
+
+`Ctrl+C` in `watch` exits only the monitor. In `distribute` or `resume`, it stops the job's peers and exits with status 130. Published files, verified partials and the job record are kept. If a peer cannot be reached or stopped, the controller reports `stop_failed` and prints the command to retry.
 
 ## Cleanup and job removal
 

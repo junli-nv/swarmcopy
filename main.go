@@ -24,7 +24,7 @@ import (
 	"time"
 )
 
-const version = "0.9.3"
+const version = "0.9.4"
 const protocol = "SCDP/1"
 
 type Manifest struct {
@@ -486,7 +486,12 @@ func main() {
 		if errors.Is(e, flag.ErrHelp) {
 			return
 		}
-		log.Print(e)
+		if errors.Is(e, errControllerInterrupt) {
+			os.Exit(130)
+		}
+		if !errors.Is(e, errPartialCompletion) {
+			log.Print(e)
+		}
 		os.Exit(1)
 	}
 }
@@ -1050,6 +1055,14 @@ func statusCommand(args []string) error {
 				return e
 			}
 			return json.NewEncoder(os.Stdout).Encode(report)
+		}
+		if j.State == "partial" && !*live {
+			report := map[string]any{"JobID": j.ID, "State": j.State, "Complete": false, "Recorded": true,
+				"CompletedTargets": j.PartialCompleted, "TotalTargets": len(j.Hosts), "FailedTargets": j.NodeIssues}
+			if e := json.NewEncoder(os.Stdout).Encode(report); e != nil {
+				return e
+			}
+			return errPartialCompletion
 		}
 		*list = strings.Join(j.addresses(), ",")
 		*tf = filepath.Join(j.Dir, "job.token")

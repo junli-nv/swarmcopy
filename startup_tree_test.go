@@ -321,6 +321,11 @@ func TestStartupRejectsMutationAfterMetadataSnapshot(t *testing.T) {
 	if err := os.WriteFile(file, bad, 0640); err != nil {
 		t.Fatal(err)
 	}
+	// Make the mutation observable even when the writes share a filesystem clock tick.
+	changed := time.Unix(1, 0)
+	if err := os.Chtimes(file, changed, changed); err != nil {
+		t.Fatal(err)
+	}
 	if err := view.prepare(context.Background(), n); err == nil || !strings.Contains(err.Error(), "changed") {
 		t.Fatalf("mutation not detected: %v", err)
 	}
@@ -381,7 +386,7 @@ func TestStartupDisplayNeverCountsCheckingNodeAsComplete(t *testing.T) {
 	}
 	saved := os.Stdout
 	os.Stdout = output
-	all := render([]observation{{addr: "test:1", st: Status{
+	all, complete := render([]observation{{addr: "test:1", st: Status{
 		Size: 100, VerifiedBytes: 100, Complete: true, CheckingExisting: true,
 		ExistingCheckedBytes: 50, ExistingTotalBytes: 100,
 	}}}, nil, false)
@@ -391,8 +396,8 @@ func TestStartupDisplayNeverCountsCheckingNodeAsComplete(t *testing.T) {
 	}
 	b, err := io.ReadAll(output)
 	output.Close()
-	if err != nil || all || !bytes.Contains(b, []byte("VERIFYING LOCAL")) {
-		t.Fatalf("local check falsely counted complete: %t %s %v", all, b, err)
+	if err != nil || all || complete != 0 || !bytes.Contains(b, []byte("VERIFYING LOCAL")) {
+		t.Fatalf("local check falsely counted complete: %t %d %s %v", all, complete, b, err)
 	}
 }
 

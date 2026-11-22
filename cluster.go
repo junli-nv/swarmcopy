@@ -58,6 +58,7 @@ type Job struct {
 	UploadMiB, DownloadMiB                                                       int64
 	Lifetime                                                                     time.Duration
 	Imported, KeepSeeding                                                        bool
+	PartialCompleted                                                             int    `json:",omitempty"`
 	Dir                                                                          string `json:"-"`
 }
 
@@ -619,7 +620,7 @@ func clusterCommand(mode string, args []string) error {
 		return errors.New("unsupported ssh-cipher")
 	}
 	fmt.Printf("JOB ID: %s\nJOB DIRECTORY: %s\n", j.ID, j.Dir)
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	ctx, stop := jobSignalContext()
 	defer stop()
 	ctx, cancel := context.WithTimeout(ctx, j.Lifetime)
 	defer cancel()
@@ -660,6 +661,90 @@ func clusterCommand(mode string, args []string) error {
 }
 func stopPeers(ctx context.Context, r sshRunner, j Job) error { return stopRemotePeers(ctx, r, j) }
 
+var (
+	errControllerInterrupt = errors.New("job stopped by Ctrl-C")
+	errPeerStopFailed      = errors.New("could not confirm all peers stopped")
+)
+
+func jobSignalContext() (context.Context, func()) {
+	ctx, cancel := context.WithCancelCause(context.Background())
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		select {
+		case sig := <-interrupt:
+			if sig == os.Interrupt {
+				cancel(errControllerInterrupt)
+			} else {
+				cancel(nil)
+			}
+		case <-ctx.Done():
+		}
+	}()
+	return ctx, func() {
+		cancel(nil)
+		signal.Stop(interrupt)
+	}
+}
+
+func jobCommand(j Job, action string, askPass bool) string {
+	job := j.ID
+	if j.Dir != resolveJob(j.ID) {
+		job = j.Dir
+	}
+	command := shellQuote(os.Args[0]) + " " + action + " --job " + shellQuote(job)
+	if askPass {
+		command += " --ask-pass"
+	}
+	return command
+}
+
+func printControllerExit(w io.Writer, j Job, completed int, askPass bool) {
+	switch j.State {
+	case "stopped":
+		fmt.Fprintf(w, "JOB STOPPED: %s\n", j.ID)
+	case "stop_failed":
+		fmt.Fprintf(w, "JOB STOP INCOMPLETE: %s\n", j.ID)
+	default:
+		fmt.Fprintf(w, "CONTROLLER STOPPED: %s\n", j.ID)
+	}
+	if completed >= 0 {
+		fmt.Fprintf(w, "Last observed completion: %d/%d targets.\n", completed, len(j.Hosts))
+	}
+	fmt.Fprintln(w, "Published files and verified partials are retained.")
+	if j.State != "stopped" {
+		fmt.Fprintln(w, "Deployed peers may still be running. To stop them from this controller:")
+		fmt.Fprintln(w, "  "+jobCommand(j, "stop", askPass))
+	}
+	fmt.Fprintln(w, "To continue the same job after recovery:")
+	fmt.Fprintln(w, "  "+jobCommand(j, "resume", askPass))
+	fmt.Fprintln(w, "Unfinished initial source hashing or seed copying restarts on resume.")
+}
+
+func stopInterruptedJob(ctx context.Context, r sshRunner, j *Job, hosts []string) error {
+	j.State = "stopped"
+	j.LastError = ""
+	var stopErr error
+	if len(hosts) > 0 {
+		fmt.Fprintln(os.Stderr, "Ctrl-C received. Stopping this job's peers before exit.")
+		owned := *j
+		owned.Hosts = hosts
+		stopCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), nodeTimeout(*j))
+		defer cancel()
+		if err := stopPeers(stopCtx, r, owned); err != nil {
+			stopErr = errors.Join(errPeerStopFailed, err)
+			j.State = "stop_failed"
+			j.LastError = stopErr.Error()
+			fmt.Fprintln(os.Stderr, "WARNING:", stopErr)
+		}
+	}
+	saveErr := j.save()
+	if saveErr != nil {
+		fmt.Fprintln(os.Stderr, "WARNING: could not save the job stop result:", saveErr)
+	}
+	return errors.Join(errControllerInterrupt, stopErr, saveErr)
+}
+
 func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	attemptStarted := time.Now()
 	previouslyStarted := j.State != "created" && j.State != ""
@@ -672,17 +757,6 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	if e = syscall.Flock(fd, syscall.LOCK_EX|syscall.LOCK_NB); e != nil {
 		return errors.New("another controller is active for this job")
 	}
-	if previouslyStarted {
-		if t, x := token(filepath.Join(j.Dir, "job.token")); x == nil {
-			c := client()
-			for _, r := range observe(ctx, c, t, j.addresses()) {
-				if r.err == nil {
-					initialCounters[r.addr] = r.st
-				}
-			}
-			c.CloseIdleConnections()
-		}
-	}
 	j.Attempt = randomID()
 	j.ControllerPID = os.Getpid()
 	j.ControllerHost, _ = os.Hostname()
@@ -690,6 +764,7 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	j.State = "starting"
 	j.LastError = ""
 	j.NodeIssues = map[string]string{}
+	j.PartialCompleted = 0
 	directHost := ""
 	if len(j.Inputs) > 0 {
 		directHost = controllerSourceHost(*j)
@@ -715,19 +790,39 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	os.Remove(filepath.Join(j.Dir, "stop.request"))
 	ctx, finishProgress := startJobProgress(ctx, *j, os.Stderr)
 	defer func() { finishProgress(result) }()
+	lastCompleted := -1
+	var possiblePeers []string
 	defer func() {
-		if result != nil {
+		if result != nil && errors.Is(context.Cause(ctx), errControllerInterrupt) {
+			result = stopInterruptedJob(ctx, r, j, possiblePeers)
+			printControllerExit(os.Stderr, *j, lastCompleted, r.password)
+			return
+		}
+		if result != nil && !errors.Is(result, errPartialCompletion) {
 			j.State = "interrupted"
-			if errors.Is(context.Cause(ctx), errJobStop) {
+			stopRequested := errors.Is(context.Cause(ctx), errJobStop)
+			if stopRequested {
 				j.State = "stopped"
 			}
 			j.LastError = result.Error()
 			j.save()
-			if ctx.Err() != nil {
-				fmt.Fprintf(os.Stderr, "CONTROLLER STOPPED: %s; use resume --job %s. Initial source hashing/import restart when incomplete; verified P2P partials are retained. Use stop --job %s to stop any previously deployed peers.\n", j.ID, j.ID, j.ID)
+			if ctx.Err() != nil && !stopRequested {
+				printControllerExit(os.Stderr, *j, lastCompleted, r.password)
 			}
 		}
 	}()
+	if previouslyStarted {
+		possiblePeers = j.Hosts
+		if t, x := token(filepath.Join(j.Dir, "job.token")); x == nil {
+			c := client()
+			for _, r := range observe(ctx, c, t, j.addresses()) {
+				if r.err == nil {
+					initialCounters[r.addr] = r.st
+				}
+			}
+			c.CloseIdleConnections()
+		}
+	}
 	if e = j.preparing(ctx, "checking-ssh", "checking SSH login before expensive source hashing", 0, 0, len(j.Hosts)); e != nil {
 		return e
 	}
@@ -887,6 +982,9 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 	if e = j.preparing(ctx, "starting-peers", "starting peer listeners; existing files are verified in background", 0, 0, len(j.Hosts)); e != nil {
 		return e
 	}
+	if !previouslyStarted {
+		possiblePeers = active
+	}
 	started, x := nodeStage(ctx, j, active, "starting-peers", func(c context.Context, h string) error { return startRemotePeer(c, r, *j, m, manifest, h) })
 	if x != nil {
 		return x
@@ -943,14 +1041,23 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 				return e
 			}
 		}
-		all := render(rows, previous, clear)
+		all, completed := render(rows, previous, clear)
+		if ctx.Err() == nil {
+			lastCompleted = completed
+		}
 		fmt.Println(j.SourceDescription)
+		fmt.Println("Ctrl-C stops this job and its deployed peers.")
 		if !all {
-			fmt.Println("Pending/offline nodes do not block other peers. Keep verified partials; resume --job " + j.ID + " after recovery.")
+			fmt.Println("Pending/offline nodes do not block transfers on other peers.")
 		}
 		for _, o := range rows {
 			if o.err == nil {
 				previous[o.addr] = o
+			}
+		}
+		if !all && completed > 0 && len(j.NodeIssues) >= len(rows)-completed && ctx.Err() == nil {
+			if failed := failedRemainingTargets(*j, rows, completed); failed != nil {
+				return finishPartialJob(ctx, r, j, completed, failed)
 			}
 		}
 		if all {
@@ -988,7 +1095,7 @@ func runJob(ctx context.Context, r sshRunner, j *Job) (result error) {
 		}
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("controller interrupted: %w; use resume --job %s", ctx.Err(), j.ID)
+			return fmt.Errorf("controller interrupted: %w", ctx.Err())
 		case <-ticker.C:
 		}
 	}

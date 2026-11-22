@@ -95,7 +95,8 @@ Repeat --ssh-opt KEY=VALUE to extend these defaults; the last same-key value win
 Options are saved for resume. Explicit --ssh-cipher overrides --ssh-opt Ciphers.
 Source hashing and staged seed copying show byte progress, rate and estimated
 time remaining every two seconds. Other preparation stages show node counts
-and elapsed time. Ctrl-C cancels source hashing between read buffers.
+and elapsed time. Ctrl-C stops the job and its deployed peers. Published files
+and verified partials are retained for resume.
 --dest is the parent directory on each target. Files and directories keep their
 names, so --source /raid/dist --dest /raid gives /raid/dist/ on each target.
 Repeat --source, use a quoted glob, or pass source operands.
@@ -107,7 +108,9 @@ Use --existing resume to reuse matching chunks, replace to receive conflicting
 files afresh, or keep to cancel safely. Old files stay intact until verification.
 Publication is atomic per file, not across the whole dataset.
 Healthy nodes continue when other nodes are unavailable. Monitoring starts
-without waiting for every listener. Failed/pending nodes remain incomplete.
+without waiting for every listener. When all other targets are complete, confirmed
+failures end the job as partially complete (exit 1). Failed targets are listed
+and kept in the job for resume. Targets with unresolved status are still monitored.
 Per-node diagnostics identify the host, stage, peer process and recent log.
 --node-timeout bounds each SSH/deployment/inventory attempt (default 1m);
 direct mode inventories metadata/caches only; peer listeners open before local
@@ -165,6 +168,7 @@ See docs/EXAMPLES.en.md and README.md (Chinese).
 	case "resume":
 		return `Resume a saved job; valid partial chunks are rehashed and retained.
 Existing live peers are reused. SSH passwords are requested again if needed.
+Ctrl-C stops the job and its deployed peers, retaining data for resume.
 
 Examples:
   swarmcopy jobs
@@ -196,7 +200,7 @@ Examples:
   swarmcopy watch --job <ID> --interval 2s --count 3 --plain
   swarmcopy watch --job <ID> --until-complete --timeout 30m
 
-Completed jobs show saved results; use --live to explicitly query stopped peers.
+Completed and partially completed jobs show saved results. Use --live to query peers.
 `
 	case "status":
 		return `Print machine-readable JSON for a saved job or explicit peer list.
@@ -286,7 +290,7 @@ func latestJob() (Job, error) {
 	}
 	sort.Slice(jobs, func(a, b int) bool { return jobs[a].Created > jobs[b].Created })
 	for _, j := range jobs {
-		if j.State != "complete" && j.State != "stopped" {
+		if j.State != "complete" && j.State != "partial" && j.State != "stopped" {
 			return j, nil
 		}
 	}

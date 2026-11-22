@@ -85,7 +85,7 @@ func progressBar(ratio float64) string {
 	n := int(math.Max(0, math.Min(1, ratio)) * 30)
 	return "[" + strings.Repeat("#", n) + strings.Repeat("-", 30-n) + "]"
 }
-func render(observations []observation, previous map[string]observation, clear bool) bool {
+func render(observations []observation, previous map[string]observation, clear bool) (bool, int) {
 	if clear {
 		fmt.Print("\033[H\033[2J")
 	}
@@ -243,10 +243,10 @@ func render(observations []observation, previous map[string]observation, clear b
 	}
 	if recorded {
 		fmt.Println("Historical verified results; use --live to query current peers.")
-	} else {
-		fmt.Println("100% bytes still requires final SHA256; Ctrl-C exits monitor only.")
+	} else if !all {
+		fmt.Println("100% of bytes can be reached before verification and publication finish.")
 	}
-	return all
+	return all, complete
 }
 func watchCommand(args []string) error {
 	fs := flag.NewFlagSet("watch", flag.ContinueOnError)
@@ -326,6 +326,13 @@ func watchCommand(args []string) error {
 			if x != nil {
 				return x
 			}
+			if current.State == "partial" && !*live {
+				printPartialResult(os.Stdout, current)
+				if *until {
+					return errPartialCompletion
+				}
+				return nil
+			}
 			handled, all, x = renderSavedJob(current, *live, clear)
 			if x != nil {
 				return x
@@ -347,10 +354,11 @@ func watchCommand(args []string) error {
 				}
 				description = current.SourceDescription
 			}
-			all = render(rows, previous, clear)
+			all, _ = render(rows, previous, clear)
 			if description != "" {
 				fmt.Println(description)
 			}
+			fmt.Println("Ctrl-C exits watch only. Transfers continue.")
 			for _, o := range rows {
 				if o.err == nil {
 					previous[o.addr] = o

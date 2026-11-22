@@ -206,7 +206,17 @@ func startJobProgress(ctx context.Context, j Job, out io.Writer) (context.Contex
 		close(p.done)
 		<-p.exited
 		p.mu.Lock()
-		if result != nil {
+		if errors.Is(result, errControllerInterrupt) {
+			p.value.State = "stopped"
+			p.value.Error = ""
+			if errors.Is(result, errPeerStopFailed) {
+				p.value.State = "stop_failed"
+				p.value.Error = result.Error()
+			}
+		} else if errors.Is(result, errPartialCompletion) {
+			p.value.State = "partial"
+			p.value.Error = result.Error()
+		} else if result != nil {
 			p.value.State = "interrupted"
 			p.value.Error = result.Error()
 			if errors.Is(context.Cause(child), errJobStop) {
@@ -337,7 +347,7 @@ func renderSavedJob(j Job, live, clear bool) (bool, bool, error) {
 			return true, false, err
 		}
 		fmt.Printf("Saved completion result for %s. No live query.\n", j.ID)
-		all := render(rows, map[string]observation{}, clear)
+		all, _ := render(rows, map[string]observation{}, clear)
 		printRecordedSummary(report)
 		return true, all, nil
 	}

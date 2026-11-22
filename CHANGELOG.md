@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.9.4 — partial completion and Ctrl-C shutdown
+
+- Finish as `partial` when every remaining target has a confirmed failure. Report the failed targets and preserve the job for resume.
+- Handle Ctrl-C in `distribute` and `resume` by stopping the job's owned peers. Keep published files and verified partials, and report any peer shutdown that could not be confirmed.
+
 ## 0.9.3 — clearer distribution examples
 
 - Explain that `--dest` is the target parent directory and show where an entire source directory is copied.

@@ -45,7 +45,7 @@ Monitoring no longer waits for every peer listener. A ready peer transfers indep
 
 Errors name the host and stage and persist in job.json. STARTING means the recorded peer process is alive; recent logs and their path are shown. FAILED means it exited; failed SSH diagnostics show UNREACHABLE. Logs remain untrusted diagnostic data.
 
-Status requests are bounded. Peers avoid unavailable sources through discovery/retry while other sources have the needed chunks. Failed targets remain in the total and cannot count as completed. Healthy completed peers keep seeding until all targets finish or the controller stops/expires. A recovered running peer can reappear; failed deployment is not automatically relaunched. Use the same job ID after recovery:
+Status requests are bounded. Peers use other available sources for missing chunks. Once every remaining target has either verified and published its files or has a confirmed SSH setup, deployment, or peer failure, the controller can end the run as `partial` with exit status 1. Targets still starting, transferring, verifying, or with unresolved status remain pending. By default, the controller stops completed peers and keeps the job and partial data. Use the same job ID after recovery:
 
 ~~~bash
 ./swarmcopy jobs
